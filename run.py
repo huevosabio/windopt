@@ -1,4 +1,5 @@
 #!venv/bin/python
 from app import app
 
-app.run(host='0.0.0.0')
+#app.run(debug=True)
+app.run(debug=True,host='0.0.0.0')
