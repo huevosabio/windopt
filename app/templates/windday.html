@@ -27,8 +27,11 @@
                 to continue please fill the following form with your Wind Day criteria.
             </p>
             <form>
+                <label for="workWindow">Number of Workable Hours in a Day</label>
                 <input type="number" name="workWindow" onkeypress="return isNumberKey(event)"/>
+                <label for="consecutive">Number of consecutive hours to call Wind Day</label>
                 <input type="number" name="consecutive" onkeypress="return isNumberKey(event)"/>
+                <label for="maxWS">Maximum Wind Speed</label>
                 <input type="decimal" name="maxWS" onkeypress="return isDecimalKey(event)"/>
             </form>
         </div>
@@ -48,13 +51,14 @@
     var name = file.name;
     var size = file.size;
     var type = file.type;
-    if (type != 'text/csv'){
+    if (type != 'text/csv' && type != 'application/vnd.ms-excel'){
         input.replaceWith( input = input.clone( true ) );
-        alert('Wrong File Type! Please upload a properly formatted CSV file.');
+        alert('Wrong File Type!'+'You Uploaded a ' + type + ' file. Please upload a CSV file.');
     }
 });</script>
 <script>
     $('#uploadBTN').click(function(){
+        $('#tier2').hide();
     
         $('#progress').show();
         var formData = new FormData($('form')[0]);
@@ -80,29 +84,64 @@
             contentType: false,
             processData: false
         })
-        .done(function(json){
-            $.ajax({
-                url: '/visualize',
-                type: 'GET'
+        .done(function(){
+            $.getJSON( "/visualize", function( data ) {
+                var images = [];
+                console.log(data);
+                $.each( data.images, function(i, val) {
+                    images.push('<li><iframe id="igraph" scrolling="no" height="462" src="' + val + '"width="100%"></iframe></li>');
+                });
+           
+                $("#tier2").hide();
+                
+                $('#historicalPlots').empty();
+                
+                $( "<ul/>", {
+                    "class": "plots",
+                    html: images.join( "" )
+                }).appendTo( "#historicalPlots" );
+                
             })
-            .done(function(html){
+            .done(function(){
                 $('#progress').hide();
-                $('#historicalPlots').append(html);
                 $('#tier2').show();
             });
         });
     });
+            /*
+            $.ajax({
+                dataType: "json",
+                url: '/visualize',
+                type: 'GET'
+            })
+            .done(function(json){
+                console.log(json)
+                $('#progress').hide();
+                $('#historicalPlots').append(plotify(json));
+                $('#tier2').show();
+            });
+        });
+    });
+    
+    function plotify(iminfo){
+        var ims = "";
+        for (var i = 0; i < iminfo.images.length; i++){
+            ims.concat("<img src=" + iminfo.images[i] +">");
+        }
+        return ims;
+    }
+    */
 </script>
 <script>
     function isNumberKey(evt){
-        var charCode = (evt.which) ? evt.which : event.keyCode
+        var charCode = (evt.which) ? evt.which : event.keyCode;
         if (charCode > 31 && (charCode < 48 || charCode > 57))
             return false;
         return true;
     }
 
     function isDecimalKey(evt){
-        var charCode = (evt.which) ? evt.which : event.keyCode
+        var charCode = (evt.which) ? evt.which : event.keyCode;
         if (charCode > 31 && (charCode != 46 &&(charCode < 48 || charCode > 57)))
             return false;
         return true;
