@@ -32,7 +32,7 @@ def visualize():
     
     ploturls = []
     
-    windData = pd.read_csv('tmp/winddata.csv', parse_dates=['Date_time'], index_col='Date_time')
+    windData = pd.read_csv('tmp/winddata.csv', parse_dates=True, index_col=0)
     ws = list(windData.columns.values)[0]
     historical = windData[[ws]]
     plots.append([historical,'historical'])

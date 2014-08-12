@@ -33,6 +33,7 @@
                 <input type="number" name="consecutive" onkeypress="return isNumberKey(event)"/>
                 <label for="maxWS">Maximum Wind Speed</label>
                 <input type="decimal" name="maxWS" onkeypress="return isDecimalKey(event)"/>
+                <input hidden id="parameters"/>
             </form>
         </div>
         <div id="historicalPlots" class="plots"></div>
@@ -87,24 +88,22 @@
         .done(function(){
             $.getJSON( "/visualize", function( data ) {
                 var images = [];
-                console.log(data);
                 $.each( data.images, function(i, val) {
                     images.push('<li><iframe id="igraph" scrolling="no" height="462" src="' + val + '"width="100%"></iframe></li>');
                 });
-           
-                $("#tier2").hide();
                 
                 $('#historicalPlots').empty();
+                $('#parameters').append(data.parameters);
                 
                 $( "<ul/>", {
                     "class": "plots",
                     html: images.join( "" )
                 }).appendTo( "#historicalPlots" );
                 
-            })
-            .done(function(){
                 $('#progress').hide();
+                
                 $('#tier2').show();
+                
             });
         });
     });

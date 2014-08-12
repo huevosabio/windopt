@@ -3,4 +3,4 @@ from app import app
 
 @app.route('/')
 def home():
-    return render_template('windday.html')
+    return app.send_static_file('index.html')
