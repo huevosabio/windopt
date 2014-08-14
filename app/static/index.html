@@ -4,9 +4,9 @@
 	<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>WindDay App</title>
+	<title>WindyDay App</title>
 	<link href="static/wind_icon.jpg" rel="icon" type="image/x-icon" />
-
+  
   <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="static/css/font-awesome.min.css">
   <link rel="stylesheet" type="text/css" href="static/css/dashboard/dashboard.css">
@@ -15,7 +15,7 @@
   <link rel="stylesheet" type="text/css" href="static/css/themes/green.css">
   <link rel="stylesheet" type="text/css" href="static/css/themes/red.css">
   -->
-
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script type="text/javascript" src="static/js/angular.min.js"></script>
   <script type="text/javascript" src="static/js/angular-cookies.js"></script>
   <script type="text/javascript" src="static/js/ng-bootstrap-tpls.min.js"></script>
@@ -31,28 +31,22 @@
       <ul class="sidebar">
         <li class="sidebar-main">
           <a href="#" ng-click="toggleSidebar()">
-            Dashboard
+            WindyDay
             <span class="menu-icon glyphicon glyphicon-transfer"></span>
           </a>
         </li>
         <li class="sidebar-title"><span>NAVIGATION</span></li>
         <li class="sidebar-list">
-          <a href="#">Dashboard <span class="menu-icon fa fa-tachometer"></span></a>
-        </li>
-        <li class="sidebar-list">
-          <a href="#">Servers <span class="menu-icon fa fa-tasks"></span></a>
-        </li>
-        <li class="sidebar-list">
-          <a href="#">Settings <span class="menu-icon fa fa-cogs"></span></a>
+          <a href="#">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
         </li>
         <li class="sidebar-title separator"><span>QUICK LINKS</span></li>
         <li class="sidebar-list">
-          <a href="#" target="_blank">Forums <span class="menu-icon fa fa-external-link"></span></a>
+          <a href="http://huevosabio.com/" target="_blank">Blog <span class="menu-icon fa fa-external-link"></span></a>
         </li>
       </ul>
       <div class="sidebar-footer">
         <div class="col-xs-4">
-          <a href="https://github.com/Ehesp/Responsive-Dashboard" target="_blank">
+          <a href="https://github.com/huevosabio/windDayApp" target="_blank">
             Github
           </a>
         </div>
@@ -80,10 +74,10 @@
           <div class="col-xs-12">
             <div class="meta pull-left">
               <div class="page">
-                Dashboard
+                WindyDay
               </div>
               <div class="breadcrumb-links">
-                Home / Dashboard
+                Home / WindyDay
               </div>
             </div>
             <div class="user pull-right">
@@ -144,25 +138,50 @@
           <div class="col-lg-6">
             <div class="widget">
               <div class="widget-title">
-                  <i class="fa fa-tasks"></i> Upload Historical Data
+                  <i class="fa fa-tasks"></i> Historical Data and Wind DayCriteria
               </div>
-              <div class="widget-body small no-padding">
+              <div class="widget-body medium">
+              <div id="fileUpload">
                 <div class="message">
-                    Please upload a properly formatted CSV file. The first column should be in Date/Time form (preferably mm/dd/yyyy hh:mm). The second should be the measured wind speed in m/s.
+                    Please upload a properly formatted CSV file.
                 </div>
-                <div class="form-group has-feedback has-success">
+                <div class="form-group row">
+                  <form enctype="multipart/form-data">
                     <div class="col-sm-5">
                         <input name="file" type="file"  id="csvFileUpload" accept=".csv"  class="btn"/>
                      </div>
                     <div class="col-sm-5">
-                      <input type="button" id='uploadBTN' value="Upload" class="btn btn-sm btn-info pull-right" />
+                      <input type="button" id='uploadBTN' value="Upload" class="btn btn-default pull-right" />
                     </div>
+                  </form>
                </div>
+              </div>
+              <hr>
+              <div hidden id="loading">
+                <loading></loading>
+              </div>
+              <div hidden id="windCriteria">
+                <div class="message">Please select the appropiate Wind Day Criteria</div>
+              <form role="form">
+                <div class="form-group col-sm-5">
+                  <input class="form-control" type="number" name="workWindow" onkeypress="return isNumberKey(event)" placeholder="Shift length in hours"/>
+                </div>
+                <div class="form-group col-sm-5">
+                  <div class="input-group  pull-right">
+                    <input class="form-control" type="number" name="consecutive" onkeypress="return isNumberKey(event)" placeholder="Maximum wind hours"/>
+                  </div>
+                </div>
+                <div class="form-group col-sm-5">
+                  <input class="form-control" type="decimal" name="maxWS" onkeypress="return isDecimalKey(event)" placeholder="Maximum wind speed"/>
+                </div>
+                <div class="col-sm-5"><button type="submit" class="btn btn-default pull-right">Estimate Wind Days</button></div>
+            </form>
               </div>
             </div>
           </div>
         </div>
-          <div class="row">
+        </div>
+          <div class="row" id="results" hidden>
             <div class="col-lg-3 col-md-6 col-xs-12">
               <div class="widget">
                 <div class="widget-body">
@@ -221,40 +240,42 @@
               </div>
             </div>
           </div>
-          <div class="row">
+          <div hidden class="row graphs">
             <div class="col-lg-6">
               <div class="widget">
                 <div class="widget-title">
-                  <i class="fa fa-tasks"></i> Weibull Distribution
+                  <i class="fa fa-bar-chart-o"></i> Weibull Distribution
                 </div>
-                <div class="widget-body medium no-padding">
+                <div class="widget-body medium no-padding tier2" id="weibull">
                 </div>
               </div>
             </div>
             <div class="col-lg-6">
               <div class="widget">
                 <div class="widget-title">
-                  <i class="fa fa-users"></i> Historical Speeds
+                  <i class="fa fa-bar-chart-o"></i> Historical Speeds
                 </div>
-                <div class="widget-body medium no-padding">
+                <div class="widget-body medium no-padding tier2" id="historical">
                 </div>
               </div>
             </div>
           </div>
-          <div class="row">
+          <div hidden class="row graphs">
             <div class="col-lg-6">
               <div class="widget">
                 <div class="widget-title">
-                  <i class="fa fa-plus"></i> Monthly Median Wind Speed
+                  <i class="fa fa-bar-chart-o"></i> Monthly Median Wind Speed
                 </div>
-                <div class="widget-body">
+                <div class="widget-body medium no-padding tier2" id="byMonth">
                 </div>
               </div>
             </div>
             <div class="col-lg-6">
               <div class="widget">
                 <div class="widget-title">
-                  <i class="fa fa-cog fa-spin"></i> Hourly Median Wind Speed
+                  <i class="fa fa-bar-chart-o"></i> Hourly Median Wind Speed
+                </div>
+                <div class="widget-body medium no-padding tier2" id="byHour">
                 </div>
                 </div>
               </div>
@@ -266,5 +287,109 @@
       </div><!-- End Page Content -->
     </div><!-- End Content Wrapper -->
   </div><!-- End Page Wrapper -->
+ 
+  <script>
+      $(':file').change(function(){
+      var input = $('#csvFileUpload');
+      var file = this.files[0];
+      var name = file.name;
+      var size = file.size;
+      var type = file.type;
+      if (type != 'text/csv' && type != 'application/vnd.ms-excel'){
+          input.replaceWith( input = input.clone( true ) );
+          alert('Wrong File Type!'+'You Uploaded a ' + type + ' file. Please upload a CSV file.');
+      }
+  });
+    
+  </script>
+  <script>
+      $('#uploadBTN').click(function(){
+        $('.tier2').empty();
+        $('#loading').show();
+        
+          
+          var formData = new FormData($('form')[0]);
+          $.ajax({
+              url: '/upload',  //Server script to process data
+              type: 'POST',
+              /*xhr: function() {  // Custom XMLHttpRequest
+                  var myXhr = $.ajaxSettings.xhr();
+                  if(myXhr.upload){ // Check if upload property exists
+                      myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+                  }
+                  return myXhr;
+              },
+              */
+              //Ajax events
+              //beforeSend: beforeSendHandler,
+              //success: completeHandler,
+              //error: errorHandler,
+              // Form data
+              data: formData,
+              //Options to tell jQuery not to process data or worry about content-type.
+              cache: false,
+              contentType: false,
+              processData: false
+          })
+          .done(function(){
+              $.getJSON( "/visualize", function( data ) {
+                  var images = {};
+                  $.each( data.images, function(key, val) {
+                      images[key] = '<iframe id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  val + '" width="100%"></iframe>';
+                  });
+                  
+                  $('#tier2').empty();
+                  $('#historical').html(images['historical']);
+                  $('#weibull').html(images['weibull']);
+                  $('#byMonth').html(images['byMonth']);
+                  $('#byHour').html(images['byHour']);
+                  $('#loading').hide();
+                  $('#fileUpload').show();
+                  $('#windCriteria').show();
+                  $('.graphs').show();
+                  //$('#parameters').append(data.parameters);
+                  
+              });
+          });
+      });
+              /*
+              $.ajax({
+                  dataType: "json",
+                  url: '/visualize',
+                  type: 'GET'
+                })
+              .done(function(json){
+                    console.log(json)
+                  $('#progress').hide();
+                  $('#historicalPlots').append(plotify(json));
+                  $('#tier2').show();
+              });
+          });
+      });
+      
+      function plotify(iminfo){
+          var ims = "";
+          for (var i = 0; i < iminfo.images.length; i++){
+            ims.concat("<img src=" + iminfo.images[i] +">");
+          }
+          return ims;
+      }
+      */
+  </script>
+  <script>
+      function isNumberKey(evt){
+          var charCode = (evt.which) ? evt.which : event.keyCode;
+          if (charCode > 31 && (charCode < 48 || charCode > 57))
+              return false;
+          return true;
+      }
+  
+      function isDecimalKey(evt){
+          var charCode = (evt.which) ? evt.which : event.keyCode;
+          if (charCode > 31 && (charCode != 46 &&(charCode < 48 || charCode > 57)))
+              return false;
+          return true;
+      }
+  </script>
 </body>
 </html>

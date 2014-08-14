@@ -30,7 +30,8 @@ def visualize():
     plt.rcParams['figure.figsize'] = (15, 5)
     plots = []
     
-    ploturls = []
+    ploturls = {}
+    layout={'margin':{'l':40,'r':0,'t':0,'b':40},'xaxis':{'mirror':'false'},'yaxis':{'mirror':'false'}}
     
     windData = pd.read_csv('tmp/winddata.csv', parse_dates=True, index_col=0)
     ws = list(windData.columns.values)[0]
@@ -44,7 +45,7 @@ def visualize():
     plt.plot(x, stats.exponweib.pdf(x, *parameters))
     _ = plt.hist(cleanData, bins=np.linspace(0, 20, 40), normed=True, alpha=0.5)
     plt.savefig(os.path.join(app.config['STATIC'], 'weibull.png'))
-    ploturls.append(py.plot_mpl(weibull,auto_open=False, filename='weibull'))
+    ploturls['weibull'] = py.plot_mpl(weibull,auto_open=False, filename='weibull',update={'layout':layout})
     plt.close()
     
     byMonth = windData[[ws]]
@@ -63,7 +64,7 @@ def visualize():
         #fig = ax.get_figure()
         #fig.savefig(os.path.join(app.config['STATIC'], each[1]+'.png'))
         #ploturls.append(py.plot_mpl(fig,filename=each[1], auto_open=False))
-        ploturls.append(py.plot(df_to_iplot(each[0]),filename=each[1],auto_open=False, connectgaps=False))
+        ploturls[each[1]]=py.plot(df_to_iplot(each[0]),filename=each[1],auto_open=False, connectgaps=False,update={'layout':layout})
         plt.close()
     
     response = {}
