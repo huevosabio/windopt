@@ -1,0 +1,5 @@
+affine>=1.0
+click
+Numpy>=1.7
+setuptools
+enum34
