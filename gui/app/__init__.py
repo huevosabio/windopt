@@ -24,8 +24,8 @@ def index():
 from app import schemas
 
 from app.resources.auth import *
-api.add_resource(Register,'/api/register')
-api.add_resource(Login,'/api/login')
+api.add_resource(Register,'/auth/signup')
+api.add_resource(Login,'/auth/login')
 
 
 if __name__ == '__main__':
