@@ -11,7 +11,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-@app.route('/upload', methods=['POST'])
+@app.route('/windyday/upload', methods=['POST'])
 def upload_file():
     print "At upload"
     if request.method == 'POST':
@@ -21,4 +21,4 @@ def upload_file():
             print "File is allowed"
             #filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'winddata.csv'))
-            return flask.jsonify({'status':'success'})
+            return flask.jsonify(result={"status": 200})

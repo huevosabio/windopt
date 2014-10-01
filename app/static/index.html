@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>WindyDay App</title>
+	<title>WindOps App</title>
 	<link href="static/wind_icon.jpg" rel="icon" type="image/x-icon" />
   
   <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
@@ -31,13 +31,16 @@
       <ul class="sidebar">
         <li class="sidebar-main">
           <a href="#" ng-click="toggleSidebar()">
-            WindyDay
+            WindyOps
             <span class="menu-icon glyphicon glyphicon-transfer"></span>
           </a>
         </li>
         <li class="sidebar-title"><span>NAVIGATION</span></li>
         <li class="sidebar-list">
-          <a href="#">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+          <a href="/windyday">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+        </li>
+        <li class="sidebar-list">
+          <a href="/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
         </li>
         <li class="sidebar-title separator"><span>QUICK LINKS</span></li>
         <li class="sidebar-list">
@@ -214,6 +217,7 @@
                     </div>
                   </form>
                </div>
+               <div class="image"><img src="static/img/properformat.png"/></div>
               </div>
               
               <div hidden id="loading">
@@ -226,7 +230,9 @@
                   <input class="form-control" type="number" name="workWindow" onkeypress="return isNumberKey(event)" placeholder="Shift length in hours"/>
                 </div>
                 <div class="form-group col-sm-5">
+                  <div class="input-group  pull-right">
                     <input class="form-control" type="number" name="consecutive" onkeypress="return isNumberKey(event)" placeholder="Maximum wind hours"/>
+                  </div>
                 </div>
                 <div class="form-group col-sm-5">
                   <input class="form-control" type="decimal" name="maxWS" onkeypress="return isDecimalKey(event)" placeholder="Maximum wind speed"/>
@@ -321,7 +327,7 @@
           
           var formData = new FormData($('form')[0]);
           $.ajax({
-              url: '/upload',  //Server script to process data
+              url: 'windyday/upload',  //Server script to process data
               type: 'POST',
               /*xhr: function() {  // Custom XMLHttpRequest
                   var myXhr = $.ajaxSettings.xhr();
@@ -346,7 +352,7 @@
               $.getJSON( "/visualize", function( data ) {
                   var images = {};
                   $.each( data.images, function(key, val) {
-                      images[key] = '<iframe id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  val + '" width="100%"></iframe>';
+                      images[key] = '<img id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  val + '" width="100%"></img>';
                   });
                   parameters = data.parameters;
                   $('#tier2').empty();
@@ -393,7 +399,7 @@
     // Put the results in a div
     posting.done(function( data ) {
       var ploturl = data.ploturl;
-      $( "#expWD" ).empty().html( '<iframe id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  ploturl + '" width="100%"></iframe>' );
+      $( "#expWD" ).empty().html( '<img id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  ploturl + '" width="100%"></iframe>' );
       $('.tier3').show();
     });
   });

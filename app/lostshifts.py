@@ -35,7 +35,9 @@ def lostShifts():
     x = np.linspace(0.01,0.99,1000)
     z = stats.binom.ppf(x,request.json['projectLength'],wdprob)
     plt.plot(x,z)
-    layout={'margin':{'l':40,'r':0,'t':0,'b':40},'xaxis':{'mirror':'false'},'yaxis':{'mirror':'false'}}
-    ploturl = py.plot_mpl(ppf,auto_open=False, filename='shiftLostDistr',update={'layout':layout})
+    plt.savefig(os.path.join(app.config['STATIC'], 'lostshifts.png'))
+    ploturl = 'static/lostshifts.png'
+    #layout={'margin':{'l':40,'r':0,'t':0,'b':40},'xaxis':{'mirror':'false'},'yaxis':{'mirror':'false'}}
+    #ploturl = py.plot_mpl(ppf,auto_open=False, filename='shiftLostDistr',update={'layout':layout})
     
     return jsonify({'ploturl': ploturl})
