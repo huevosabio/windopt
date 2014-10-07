@@ -12,4 +12,4 @@ def windyday():
     
 @app.route('/cranepath')
 def cranepath():
-    return app.send_static_file('cranepath.html')
+    return app.send_static_file('zipupload.html')

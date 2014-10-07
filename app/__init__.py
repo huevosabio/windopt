@@ -13,3 +13,4 @@ from app import windday
 from app import visualization
 from app import lostshifts
 from app import cranetest
+from app import cranepath
