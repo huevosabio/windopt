@@ -6,7 +6,6 @@ numpy==1.9.0
 pandas==0.14.1
 plotly==0.5.6
 pyproj==1.9.3
-pyspatialite==3.0.1
 pyzmq==14.0.1
 scikit-image==0.10.1
 scipy==0.13.3
