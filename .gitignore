@@ -1,0 +1,9 @@
+#Files
+*.pyc
+*.shp
+*.dbf
+*.csv
+*.proj
+
+#Directories
+tmp/
