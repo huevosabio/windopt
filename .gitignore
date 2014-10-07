@@ -6,4 +6,4 @@
 *.proj
 
 #Directories
-tmp/
+tmp/**
