@@ -34,18 +34,27 @@ def get_total_cost(tsp_sol,tpos,layerDict,pathDirectory,CostSurfacefn):
     cost['total'] = cost['CraneWalk'] + cost['Crossing']
     return cost, tsp_sol
 
-def get_detailed_schedule(solution,erectionCost):
+def get_geojson(solution,erectionCost,tpos):
+    """
+    Coordinates should be in WGS84 for this function to work
+    """
     sequence = nx.topological_sort(solution)
-    schedule = []
+    schedule = {"type":"FeatureCollection","features":[]}
+    order = 0
     for index in range(len(sequence)):
-        erection = {}
-        erection['activity'] = 'Erect Turbine ' + str(sequence[index])
-        erection['cost'] = erectionCost
-        schedule.append(erection)
+        erection = {"type":"Feature","properties":{},"geometry":{}}
+        erection["properties"]['activity'] = 'Erect Turbine ' + str(sequence[index])
+        erection["properties"]['cost'] = erectionCost
+        erection["properties"]['order'] = order
+        order = order + 1
+        erection["geometry"]["coordinates"] = list(tpos[str(sequence[index])])
+        erection["geometry"]["type"] = "Point"
+        schedule["features"].append(erection)
         if index < len(sequence)-1:
             for path in solution[sequence[index]][sequence[index+1]]['geobj']:
-                schedule.append(path['properties'])
+                path['properties']['order'] = order
+                order = order + 1
+                schedule["features"].append(path)
+
+
     return schedule
-
-
-        
