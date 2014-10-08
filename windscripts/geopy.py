@@ -398,7 +398,7 @@ def shp2LS(outputPathfn,startCoord,stopCoord):
 def transform_to_wgs84(crs,original):
     geojson = original.copy()
     def trans84(tpl):
-        proj1=pyproj.Proj(crs)
+        proj1=pyproj.Proj(crs,preserve_units=True)
         wgs84=pyproj.Proj("+init=EPSG:4326",preserve_units=True)
         return pyproj.transform(proj1,wgs84,tpl[0],tpl[1])
     if geojson['type'] == 'Point':
@@ -461,7 +461,7 @@ def create_nx_graph(turbinesfn,tiffile,directory,layerDict):
     i = 0
     with fiona.open(turbinesfn) as turbines:
         if turbines.crs != crs:
-            proj1=pyproj.Proj(turbines.crs)
+            proj1=pyproj.Proj(turbines.crs,preserve_units=True)
             proj2=pyproj.Proj(crs,preserve_units=True)
             def conversion(x,y):
                 return pyproj.transform(proj1,proj2,x,y)
