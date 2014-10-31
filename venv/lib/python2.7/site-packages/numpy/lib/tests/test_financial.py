@@ -1,7 +1,10 @@
 from __future__ import division, absolute_import, print_function
 
-from numpy.testing import *
 import numpy as np
+from numpy.testing import (
+    run_module_suite, TestCase, assert_, assert_almost_equal
+    )
+
 
 class TestFinancial(TestCase):
     def test_rate(self):
@@ -55,8 +58,9 @@ class TestFinancial(TestCase):
                             50.0, 1)
 
     def test_npv(self):
-        assert_almost_equal(np.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
-                            122.89, 2)
+        assert_almost_equal(
+            np.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            122.89, 2)
 
     def test_mirr(self):
         val = [-4500, -800, 800, 800, 600, 600, 800, 800, 700, 3000]
@@ -137,7 +141,7 @@ class TestFinancial(TestCase):
 
     def test_broadcast(self):
         assert_almost_equal(np.nper(0.075, -2000, 0, 100000., [0, 1]),
-                            [ 21.5449442,  20.76156441], 4)
+                            [21.5449442, 20.76156441], 4)
 
         assert_almost_equal(np.ipmt(0.1/12, list(range(5)), 24, 2000),
                             [-17.29165168, -16.66666667, -16.03647345,
@@ -148,7 +152,7 @@ class TestFinancial(TestCase):
                                 -76.88882405, -77.52956425], 4)
 
         assert_almost_equal(np.ppmt(0.1/12, list(range(5)), 24, 2000, 0,
-            [0, 0, 1, 'end', 'begin']),
+                                    [0, 0, 1, 'end', 'begin']),
                             [-74.998201, -75.62318601, -75.62318601,
                                 -76.88882405, -76.88882405], 4)
 

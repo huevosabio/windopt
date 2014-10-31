@@ -3,14 +3,32 @@
 """
 from __future__ import division, absolute_import, print_function
 
-__all__ = ['diag', 'diagflat', 'eye', 'fliplr', 'flipud', 'rot90', 'tri', 'triu',
-           'tril', 'vander', 'histogram2d', 'mask_indices',
-           'tril_indices', 'tril_indices_from', 'triu_indices', 'triu_indices_from',
-           ]
+from numpy.core.numeric import (
+    asanyarray, arange, zeros, greater_equal, multiply, ones, asarray,
+    where, int8, int16, int32, int64, empty, promote_types
+    )
+from numpy.core import iinfo
 
-from numpy.core.numeric import asanyarray, equal, subtract, arange, \
-     zeros, greater_equal, multiply, ones, asarray, alltrue, where, \
-     empty, diagonal
+
+__all__ = [
+    'diag', 'diagflat', 'eye', 'fliplr', 'flipud', 'rot90', 'tri', 'triu',
+    'tril', 'vander', 'histogram2d', 'mask_indices', 'tril_indices',
+    'tril_indices_from', 'triu_indices', 'triu_indices_from', ]
+
+
+i1 = iinfo(int8)
+i2 = iinfo(int16)
+i4 = iinfo(int32)
+def _min_int(low, high):
+    """ get small int that fits the range """
+    if high <= i1.max and low >= i1.min:
+        return int8
+    if high <= i2.max and low >= i2.min:
+        return int16
+    if high <= i4.max and low >= i4.min:
+        return int32
+    return int64
+
 
 def fliplr(m):
     """
@@ -22,7 +40,7 @@ def fliplr(m):
     Parameters
     ----------
     m : array_like
-        Input array.
+        Input array, must be at least 2-D.
 
     Returns
     -------
@@ -37,8 +55,7 @@ def fliplr(m):
 
     Notes
     -----
-    Equivalent to A[:,::-1]. Does not require the array to be
-    two-dimensional.
+    Equivalent to A[:,::-1]. Requires the array to be at least 2-D.
 
     Examples
     --------
@@ -61,6 +78,7 @@ def fliplr(m):
     if m.ndim < 2:
         raise ValueError("Input must be >= 2-d.")
     return m[:, ::-1]
+
 
 def flipud(m):
     """
@@ -115,6 +133,7 @@ def flipud(m):
         raise ValueError("Input must be >= 1-d.")
     return m[::-1, ...]
 
+
 def rot90(m, k=1):
     """
     Rotate an array by 90 degrees in the counter-clockwise direction.
@@ -167,6 +186,7 @@ def rot90(m, k=1):
         # k == 3
         return fliplr(m.swapaxes(0, 1))
 
+
 def eye(N, M=None, k=0, dtype=float):
     """
     Return a 2-D array with ones on the diagonal and zeros elsewhere.
@@ -218,6 +238,7 @@ def eye(N, M=None, k=0, dtype=float):
     m[:M-k].flat[i::M+1] = 1
     return m
 
+
 def diag(v, k=0):
     """
     Extract a diagonal or construct a diagonal array.
@@ -249,7 +270,7 @@ def diag(v, k=0):
     diagflat : Create a 2-D array with the flattened input as a diagonal.
     trace : Sum along diagonals.
     triu : Upper triangle of an array.
-    tril : Lower triange of an array.
+    tril : Lower triangle of an array.
 
     Examples
     --------
@@ -287,6 +308,7 @@ def diag(v, k=0):
         return v.diagonal(k)
     else:
         raise ValueError("Input must be 1- or 2-d.")
+
 
 def diagflat(v, k=0):
     """
@@ -346,6 +368,7 @@ def diagflat(v, k=0):
         return res
     return wrap(res)
 
+
 def tri(N, M=None, k=0, dtype=float):
     """
     An array with ones at and below the given diagonal and zeros elsewhere.
@@ -385,8 +408,15 @@ def tri(N, M=None, k=0, dtype=float):
     """
     if M is None:
         M = N
-    m = greater_equal(subtract.outer(arange(N), arange(M)), -k)
-    return m.astype(dtype)
+
+    m = greater_equal.outer(arange(N, dtype=_min_int(0, N)),
+                            arange(-k, M-k, dtype=_min_int(-k, M - k)))
+
+    # Avoid making a copy if the requested type is already bool
+    m = m.astype(dtype, copy=False)
+
+    return m
+
 
 def tril(m, k=0):
     """
@@ -421,8 +451,10 @@ def tril(m, k=0):
 
     """
     m = asanyarray(m)
-    out = multiply(tri(m.shape[0], m.shape[1], k=k, dtype=m.dtype), m)
-    return out
+    mask = tri(*m.shape[-2:], k=k, dtype=bool)
+
+    return where(mask, m, zeros(1, m.dtype))
+
 
 def triu(m, k=0):
     """
@@ -447,33 +479,46 @@ def triu(m, k=0):
 
     """
     m = asanyarray(m)
-    out = multiply((1 - tri(m.shape[0], m.shape[1], k - 1, dtype=m.dtype)), m)
-    return out
+    mask = tri(*m.shape[-2:], k=k-1, dtype=bool)
 
-# borrowed from John Hunter and matplotlib
-def vander(x, N=None):
+    return where(mask, zeros(1, m.dtype), m)
+
+
+# Originally borrowed from John Hunter and matplotlib
+def vander(x, N=None, increasing=False):
     """
-    Generate a Van der Monde matrix.
+    Generate a Vandermonde matrix.
 
-    The columns of the output matrix are decreasing powers of the input
-    vector.  Specifically, the `i`-th output column is the input vector
-    raised element-wise to the power of ``N - i - 1``.  Such a matrix with
-    a geometric progression in each row is named for Alexandre-Theophile
-    Vandermonde.
+    The columns of the output matrix are powers of the input vector. The
+    order of the powers is determined by the `increasing` boolean argument.
+    Specifically, when `increasing` is False, the `i`-th output column is
+    the input vector raised element-wise to the power of ``N - i - 1``. Such
+    a matrix with a geometric progression in each row is named for Alexandre-
+    Theophile Vandermonde.
 
     Parameters
     ----------
     x : array_like
         1-D input array.
     N : int, optional
-        Order of (number of columns in) the output.  If `N` is not specified,
-        a square array is returned (``N = len(x)``).
+        Number of columns in the output.  If `N` is not specified, a square
+        array is returned (``N = len(x)``).
+    increasing : bool, optional
+        Order of the powers of the columns.  If True, the powers increase
+        from left to right, if False (the default) they are reversed.
+
+        .. versionadded:: 1.9.0
 
     Returns
     -------
     out : ndarray
-        Van der Monde matrix of order `N`.  The first column is ``x^(N-1)``,
-        the second ``x^(N-2)`` and so forth.
+        Vandermonde matrix.  If `increasing` is False, the first column is
+        ``x^(N-1)``, the second ``x^(N-2)`` and so forth. If `increasing` is
+        True, the columns are ``x^0, x^1, ..., x^(N-1)``.
+
+    See Also
+    --------
+    polynomial.polynomial.polyvander
 
     Examples
     --------
@@ -497,6 +542,11 @@ def vander(x, N=None):
            [  8,   4,   2,   1],
            [ 27,   9,   3,   1],
            [125,  25,   5,   1]])
+    >>> np.vander(x, increasing=True)
+    array([[  1,   1,   1,   1],
+           [  1,   2,   4,   8],
+           [  1,   3,   9,  27],
+           [  1,   5,  25, 125]])
 
     The determinant of a square Vandermonde matrix is the product
     of the differences between the values of the input vector:
@@ -508,12 +558,21 @@ def vander(x, N=None):
 
     """
     x = asarray(x)
+    if x.ndim != 1:
+        raise ValueError("x must be a one-dimensional array or sequence.")
     if N is None:
-        N=len(x)
-    X = ones( (len(x), N), x.dtype)
-    for i in range(N - 1):
-        X[:, i] = x**(N - i - 1)
-    return X
+        N = len(x)
+
+    v = empty((len(x), N), dtype=promote_types(x.dtype, int))
+    tmp = v[:, ::-1] if not increasing else v
+
+    if N > 0:
+        tmp[:, 0] = 1
+    if N > 1:
+        tmp[:, 1:] = x[:, None]
+        multiply.accumulate(tmp[:, 1:], out=tmp[:, 1:], axis=1)
+
+    return v
 
 
 def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
@@ -532,7 +591,8 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
         The bin specification:
 
           * If int, the number of bins for the two dimensions (nx=ny=bins).
-          * If [int, int], the number of bins in each dimension (nx, ny = bins).
+          * If [int, int], the number of bins in each dimension
+            (nx, ny = bins).
           * If array_like, the bin edges for the two dimensions
             (x_edges=y_edges=bins).
           * If [array, array], the bin edges in each dimension
@@ -610,14 +670,14 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
 
     >>> fig = plt.figure(figsize=(7, 3))
     >>> ax = fig.add_subplot(131)
-    >>> ax.set_title('imshow:\nequidistant')
+    >>> ax.set_title('imshow: equidistant')
     >>> im = plt.imshow(H, interpolation='nearest', origin='low',
                     extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 
-    pcolormesh can displaying exact bin edges:
+    pcolormesh can display exact bin edges:
 
     >>> ax = fig.add_subplot(132)
-    >>> ax.set_title('pcolormesh:\nexact bin edges')
+    >>> ax.set_title('pcolormesh: exact bin edges')
     >>> X, Y = np.meshgrid(xedges, yedges)
     >>> ax.pcolormesh(X, Y, H)
     >>> ax.set_aspect('equal')
@@ -625,7 +685,7 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
     NonUniformImage displays exact bin edges with interpolation:
 
     >>> ax = fig.add_subplot(133)
-    >>> ax.set_title('NonUniformImage:\ninterpolated')
+    >>> ax.set_title('NonUniformImage: interpolated')
     >>> im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
     >>> xcenters = xedges[:-1] + 0.5 * (xedges[1:] - xedges[:-1])
     >>> ycenters = yedges[:-1] + 0.5 * (yedges[1:] - yedges[:-1])
@@ -721,17 +781,24 @@ def mask_indices(n, mask_func, k=0):
     return where(a != 0)
 
 
-def tril_indices(n, k=0):
+def tril_indices(n, k=0, m=None):
     """
-    Return the indices for the lower-triangle of an (n, n) array.
+    Return the indices for the lower-triangle of an (n, m) array.
 
     Parameters
     ----------
     n : int
-        The row dimension of the square arrays for which the returned
+        The row dimension of the arrays for which the returned
         indices will be valid.
     k : int, optional
         Diagonal offset (see `tril` for details).
+    m : int, optional
+        .. versionadded:: 1.9.0
+
+        The column dimension of the arrays for which the returned
+        arrays will be valid.
+        By default `m` is taken equal to `n`.
+
 
     Returns
     -------
@@ -791,7 +858,7 @@ def tril_indices(n, k=0):
            [-10, -10, -10, -10]])
 
     """
-    return mask_indices(n, tril, k)
+    return where(tri(n, m, k=k, dtype=bool))
 
 
 def tril_indices_from(arr, k=0):
@@ -817,14 +884,14 @@ def tril_indices_from(arr, k=0):
     .. versionadded:: 1.4.0
 
     """
-    if not (arr.ndim == 2 and arr.shape[0] == arr.shape[1]):
-        raise ValueError("input array must be 2-d and square")
-    return tril_indices(arr.shape[0], k)
+    if arr.ndim != 2:
+        raise ValueError("input array must be 2-d")
+    return tril_indices(arr.shape[-2], k=k, m=arr.shape[-1])
 
 
-def triu_indices(n, k=0):
+def triu_indices(n, k=0, m=None):
     """
-    Return the indices for the upper-triangle of an (n, n) array.
+    Return the indices for the upper-triangle of an (n, m) array.
 
     Parameters
     ----------
@@ -833,6 +900,13 @@ def triu_indices(n, k=0):
         be valid.
     k : int, optional
         Diagonal offset (see `triu` for details).
+    m : int, optional
+        .. versionadded:: 1.9.0
+
+        The column dimension of the arrays for which the returned
+        arrays will be valid.
+        By default `m` is taken equal to `n`.
+
 
     Returns
     -------
@@ -894,12 +968,12 @@ def triu_indices(n, k=0):
            [ 12,  13,  14,  -1]])
 
     """
-    return mask_indices(n, triu, k)
+    return where(~tri(n, m, k=k-1, dtype=bool))
 
 
 def triu_indices_from(arr, k=0):
     """
-    Return the indices for the upper-triangle of a (N, N) array.
+    Return the indices for the upper-triangle of arr.
 
     See `triu_indices` for full details.
 
@@ -924,6 +998,6 @@ def triu_indices_from(arr, k=0):
     .. versionadded:: 1.4.0
 
     """
-    if not (arr.ndim == 2 and arr.shape[0] == arr.shape[1]):
-        raise ValueError("input array must be 2-d and square")
-    return triu_indices(arr.shape[0], k)
+    if arr.ndim != 2:
+        raise ValueError("input array must be 2-d")
+    return triu_indices(arr.shape[-2], k=k, m=arr.shape[-1])

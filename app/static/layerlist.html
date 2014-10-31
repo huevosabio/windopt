@@ -182,7 +182,7 @@
 <script>
     $.getJSON( "/cranepath/layerlist", function( data ) {
         $.each(data.layers, function(index,layer){
-            var select = '<select class="selectpicker" name = "'+layer+'.interpretation" form="daform"><option value="turbines">Turbines</option><option value="boundary">Boundary</option><option value="crossing">Crossing</option></select>';
+            var select = '<select class="selectpicker" name = "'+layer+'.interpretation" form="daform"><option value="crossing">Crossing</option><option value="turbines">Turbines</option><option value="boundary">Boundary</option></select>';
             var cost = '<input class="form-control" type="decimal" name="'+layer+'.cost" onkeypress="return isDecimalKey(event)" onkeypress="return isDecimalKey(event)" placeholder="Associated Cost in USD" value="0.0"/>';
             $('#formbody').append("<tr><td>"+layer+"</td><td>"+select+"</td><td>"+cost+"</td></tr>");
         });
@@ -197,9 +197,6 @@
   </script>
 <script>
       $('#tspopt').click(function(){
-        $('.tier2').empty();
-        $('#loading').show();
-        $('#fileUpload').hide();
           
           var formData = form2js('daform','.',true);
           console.log(formData);
@@ -207,8 +204,10 @@
               url: 'cranepath/tsp',  //Server script to process data
               type: 'POST',
               contentType: 'application/json',
-              data: formData
-          }).done(window.location.replace('/solution'));
+              data: JSON.stringify(formData),
+              dataType: 'json',
+              success: function (e) {window.location.replace('/solution')}
+          });
       });
 </script>
 <script>

@@ -1,13 +1,16 @@
 from __future__ import division, absolute_import, print_function
 
+import os
 import sys
 import warnings
 import collections
 from . import multiarray
 from . import umath
-from .umath import *
+from .umath import (invert, sin, UFUNC_BUFSIZE_DEFAULT, ERR_IGNORE,
+                    ERR_WARN, ERR_RAISE, ERR_CALL, ERR_PRINT, ERR_LOG,
+                    ERR_DEFAULT, PINF, NAN)
 from . import numerictypes
-from .numerictypes import *
+from .numerictypes import longlong, intc, int_, float_, complex_, bool_
 
 if sys.version_info[0] >= 3:
     import pickle
@@ -130,7 +133,9 @@ def zeros_like(a, dtype=None, order='K', subok=True):
 
     """
     res = empty_like(a, dtype=dtype, order=order, subok=subok)
-    multiarray.copyto(res, 0, casting='unsafe')
+    # needed instead of a 0 to get same result as zeros for for string dtypes
+    z = zeros(1, dtype=res.dtype)
+    multiarray.copyto(res, z, casting='unsafe')
     return res
 
 def ones(shape, dtype=None, order='C'):
@@ -354,9 +359,6 @@ def extend_all(module):
     for a in mall:
         if a not in adict:
             __all__.append(a)
-
-extend_all(umath)
-extend_all(numerictypes)
 
 newaxis = None
 
@@ -766,7 +768,7 @@ def argwhere(a):
            [1, 2]])
 
     """
-    return transpose(asanyarray(a).nonzero())
+    return transpose(nonzero(a))
 
 def flatnonzero(a):
     """
@@ -823,7 +825,7 @@ def correlate(a, v, mode='valid', old_behavior=False):
     This function computes the correlation as generally defined in signal
     processing texts::
 
-        z[k] = sum_n a[n] * conj(v[n+k])
+        c_{av}[k] = sum_n a[n+k] * conj(v[n])
 
     with a and v sequences being zero-padded where necessary and conj being
     the conjugate.
@@ -841,9 +843,23 @@ def correlate(a, v, mode='valid', old_behavior=False):
         for complex arrays). If False, uses the conventional signal
         processing definition.
 
+    Returns
+    -------
+    out : ndarray
+        Discrete cross-correlation of `a` and `v`.
+
     See Also
     --------
     convolve : Discrete, linear convolution of two one-dimensional sequences.
+
+    Notes
+    -----
+    The definition of correlation above is not unique and sometimes correlation
+    may be defined differently. Another common definition is::
+
+        c'_{av}[k] = sum_n a[n] conj(v[n+k])
+
+    which is related to ``c_{av}[k]`` by ``c'_{av}[k] = c_{av}[-k]``.
 
     Examples
     --------
@@ -853,6 +869,18 @@ def correlate(a, v, mode='valid', old_behavior=False):
     array([ 2. ,  3.5,  3. ])
     >>> np.correlate([1, 2, 3], [0, 1, 0.5], "full")
     array([ 0.5,  2. ,  3.5,  3. ,  0. ])
+
+    Using complex sequences:
+
+    >>> np.correlate([1+1j, 2, 3-1j], [0, 1, 0.5j], 'full')
+    array([ 0.5-0.5j,  1.0+0.j ,  1.5-1.5j,  3.0-1.j ,  0.0+0.j ])
+
+    Note that you get the time reversed, complex conjugated result
+    when the two input sequences change places, i.e.,
+    ``c_{va}[k] = c^{*}_{av}[-k]``:
+
+    >>> np.correlate([0, 1, 0.5j], [1+1j, 2, 3-1j], 'full')
+    array([ 0.0+0.j ,  3.0+1.j ,  1.5+1.5j,  1.0+0.j ,  0.5+0.5j])
 
     """
     mode = _mode_from_name(mode)
@@ -879,6 +907,8 @@ def convolve(a,v,mode='full'):
     probability theory, the sum of two independent random variables is
     distributed according to the convolution of their individual
     distributions.
+
+    If `v` is longer than `a`, the arrays are swapped before computation.
 
     Parameters
     ----------
@@ -913,12 +943,14 @@ def convolve(a,v,mode='full'):
     scipy.signal.fftconvolve : Convolve two arrays using the Fast Fourier
                                Transform.
     scipy.linalg.toeplitz : Used to construct the convolution operator.
+    polymul : Polynomial multiplication. Same output as convolve, but also
+              accepts poly1d objects as input.
 
     Notes
     -----
     The discrete convolution operation is defined as
 
-    .. math:: (f * g)[n] = \\sum_{m = -\\infty}^{\\infty} f[m] g[n - m]
+    .. math:: (a * v)[n] = \\sum_{m = -\\infty}^{\\infty} a[m] v[n - m]
 
     It can be shown that a convolution :math:`x(t) * y(t)` in time/space
     is equivalent to the multiplication :math:`X(f) Y(f)` in the Fourier
@@ -963,7 +995,7 @@ def convolve(a,v,mode='full'):
     mode = _mode_from_name(mode)
     return multiarray.correlate(a, v[::-1], mode)
 
-def outer(a, b):
+def outer(a, b, out=None):
     """
     Compute the outer product of two vectors.
 
@@ -984,6 +1016,10 @@ def outer(a, b):
     b : (N,) array_like
         Second input vector.  Input is flattened if
         not already 1-dimensional.
+    out : (M, N) ndarray, optional
+          A location where the result is stored
+
+        .. versionadded:: 1.9.0
 
     Returns
     -------
@@ -1037,12 +1073,20 @@ def outer(a, b):
     """
     a = asarray(a)
     b = asarray(b)
-    return a.ravel()[:, newaxis]*b.ravel()[newaxis,:]
+    return multiply(a.ravel()[:, newaxis], b.ravel()[newaxis,:], out)
 
 # try to import blas optimized dot if available
+envbak = os.environ.copy()
 try:
     # importing this changes the dot function for basic 4 types
     # to blas-optimized versions.
+
+    # disables openblas affinity setting of the main thread that limits
+    # python threads or processes to one core
+    if 'OPENBLAS_MAIN_FREE' not in os.environ:
+        os.environ['OPENBLAS_MAIN_FREE'] = '1'
+    if 'GOTOBLAS_MAIN_FREE' not in os.environ:
+        os.environ['GOTOBLAS_MAIN_FREE'] = '1'
     from ._dotblas import dot, vdot, inner, alterdot, restoredot
 except ImportError:
     # docstrings are in add_newdocs.py
@@ -1054,6 +1098,10 @@ except ImportError:
         pass
     def restoredot():
         pass
+finally:
+    os.environ.clear()
+    os.environ.update(envbak)
+    del envbak
 
 def tensordot(a, b, axes=2):
     """
@@ -1401,6 +1449,11 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None):
     outer : Outer product.
     ix_ : Construct index arrays.
 
+    Notes
+    -----
+    .. versionadded:: 1.9.0
+    Supports full broadcasting of the inputs.
+
     Examples
     --------
     Vector cross-product.
@@ -1462,39 +1515,86 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None):
 
     """
     if axis is not None:
-        axisa, axisb, axisc=(axis,)*3
-    a = asarray(a).swapaxes(axisa, 0)
-    b = asarray(b).swapaxes(axisb, 0)
-    msg = "incompatible dimensions for cross product\n"\
-          "(dimension must be 2 or 3)"
-    if (a.shape[0] not in [2, 3]) or (b.shape[0] not in [2, 3]):
+        axisa, axisb, axisc = (axis,) * 3
+    a = asarray(a)
+    b = asarray(b)
+    # Move working axis to the end of the shape
+    a = rollaxis(a, axisa, a.ndim)
+    b = rollaxis(b, axisb, b.ndim)
+    msg = ("incompatible dimensions for cross product\n"
+           "(dimension must be 2 or 3)")
+    if a.shape[-1] not in (2, 3) or b.shape[-1] not in (2, 3):
         raise ValueError(msg)
-    if a.shape[0] == 2:
-        if (b.shape[0] == 2):
-            cp = a[0]*b[1] - a[1]*b[0]
+
+        # Create the output array
+    shape = broadcast(a[..., 0], b[..., 0]).shape
+    if a.shape[-1] == 3 or b.shape[-1] == 3:
+        shape += (3,)
+    dtype = promote_types(a.dtype, b.dtype)
+    cp = empty(shape, dtype)
+
+    # create local aliases for readability
+    a0 = a[..., 0]
+    a1 = a[..., 1]
+    if a.shape[-1] == 3:
+        a2 = a[..., 2]
+    b0 = b[..., 0]
+    b1 = b[..., 1]
+    if b.shape[-1] == 3:
+        b2 = b[..., 2]
+    if cp.ndim != 0 and cp.shape[-1] == 3:
+        cp0 = cp[..., 0]
+        cp1 = cp[..., 1]
+        cp2 = cp[..., 2]
+
+    if a.shape[-1] == 2:
+        if b.shape[-1] == 2:
+            # a0 * b1 - a1 * b0
+            multiply(a0, b1, out=cp)
+            cp -= a1 * b0
             if cp.ndim == 0:
                 return cp
             else:
-                return cp.swapaxes(0, axisc)
+                # This works because we are moving the last axis
+                return rollaxis(cp, -1, axisc)
         else:
-            x = a[1]*b[2]
-            y = -a[0]*b[2]
-            z = a[0]*b[1] - a[1]*b[0]
-    elif a.shape[0] == 3:
-        if (b.shape[0] == 3):
-            x = a[1]*b[2] - a[2]*b[1]
-            y = a[2]*b[0] - a[0]*b[2]
-            z = a[0]*b[1] - a[1]*b[0]
+            # cp0 = a1 * b2 - 0  (a2 = 0)
+            # cp1 = 0 - a0 * b2  (a2 = 0)
+            # cp2 = a0 * b1 - a1 * b0
+            multiply(a1, b2, out=cp0)
+            multiply(a0, b2, out=cp1)
+            negative(cp1, out=cp1)
+            multiply(a0, b1, out=cp2)
+            cp2 -= a1 * b0
+    elif a.shape[-1] == 3:
+        if b.shape[-1] == 3:
+            # cp0 = a1 * b2 - a2 * b1
+            # cp1 = a2 * b0 - a0 * b2
+            # cp2 = a0 * b1 - a1 * b0
+            multiply(a1, b2, out=cp0)
+            tmp = array(a2 * b1)
+            cp0 -= tmp
+            multiply(a2, b0, out=cp1)
+            multiply(a0, b2, out=tmp)
+            cp1 -= tmp
+            multiply(a0, b1, out=cp2)
+            multiply(a1, b0, out=tmp)
+            cp2 -= tmp
         else:
-            x = -a[2]*b[1]
-            y = a[2]*b[0]
-            z = a[0]*b[1] - a[1]*b[0]
-    cp = array([x, y, z])
+            # cp0 = 0 - a2 * b1  (b2 = 0)
+            # cp1 = a2 * b0 - 0  (b2 = 0)
+            # cp2 = a0 * b1 - a1 * b0
+            multiply(a2, b1, out=cp0)
+            negative(cp0, out=cp0)
+            multiply(a2, b0, out=cp1)
+            multiply(a0, b1, out=cp2)
+            cp2 -= a1 * b0
+
     if cp.ndim == 1:
         return cp
     else:
-        return cp.swapaxes(0, axisc)
-
+        # This works because we are moving the last axis
+        return rollaxis(cp, -1, axisc)
 
 #Use numarray's printing function
 from .arrayprint import array2string, get_printoptions, set_printoptions
@@ -2111,6 +2211,11 @@ def allclose(a, b, rtol=1.e-5, atol=1.e-8):
     x = array(a, copy=False, ndmin=1)
     y = array(b, copy=False, ndmin=1)
 
+    # make sure y is an inexact type to avoid abs(MIN_INT); will cause
+    # casting of x later.
+    dtype = multiarray.result_type(y, 1.)
+    y = array(y, dtype=dtype, copy=False)
+
     xinf = isinf(x)
     yinf = isinf(y)
     if any(xinf) or any(yinf):
@@ -2126,7 +2231,7 @@ def allclose(a, b, rtol=1.e-5, atol=1.e-8):
 
     # ignore invalid fpe's
     with errstate(invalid='ignore'):
-        r = all(less_equal(abs(x-y), atol + rtol * abs(y)))
+        r = all(less_equal(abs(x - y), atol + rtol * abs(y)))
 
     return r
 
@@ -2216,7 +2321,8 @@ def isclose(a, b, rtol=1.e-5, atol=1.e-8, equal_nan=False):
         cond[~finite] = (x[~finite] == y[~finite])
         if equal_nan:
             # Make NaN == NaN
-            cond[isnan(x) & isnan(y)] = True
+            both_nan = isnan(x) & isnan(y)
+            cond[both_nan] = both_nan[both_nan]
         return cond
 
 def array_equal(a1, a2):
@@ -2300,9 +2406,11 @@ def array_equiv(a1, a2):
     except:
         return False
     try:
-        return bool(asarray(a1 == a2).all())
-    except ValueError:
+        multiarray.broadcast(a1, a2)
+    except:
         return False
+
+    return bool(asarray(a1 == a2).all())
 
 
 _errdict = {"ignore":ERR_IGNORE,
@@ -2714,7 +2822,7 @@ class errstate(object):
 
 
 def _setdef():
-    defval = [UFUNC_BUFSIZE_DEFAULT, ERR_DEFAULT2, None]
+    defval = [UFUNC_BUFSIZE_DEFAULT, ERR_DEFAULT, None]
     umath.seterrobj(defval)
 
 # set the default values
@@ -2725,6 +2833,10 @@ nan = NaN = NAN
 False_ = bool_(False)
 True_ = bool_(True)
 
+from .umath import *
+from .numerictypes import *
 from . import fromnumeric
 from .fromnumeric import *
 extend_all(fromnumeric)
+extend_all(umath)
+extend_all(numerictypes)

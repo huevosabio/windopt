@@ -13,6 +13,13 @@ from __future__ import division, absolute_import, print_function
 
 import string
 import sys
+import warnings
+from number import Number
+
+from numpy import ModuleDeprecationWarning
+
+warnings.warn("The polytemplate module will be removed in Numpy 1.10.0.",
+              ModuleDeprecationWarning)
 
 polytemplate = string.Template('''
 from __future__ import division, absolute_import, print_function
@@ -281,15 +288,13 @@ class $name(pu.PolyBase) :
         return self.__floordiv__(other)
 
     def __truediv__(self, other) :
-        # there is no true divide if the rhs is not a scalar, although it
+        # there is no true divide if the rhs is not a Number, although it
         # could return the first n elements of an infinite series.
         # It is hard to see where n would come from, though.
-        if np.isscalar(other) :
-            # this might be overly restrictive
-            coef = self.coef/other
-            return self.__class__(coef, self.domain, self.window)
-        else :
-            return NotImplemented
+        if not isinstance(other, Number) or isinstance(other, bool):
+            form = "unsupported types for true division: '%s', '%s'"
+            raise TypeError(form % (type(self), type(other)))
+        return self.__floordiv__(other)
 
     def __floordiv__(self, other) :
         """Returns the quotient."""
@@ -378,20 +383,14 @@ class $name(pu.PolyBase) :
         return self.__rfloordiv__(other)
 
     def __rtruediv__(self, other) :
-        # there is no true divide if the rhs is not a scalar, although it
-        # could return the first n elements of an infinite series.
-        # It is hard to see where n would come from, though.
-        if len(self.coef) == 1 :
-            try :
-                quo, rem = ${nick}div(other, self.coef[0])
-            except :
-                return NotImplemented
-        return self.__class__(quo, self.domain, self.window)
+        # An instance of PolyBase is not considered a
+        # Number.
+        return NotImplemented
 
     def __rfloordiv__(self, other) :
         try :
             quo, rem = ${nick}div(other, self.coef)
-        except :
+        except:
             return NotImplemented
         return self.__class__(quo, self.domain, self.window)
 
@@ -738,7 +737,7 @@ class $name(pu.PolyBase) :
             then a minimal domain that covers the points `x` is chosen.  If
             ``[]`` the default domain ``$domain`` is used. The default
             value is $domain in numpy 1.4.x and ``None`` in later versions.
-            The ``'[]`` value was added in numpy 1.5.0.
+            The ``[]`` value was added in numpy 1.5.0.
         rcond : float, optional
             Relative condition number of the fit. Singular values smaller
             than this relative to the largest singular value will be
@@ -781,10 +780,10 @@ class $name(pu.PolyBase) :
         """
         if domain is None:
             domain = pu.getdomain(x)
-        elif domain == []:
+        elif type(domain) is list and len(domain) == 0:
             domain = $domain
 
-        if window == []:
+        if type(window) is list and len(window) == 0:
             window = $domain
 
         xnew = pu.mapdomain(x, domain, window)

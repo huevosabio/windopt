@@ -3,7 +3,7 @@ from app import app
 
 @app.route('/')
 def home():
-    return redirect('/windyday')
+    return app.send_static_file('index.html')
     
 @app.route('/windyday')
 def windyday():

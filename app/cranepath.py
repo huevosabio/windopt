@@ -4,13 +4,36 @@ import flask
 from flask import Flask, request, redirect, url_for, render_template, jsonify
 from app import app
 from werkzeug.utils import secure_filename
-from windscripts import *
+from windscripts.costing import *
+from windscripts.geopy import *
+from windscripts.tsp import *
 import fiona
 import pandas as pd
+
+#NOTES:
+#This implementation requires heavy use of a file system which in turns has all
+#the nuances of permission management. Thus, in a more refined version, it would
+#be obviously necessary to use a DB system instead of a local file system.
+#Also, currently most GIS operations are handled by OGR/GDAL bindings. A proper
+#solution would take advantage of Rasterio/Shapely/Fiona to avoid having to 
+#make system calls and obfuscated code. Another reason, OGR/GDAL doesn't give
+#warning when there is a failure to create a new file, instead it just returns
+#a NoneType
 
 SHP_DIR = os.path.join(app.config['UPLOAD_FOLDER'],'shapefiles')
 RASTER_DIR = os.path.join(app.config['UPLOAD_FOLDER'],'rasters')
 PATHS_DIR = os.path.join(app.config['UPLOAD_FOLDER'],'paths')
+
+def clear_uploads(DIR):
+    shpdir = DIR
+    if os.path.exists(shpdir):
+        for the_file in os.listdir(shpdir):
+            file_path = os.path.join(shpdir, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception, e:
+                print e
 
 @app.route('/cranepath/layerlist',methods=['GET'])
 def list_layers():
@@ -29,38 +52,55 @@ def send_layer_file():
 
 @app.route('/cranepath/tsp',methods=['POST'])
 def tsp_sol():
-    #Set Shapefile DIR
+    clear_uploads(RASTER_DIR)
+    clear_uploads(PATHS_DIR)
     #Create Layer Dictionary and identify turbines
+    print "we are at tsp_sol()"
     turbines = {}
-    layerdict = request.json.copy()
-    
+    try:
+        layerdict = request.json
+    except Exception, e:
+        print e
+    print "we created the layerdict"
     for layer in layerdict:
+        print layer
         if layerdict[layer]['interpretation'] == 'turbines':
             turbines['file'] =SHP_DIR+'/'+layer+'.shp'
             turbines['cost'] = float(layerdict[layer]['cost'])
-            del layerdict[layer]
+            turbines['name'] = layer
         elif layerdict[layer]['interpretation'] == 'boundary':
             layerdict[layer]['logic'] = 'boundary'
             layerdict[layer]['cd'] = float(layerdict[layer]['cost'])
             layerdict[layer]['cc'] = 0.0
+            layerdict[layer]['file'] =SHP_DIR+'/'+layer+'.shp'
         else:
-            layerdict[layer]['cc'] = layerdict[layer]['cost']
+            layerdict[layer]['cc'] = float(layerdict[layer]['cost'])
+            layerdict[layer]['cd'] = 0.0
+            layerdict[layer]['file'] =SHP_DIR+'/'+layer+'.shp'
+    
+    
+    del layerdict[turbines['name']]
             
     #Create Cost Ratser
-    rasterfn = RASTER_DIR+'costraster.tif'
-    geopy.create_cost_raster(rasterfn,layerdict,50.0)
+    print "cost raster"
+    rasterfn = RASTER_DIR+'/costraster.tif'
+    create_cost_raster(rasterfn,layerdict,50.0)
     
     #Create Complete NetworkX graph
-    complete = geopy.create_nx_graph(turbines['file'],rasterfn,PATHS_DIR+'/',layerdict)
+    print 'graph'
+    
+    complete = create_nx_graph(turbines['file'],rasterfn,PATHS_DIR+'/',layerdict)
     graph = complete[0]
     pos = complete[1]
     
     #Solve the graph
-    solved = tsp.tsp_ca(graph)
+    print 'tsp'
+    solved = tsp_ca(graph)
     #Detailed Path Structure
-    cost, solved = costing.get_total_cost(solved,pos, shpfiles,PATHS_DIR+'/',rasterfn)
+    cost, solved = get_total_cost(solved,pos, layerdict,PATHS_DIR+'/',rasterfn)
     
     #Save to GeoJSON
+    print 'GeoJson'
     goodpos = {}
     with fiona.open(turbines['file']) as s:
         for d in s:
@@ -72,6 +112,7 @@ def tsp_sol():
         json.dump(schedule,j)
     
     #Save to CSV
+    print 'csv'
     activities = []
     for part in schedule['features']: activities.append(part['properties'])
     
@@ -81,4 +122,4 @@ def tsp_sol():
 
 @app.route('/solution',methods=['GET'])
 def solved():
-    return app.send_static_file('data.txt')
+    return app.send_static_file('cranepath.html')

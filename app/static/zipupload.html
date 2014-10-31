@@ -171,21 +171,13 @@
     </div><!-- End Content Wrapper -->
   </div><!-- End Page Wrapper -->
 <script>
-    var parameters = [];
       $('#uploadBTN').click(function(){
-        $('.tier2').empty();
-        $('#loading').show();
-        $('#fileUpload').hide();
-          
+          console.log('here!');
           var formData = new FormData($('form')[0]);
           $.ajax({
               url: 'cranepath/zipupload',  //Server script to process data
               type: 'POST',
-              data: formData,
-              //Options to tell jQuery not to process data or worry about content-type.
-              cache: false,
-              contentType: false,
-              processData: false
+              data: formData
           })
           .done(function(){
             window.location.replace('/layers');
