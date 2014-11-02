@@ -14,3 +14,4 @@ from app import visualization
 from app import lostshifts
 from app import cranetest
 from app import cranepath
+from app import auth

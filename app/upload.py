@@ -2,6 +2,7 @@ import os
 import flask
 from flask import Flask, request, redirect, url_for, render_template
 from app import app
+from app.auth import *
 from werkzeug.utils import secure_filename
 import zipfile
 
@@ -25,6 +26,7 @@ def clear_shpfiles():
                 print e
 
 @app.route('/windyday/upload', methods=['POST'])
+@auth.login_required
 def upload_file():
     print "At upload"
     if request.method == 'POST':
@@ -37,6 +39,7 @@ def upload_file():
             return flask.jsonify(result={"status": 200})
             
 @app.route('/cranepath/zipupload',methods=['POST'])
+@auth.login_required
 def upload_ziplfile():
     clear_shpfiles()
     print "At upload"

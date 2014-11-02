@@ -1,9 +1,10 @@
 from flask import Flask, request, redirect, url_for, jsonify
 import os
 from app import app
-
+from app.auth import *
 
 @app.route('/cranetest')
+@auth.login_required
 def cranetest():
     """This is a predefined test to be able to test the output of our
     crane optimization software."""

@@ -6,6 +6,7 @@ import numpy as np
 from app import app
 import scipy.stats as stats
 import plotly.plotly as py
+from app.auth import *
 
 def df_to_iplot(df):
     
@@ -25,6 +26,7 @@ def df_to_iplot(df):
     return lines_plotly
 
 @app.route('/visualize')
+@auth.login_required
 def visualize():
     pd.set_option('display.mpl_style', 'default') # Make the graphs a bit prettier
     plt.rcParams['figure.figsize'] = (15, 5)

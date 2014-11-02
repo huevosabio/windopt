@@ -7,6 +7,7 @@ from app import app
 import scipy.stats as stats
 import plotly.plotly as py
 from flask_wtf.csrf import CsrfProtect
+from app.auth import *
 
 #csrf = CsrfProtect(app)
 
@@ -23,6 +24,7 @@ def windDayProb(shift,dayLength,maxSpeed,param):
 
 #@csrf.exempt
 @app.route('/lostShifts',methods=['POST'])
+@auth.login_required
 def lostShifts():
     #Probability of a Wind Day
     wdprob = windDayProb(request.json['consecutive'],request.json['workWindow'],request.json['maxWS'],request.json['params'])

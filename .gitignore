@@ -4,6 +4,6 @@
 *.dbf
 *.csv
 *.proj
-
+config.json
 #Directories
 tmp/**

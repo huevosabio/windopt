@@ -9,6 +9,7 @@ from windscripts.geopy import *
 from windscripts.tsp import *
 import fiona
 import pandas as pd
+from app.auth import *
 
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all
@@ -36,6 +37,7 @@ def clear_uploads(DIR):
                 print e
 
 @app.route('/cranepath/layerlist',methods=['GET'])
+@auth.login_required
 def list_layers():
     result = {}
     layers = []
@@ -51,6 +53,7 @@ def send_layer_file():
     
 
 @app.route('/cranepath/tsp',methods=['POST'])
+@auth.login_required
 def tsp_sol():
     clear_uploads(RASTER_DIR)
     clear_uploads(PATHS_DIR)
