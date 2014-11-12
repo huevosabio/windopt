@@ -1,10 +1,16 @@
 import os
 import flask
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, g
 from app import app
-from app.auth import *
+from app.dbmodel import *
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
 import zipfile
+from windscripts.wrangling import *
+from cStringIO import StringIO
+from bson.binary import Binary
+import cPickle
+import time
 
 
 ALLOWED_EXTENSIONS = set(['csv'])
@@ -25,7 +31,7 @@ def clear_shpfiles():
             except Exception, e:
                 print e
 
-@app.route('/windyday/upload', methods=['POST'])
+@app.route('/api/windyday/upload', methods=['POST'])
 @auth.login_required
 def upload_file():
     print "At upload"
@@ -35,7 +41,25 @@ def upload_file():
         if file and allowed_file(file.filename,ALLOWED_EXTENSIONS):
             print "File is allowed"
             #filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'winddata.csv'))
+            s = StringIO(file.read())
+            project, created = Project.objects.get_or_create(name='default',user=g.user)
+            #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
+            #else: project.windRaw.replace(file, content_type='text/csv')
+            t0 = time.time()
+            windseries, windcolumn = get_train_set(s)
+            t1 = time.time()
+            if project.windSeasonality:
+               project.windSeasonality.replace(plot_seasonality(windseries),content_type='image/png')
+            else: project.windSeasonality.put(plot_seasonality(windseries),content_type='image/png')
+            t2 = time.time()
+            project.save_TMatrix(train_mcm_hm(windseries,windcolumn))
+            t3 = time.time()
+            project.save()
+            t4 = time.time()
+            print 'train set = ' + str(t1-t0)
+            print 'seasonality plot = ' + str(t2-t1)
+            print 'tmatrix = ' +str(t3-t2)
+            print 'save = ' + str(t4-t3)
             return flask.jsonify(result={"status": 200})
             
 @app.route('/cranepath/zipupload',methods=['POST'])

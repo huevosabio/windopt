@@ -7,7 +7,7 @@ from app import app
 import scipy.stats as stats
 import plotly.plotly as py
 from flask_wtf.csrf import CsrfProtect
-from app.auth import *
+from app.dbmodel import *
 
 #csrf = CsrfProtect(app)
 

@@ -1,4 +1,15 @@
-var app = angular.module('Dashboard', ['ui.bootstrap', 'ngCookies']);
+var app = angular.module('Dashboard', ['ui.bootstrap', 'ngCookies','ngRoute'])
+.config(['$routeProvider', function($routeProvider) {
+        $routeProvider
+            .when('/windday',{
+                templateUrl: 'static/views/upload.html'
+            })
+            .when('/secondPage', {
+                templateUrl: '../static/secondPage.html',
+                controller: 'SecondController'
+            })
+            .otherwise({ redirectTo: '/' });
+    }]);
 
 /**
  * Loading Directive

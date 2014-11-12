@@ -16,64 +16,64 @@
   <link rel="stylesheet" type="text/css" href="static/css/themes/red.css">
   -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script type="text/javascript" src="static/js/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
   <script type="text/javascript" src="static/js/angular-cookies.js"></script>
   <script type="text/javascript" src="static/js/ng-bootstrap-tpls.min.js"></script>
   <script type="text/javascript" src="static/js/angular/bootstrap.js"></script>
 
 </head>
 <body ng-controller="MasterCtrl">
-  <div id="page-wrapper" ng-class="{'active': toggle}" ng-cloak>
+    <div id="page-wrapper" ng-class="{'active': toggle}" ng-cloak>
 
     <!-- Sidebar -->
 
-    <div id="sidebar-wrapper">
-      <ul class="sidebar">
-        <li class="sidebar-main">
-          <a href="#" ng-click="toggleSidebar()">
-            WindyOps
-            <span class="menu-icon glyphicon glyphicon-transfer"></span>
-          </a>
-        </li>
-        <li class="sidebar-title"><span>NAVIGATION</span></li>
-        <li class="sidebar-list">
-          <a href="/windyday">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
-        </li>
-        <li class="sidebar-list">
-          <a href="/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
-        </li>
-        <li class="sidebar-title separator"><span>QUICK LINKS</span></li>
-        <li class="sidebar-list">
-          <a href="http://huevosabio.com/" target="_blank">Blog <span class="menu-icon fa fa-external-link"></span></a>
-        </li>
-      </ul>
-      <div class="sidebar-footer">
-        <div class="col-xs-4">
-          <a href="https://github.com/huevosabio/windDayApp" target="_blank">
-            Github
-          </a>
+        <div id="sidebar-wrapper">
+            <ul class="sidebar">
+                <li class="sidebar-main">
+                    <a href="#" ng-click="toggleSidebar()">
+                    WindyOps
+                    <span class="menu-icon glyphicon glyphicon-transfer"></span>
+                    </a>
+                </li>
+                <li class="sidebar-title"><span>NAVIGATION</span></li>
+                <li class="sidebar-list">
+                    <a href="/">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                </li>
+                <li class="sidebar-list">
+                    <a href="/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
+                </li>
+                <li class="sidebar-title separator"><span>QUICK LINKS</span></li>
+                <li class="sidebar-list">
+                    <a href="http://huevosabio.com/" target="_blank">Blog <span class="menu-icon fa fa-external-link"></span></a>
+                </li>
+            </ul>
+        <div class="sidebar-footer">
+            <div class="col-xs-4">
+              <a href="https://github.com/huevosabio/windDayApp" target="_blank">
+                Github
+              </a>
+            </div>
+            <div class="col-xs-4">
+                <a href="#" target="_blank">
+                    About
+                </a>
+            </div>
+            <div class="col-xs-4">
+              <a href="#">
+                Support
+              </a>
+            </div>
         </div>
-        <div class="col-xs-4">
-          <a href="#" target="_blank">
-            About
-          </a>
         </div>
-        <div class="col-xs-4">
-          <a href="#">
-            Support
-          </a>
-        </div>
-      </div>
-    </div>
 
     <!-- End Sidebar -->
 
-    <div id="content-wrapper">
-      <div class="page-content">
+        <div id="content-wrapper">
+            <div class="page-content">
 
-        <!-- Header Bar -->
+            <!-- Header Bar -->
 
-        <div class="row header">
+                <div class="row header">
           <div class="col-xs-12">
             <div class="meta pull-left">
               <div class="page">
@@ -134,290 +134,17 @@
           </div>
         </div>
 
-        <!-- End Header Bar -->
+            <!-- End Header Bar -->
 
-        <!-- Main Content -->
-      <div class="row" id="results" hidden>
-          <div class="col-lg-3 col-md-6 col-xs-12">
-            <div class="widget">
-              <div class="widget-body">
-                <div class="widget-icon green pull-left">
-                  <i class="fa fa-users"></i>
-                </div>
-                <div class="widget-content pull-left">
-                  <div class="title">80</div>
-                  <div class="comment">Users</div>
-                </div>
-                <div class="clearfix"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 col-xs-12">
-            <div class="widget">
-              <div class="widget-body">
-                <div class="widget-icon red pull-left">
-                  <i class="fa fa-tasks"></i>
-                </div>
-                <div class="widget-content pull-left">
-                  <div class="title">16</div>
-                  <div class="comment">Servers</div>
-                </div>
-                <div class="clearfix"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 col-xs-12">
-            <div class="widget">
-              <div class="widget-body">
-                <div class="widget-icon orange pull-left">
-                  <i class="fa fa-sitemap"></i>
-                </div>
-                <div class="widget-content pull-left">
-                  <div class="title">225</div>
-                  <div class="comment">Documents</div>
-                </div>
-                <div class="clearfix"></div>
-              </div>
-            </div>
-          </div>
-          <div class="spacer visible-xs"></div>
-          <div class="col-lg-3 col-md-6 col-xs-12">
-            <div class="widget">
-              <div class="widget-body">
-                <div class="widget-icon blue pull-left">
-                  <i class="fa fa-support"></i>
-                </div>
-                <div class="widget-content pull-left">
-                  <div class="title">62</div>
-                  <div class="comment">Tickets</div>
-                  </div>
-                <div class="clearfix"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-6">
-            <div class="widget">
-              <div class="widget-title">
-                  <i class="fa fa-tasks"></i> Historical Data and Wind DayCriteria
-              </div>
-              <div class="widget-body medium">
-              <div id="fileUpload">
-                <div class="message">
-                    Please upload a properly formatted CSV file.
-                </div><br>
-                <div class="form-group row">
-                  <form enctype="multipart/form-data">
-                    <div class="col-sm-5">
-                        <input name="file" type="file"  id="csvFileUpload" accept=".csv"  class="btn"/>
-                     </div>
-                    <div class="col-sm-5">
-                      <input type="button" id='uploadBTN' value="Upload" class="btn btn-default pull-right" />
-                    </div>
-                  </form>
-               </div>
-               <div class="image"><img src="static/img/properformat.png"/></div>
-              </div>
-              
-              <div hidden id="loading">
-                <loading></loading>
-              </div>
-              <div hidden id="windCriteria">
-                <div class="message">Please select the appropiate Wind Day Criteria</div><br>
-              <form role="form" id="windDayForm" action="/lostShifts">
-                <div class="form-group col-sm-5">
-                  <input class="form-control" type="number" name="workWindow" onkeypress="return isNumberKey(event)" placeholder="Shift length in hours"/>
-                </div>
-                <div class="form-group col-sm-5">
-                  <div class="input-group  pull-right">
-                    <input class="form-control" type="number" name="consecutive" onkeypress="return isNumberKey(event)" placeholder="Maximum wind hours"/>
-                  </div>
-                </div>
-                <div class="form-group col-sm-5">
-                  <input class="form-control" type="decimal" name="maxWS" onkeypress="return isDecimalKey(event)" placeholder="Maximum wind speed"/>
-                </div>
-                <div class="form-group col-sm-5">
-                  <input class="form-control" type="number" name="projectLength" onkeypress="return isNumberKey(event)" placeholder="Project length in days"/>
-                </div>
-                <div class="col-sm-5"><button type="submit" id="windDays" class="btn btn-default">Estimate Wind Days</button></div>
-            </form>
-              </div>
-            </div>
-          </div>
-          </div>
-          <div hidden class="col-lg-6 tier3">
-            <div class="widget">
-              <div class="widget-title">
-                <i class="fa fa-bar-chart-o"></i> Expected Wind Days by Confidence
-              </div>
-              <div class="widget-body medium no-padding" id="expWD">
-              </div>
-            </div>
-          </div>
-        </div>
-          <div hidden class="row graphs">
-            <div class="col-lg-6">
-              <div class="widget">
-                <div class="widget-title">
-                  <i class="fa fa-bar-chart-o"></i> Weibull Distribution
-                </div>
-                <div class="widget-body medium no-padding tier2" id="weibull">
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div class="widget">
-                <div class="widget-title">
-                  <i class="fa fa-bar-chart-o"></i> Historical Speeds
-                </div>
-                <div class="widget-body medium no-padding tier2" id="historical">
-                </div>
-              </div>
-            </div>
-          </div>
-          <div hidden class="row graphs">
-            <div class="col-lg-6">
-              <div class="widget">
-                <div class="widget-title">
-                  <i class="fa fa-bar-chart-o"></i> Monthly Median Wind Speed
-                </div>
-                <div class="widget-body medium no-padding tier2" id="byMonth">
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div class="widget">
-                <div class="widget-title">
-                  <i class="fa fa-bar-chart-o"></i> Hourly Median Wind Speed
-                </div>
-                <div class="widget-body medium no-padding tier2" id="byHour">
-                </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <!-- Main Content -->
+            <div ng-view></div>
+            <!-- End Main Content -->
+            </div><!-- End Page Content -->
 
         <!-- End Main Content -->
 
-      </div><!-- End Page Content -->
-    </div><!-- End Content Wrapper -->
-  </div><!-- End Page Wrapper -->
- 
-  <script>
-      $(':file').change(function(){
-      var input = $('#csvFileUpload');
-      var file = this.files[0];
-      var name = file.name;
-      var size = file.size;
-      var type = file.type;
-      if (type != 'text/csv' && type != 'application/vnd.ms-excel'){
-          input.replaceWith( input = input.clone( true ) );
-          alert('Wrong File Type!'+'You Uploaded a ' + type + ' file. Please upload a CSV file.');
-      }
-  });
-    
-  </script>
-  <script>
-    var parameters = [];
-      $('#uploadBTN').click(function(){
-        $('.tier2').empty();
-        $('#loading').show();
-        $('#fileUpload').hide();
-          
-          var formData = new FormData($('form')[0]);
-          $.ajax({
-              url: 'windyday/upload',  //Server script to process data
-              type: 'POST',
-              /*xhr: function() {  // Custom XMLHttpRequest
-                  var myXhr = $.ajaxSettings.xhr();
-                  if(myXhr.upload){ // Check if upload property exists
-                      myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
-                  }
-                  return myXhr;
-              },
-              */
-              //Ajax events
-              //beforeSend: beforeSendHandler,
-              //success: completeHandler,
-              //error: errorHandler,
-              // Form data
-              data: formData,
-              //Options to tell jQuery not to process data or worry about content-type.
-              cache: false,
-              contentType: false,
-              processData: false
-          })
-          .done(function(){
-              $.getJSON( "/visualize", function( data ) {
-                  var images = {};
-                  $.each( data.images, function(key, val) {
-                      images[key] = '<img id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  val + '" width="100%"></img>';
-                  });
-                  parameters = data.parameters;
-                  $('#tier2').empty();
-                  $('#historical').html(images['historical']);
-                  $('#weibull').html(images['weibull']);
-                  $('#byMonth').html(images['byMonth']);
-                  $('#byHour').html(images['byHour']);
-                  $('#loading').hide();
-                  
-                  $('#windCriteria').show();
-                  $('.graphs').show();
-                  //$('#parameters').append(data.parameters);
-                  
-              });
-          });
-      });
-  </script>
-  <script>
-  $( "#windDayForm" ).submit(function( event ) {
- 
-    // Stop form from submitting normally
-    event.preventDefault();
- 
-    // Get some values from elements on the page:
-    var $form = $( this ),
-      consecutive = parseInt($form.find("input[name='consecutive']").val()),
-      maxWS = parseFloat($form.find("input[name='maxWS']").val()),
-      workWindow = parseInt($form.find( "input[name='workWindow']" ).val()),
-      projectLength = parseInt($form.find("input[name='projectLength']").val()),
-      action = $form.attr("action"),
-      message = {"consecutive": consecutive, "maxWS": maxWS, "workWindow": workWindow,"projectLength":projectLength, "params": parameters};
-    console.log(message);
-    // Send the data using post
-    var posting = $.ajax({
-      url: action,
-      type:'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(message),
-      dataType: 'json'
-    });
-    
-    //var posting = $.post( url, {consecutive: consecutive, maxWS: maxWS, workWindow: workWindow, params: parameters},'json' );
-  
-    // Put the results in a div
-    posting.done(function( data ) {
-      var ploturl = data.ploturl;
-      $( "#expWD" ).empty().html( '<img id="igraph" class="graph" scrolling="no" height="100%" width="100%" src="'+  ploturl + '" width="100%"></iframe>' );
-      $('.tier3').show();
-    });
-  });
-</script>
-<script>
-      function isNumberKey(evt){
-          var charCode = (evt.which) ? evt.which : event.keyCode;
-          if (charCode > 31 && (charCode < 48 || charCode > 57))
-              return false;
-          return true;
-      }
-  
-      function isDecimalKey(evt){
-          var charCode = (evt.which) ? evt.which : event.keyCode;
-          if (charCode > 31 && (charCode != 46 &&(charCode < 48 || charCode > 57)))
-              return false;
-          return true;
-      }
-  </script>
+        </div><!-- End Content Wrapper -->
+        
+    </div><!-- End Page Wrapper -->
 </body>
 </html>
