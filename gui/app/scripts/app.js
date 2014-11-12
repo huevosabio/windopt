@@ -21,6 +21,10 @@ angular
   ])
   .config(function ($routeProvider) {
     $routeProvider
+      .when('/upload', {
+        templateUrl: 'views/upload.html',
+        controller: 'UploadCtrl'
+      })
       .when('/windday', {
         templateUrl: 'views/windday.html',
         controller: 'WinddayCtrl'

@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', [ '$scope', '$upload', function($scope, $upload) {
+  .controller('UploadCtrl', [ '$scope', '$upload', function($scope, $upload,$location) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -31,7 +31,7 @@ angular.module('windopsApp')
         $scope.progress[i-1] = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
       }).success(function(data, status, headers, config) {
         // file is uploaded successfully
-        console.log(data);
+        $location.path('/windday');
       });
       //.error(...)
       //.then(success, error, progress); 
