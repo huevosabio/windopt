@@ -52,7 +52,7 @@ def get_winddays():
     try:
         project = Project.objects.get(name='default',user=g.user)
         if project.windTMatrix:
-            winddays = estimate_winddays(project.windHeight,request.json['height'],request.json['maxws'],request.json['maxhours'],request.json['starthr'],request.json['daylength'],project.get_TMatrix(),request.json['certainty'])
+            winddays = estimate_winddays(project.windHeight,request.json['height'],request.json['maxws'],request.json['maxhours'],request.json['starthr'],request.json['daylength'],project.get_TMatrix(),request.json['certainty'],consecutive=request.json['consecutive'])
             print winddays
             return jsonify(result={"exists": True,"byMonth":winddays[0],"cumulative":winddays[1]})
         else:
@@ -66,7 +66,7 @@ def get_risks():
     try:
         project = Project.objects.get(name='default',user=g.user)
         if project.windTMatrix:
-            risks = risk_by_hour_and_month(project.windHeight,request.json['height'],request.json['maxws'],request.json['maxhours'],request.json['daylength'],project.get_TMatrix())
+            risks = risk_by_hour_and_month(project.windHeight,request.json['height'],request.json['maxws'],request.json['maxhours'],request.json['daylength'],project.get_TMatrix(),consecutive=request.json['consecutive'])
             return jsonify(result={"exists": True,"risks":risks})
         else:
             return jsonify(result={"exists": False})
