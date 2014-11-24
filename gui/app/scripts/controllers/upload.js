@@ -8,7 +8,8 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', [ '$scope', '$upload', function($scope, $upload,$location) {
+  .controller('UploadCtrl', [ '$scope', '$upload','$location',
+  function($scope, $upload, $location) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -20,8 +21,8 @@ angular.module('windopsApp')
         method: 'POST',
         //headers: {'header-key': 'header-value'},
         //withCredentials: true,
-        data: {myObj: $scope.myModelObj},
-        file: file, // or list of files ($files) for html5 only
+        data: {height: $scope.measuredHeight},
+        file: file // or list of files ($files) for html5 only
         //fileName: 'doc.jpg' or ['1.jpg', '2.jpg', ...] // to modify the name of the file(s)
         // customize file formData name ('Content-Disposition'), server side file variable name. 
         //fileFormDataName: myFile, //or a list of names for multiple files (html5). Default is 'file' 
