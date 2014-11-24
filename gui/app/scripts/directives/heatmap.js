@@ -71,7 +71,7 @@ angular.module('windopsApp')
 
         tooltip: {
             formatter: function () {
-                return 'Median wind speed the month of '+'<b>' + 
+                return 'Average wind speed the month of '+'<b>' + 
                 this.series.xAxis.categories[this.point.x] + '</b><br> at <b>' 
                 + this.series.yAxis.categories[this.point.y]+ '</b>:<br><b>' +
                 this.point.value +' m/s</b>';
