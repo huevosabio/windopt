@@ -15,12 +15,12 @@ angular.module('windopsApp')
       items: '='
     },
     controller: function ($scope, $element, $attrs) {
-      console.log(2);
+      //console.log(2);
 
     },
     template: '<div id="container" style="margin: 0 auto">not working</div>',
     link: function (scope, element, attrs) {
-      console.log(3);
+      //console.log(3);
       var data = scope.items;
       var chart = new Highcharts.Chart({
         
@@ -55,8 +55,18 @@ angular.module('windopsApp')
         },
 
         colorAxis: {
-            minColor: '#FFFFFF',
-            maxColor: '#A00000'
+            stops: [
+                [0, '#3060cf'],
+                [0.5, '#fffbbc'],
+                [0.9, '#c4463a'],
+                [1, '#c4463a']
+            ],
+            startOnTick: false,
+            endOnTick: false,
+            labels: {
+                format: '{value} m/s'
+            }
+        
         },
         
         credits: {

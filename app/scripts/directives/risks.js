@@ -15,12 +15,12 @@ angular.module('windopsApp')
       items: '='
     },
     controller: function ($scope, $element, $attrs) {
-      console.log(2);
+      //onsole.log(2);
 
     },
     template: '<div id="risks" style="margin: 0 auto">not working</div>',
     link: function (scope, element, attrs) {
-      console.log(3);
+      //console.log(3);
       var data = scope.items;
       var chart = new Highcharts.Chart({
         
@@ -55,8 +55,18 @@ angular.module('windopsApp')
         },
 
         colorAxis: {
-            minColor: '#FFFFFF',
-            maxColor: '#A00000'
+            stops: [
+                [0, '#3060cf'],
+                [0.5, '#fffbbc'],
+                [0.9, '#c4463a'],
+                [1, '#c4463a']
+            ],
+            startOnTick: false,
+            endOnTick: false,
+            labels: {
+                format: '{value}'
+            }
+        
         },
         
         credits: {
@@ -74,7 +84,7 @@ angular.module('windopsApp')
                 return 'Probability of Wind Day the month of '+'<b>' + 
                 this.series.xAxis.categories[this.point.x] + '</b><br> if shift starts at: <b>' 
                 + this.series.yAxis.categories[this.point.y]+ '</b>:<br><b>' +
-                this.point.value +' m/s</b>';
+                this.point.value +'</b>';
             }
         },
 

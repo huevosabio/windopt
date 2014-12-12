@@ -15,12 +15,12 @@ angular.module('windopsApp')
       items: '='
     },
     controller: function ($scope, $element, $attrs) {
-      console.log(2);
+      //console.log(2);
 
     },
     template: '<div id="container2" style="margin: 0 auto">not working</div>',
     link: function (scope, element, attrs) {
-      console.log(scope);
+      //console.log(scope);
       var data = scope.items;
       var chart = new Highcharts.Chart({
         chart: {
@@ -62,9 +62,6 @@ angular.module('windopsApp')
         series: [{
             name: 'By Month',
             data: data.byMonth
-        }, {
-            name: 'Cumulative',
-            data: data.cumulative
         }]
     });
       scope.$watch("items", function (newValue) {
