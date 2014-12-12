@@ -27,7 +27,7 @@ angular.module('windopsApp')
       $scope.seasonality = data.result.seasonality;
     })
     .error(function(data, status, headers, config) {
-      console.log(data);
+      //console.log(data);
     });
     
     $scope.estimate = function(){
@@ -39,7 +39,7 @@ angular.module('windopsApp')
         $scope.expectedLoaded = true;
       })
       .error(function(data,status,headers,config){
-        console.log(data);
+        //console.log(data);
       });
       
       $http.post('/api/windday/risks',$scope.conditions)
@@ -48,7 +48,7 @@ angular.module('windopsApp')
         $scope.risksLoaded = true;
       })
       .error(function(data,status,headers,config){
-        console.log(data);
+        //console.log(data);
       });
     };
     
