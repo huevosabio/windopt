@@ -43,7 +43,7 @@ def upload_file():
             print "File is allowed"
             #filename = secure_filename(file.filename)
             s = StringIO(file.read())
-            project, created = Project.objects.get_or_create(name='default',user=g.user)
+            project, created = Project.objects.get_or_create(name='default')
             #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
             #else: project.windRaw.replace(file, content_type='text/csv')
             project.windHeight = int(request.values['height'])
@@ -63,7 +63,7 @@ def upload_file():
             print 'save = ' + str(t4-t3)
             return flask.jsonify(result={"status": 200})
             
-@app.route('/cranepath/zipupload',methods=['POST'])
+@app.route('/api/cranepath/zipupload',methods=['POST'])
 @auth.login_required
 def upload_ziplfile():
     clear_shpfiles()

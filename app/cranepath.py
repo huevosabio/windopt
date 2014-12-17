@@ -36,7 +36,7 @@ def clear_uploads(DIR):
             except Exception, e:
                 print e
 
-@app.route('/cranepath/layerlist',methods=['GET'])
+@app.route('/api/cranepath/layerlist',methods=['GET'])
 @auth.login_required
 def list_layers():
     result = {}
@@ -52,7 +52,7 @@ def send_layer_file():
     return  app.send_static_file('layerlist.html')
     
 
-@app.route('/cranepath/tsp',methods=['POST'])
+@app.route('/api/cranepath/tsp',methods=['POST'])
 @auth.login_required
 def tsp_sol():
     clear_uploads(RASTER_DIR)
@@ -111,6 +111,9 @@ def tsp_sol():
     
     schedule = get_geojson(solved,turbines['cost'],goodpos)
     
+    
+    if os.path.exists(os.path.join(app.config['STATIC'], 'schedule.json')):
+        os.remove(os.path.join(app.config['STATIC'], 'schedule.json'))
     with open(os.path.join(app.config['STATIC'], 'schedule.json'),'w') as j:
         json.dump(schedule,j)
     
@@ -123,6 +126,10 @@ def tsp_sol():
     
     return jsonify({'result':'Success'})
 
-@app.route('/solution',methods=['GET'])
+@app.route('/api/cranepath/schedule',methods=['GET'])
+@auth.login_required
 def solved():
-    return app.send_static_file('cranepath.html')
+    result = {}
+    with open(os.path.join(app.config['STATIC'], 'schedule.json'),'r') as j:
+        result['schedule'] = json.load(j)
+    return jsonify(result)
