@@ -45,7 +45,8 @@
                 <div style="clear: both;"></div> 
             </div>
             <div class="widget-body medium no-padding">
-               <div class="heatmap" items="seasonality" style="height: 100%; width: 100%; margin: 0 auto"></div>
+                <div ng-if="!yearlyLoaded"><loading></loading></div>
+               <div class="heatmap" items="seasonality" ng-if="yearlyLoaded" style="height: 100%; width: 100%; margin: 0 auto"></div>
             </div>
         </div>
     </div>
