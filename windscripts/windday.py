@@ -143,15 +143,15 @@ def transform_height(originalHeight,targetHeight,windspeed,a=0.143):
     targetSpeed = windspeed*(float(originalHeight)/targetHeight)**a
     return targetSpeed
 
-def estimate_winddays(measureHeight,height,maxws,maxhours,starthour,daylength,tmatrix,certainty):
+def estimate_winddays(measureHeight,height,maxws,maxhours,starthour,daylength,tmatrix,certainty,consecutive=True):
     #TODO: Improve this such that it is based on the projects actual timeline
     #TODO: Improve this with actual workdays per month
     maxws = transform_height(measureHeight,height,maxws)
     monthlyLoss = []
     cumulative = []
     for month in range(12):
-        p = estimate_windday(starthour,daylength,month,tmatrix,maxhours,maxws)
-        monthlyLoss.append(float(stats.binom.ppf([certainty],20,p)))
+        p = estimate_windday(starthour,daylength,month,tmatrix,maxhours,maxws,consecutive=consecutive)
+        monthlyLoss.append(float(stats.binom.ppf([certainty],25,p)))
         cumulative.append(float(np.array(monthlyLoss).sum()))
     return monthlyLoss,cumulative
 

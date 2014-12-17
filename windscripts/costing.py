@@ -1,13 +1,11 @@
 from geopy import *
 import pandas as pd
 
-def get_path_cost(geopath,layerDict):
+def get_path_cost(geopath,layerDict,walkCost):
     costDetail = {}
     costDetail['total'] =0.0
     costDetail['CraneWalk'] = 0.0
     costDetail['Crossing'] = 0.0
-    #get default cranewalk cost SHOULD BE IMPROVED
-    walkCost = layerDict[layerDict.keys()[0]]['cd']
     for step in geopath:
         if step['properties']['activity'] == 'CraneWalk':
             step['properties']['cost'] = step['properties']['length']*walkCost
@@ -18,14 +16,14 @@ def get_path_cost(geopath,layerDict):
     costDetail['total'] =  costDetail['CraneWalk']+ costDetail['Crossing']
     return costDetail, geopath
     
-def get_total_cost(tsp_sol,tpos,layerDict,pathDirectory,CostSurfacefn):
+def get_total_cost(tsp_sol,tpos,layerDict,pathDirectory,CostSurfacefn,walkCost):
     cost = {}
     cost['total'] = 0.0
     cost['CraneWalk'] = 0.0
     cost['Crossing'] = 0.0
     for edge in tsp_sol.edges():
         geograph = shortestPath(CostSurfacefn,pathDirectory+'Path'+edge[0]+'_'+edge[1]+'.shp',tpos[edge[0]],tpos[edge[1]],layerDict)
-        costing, geograph = get_path_cost(geograph,layerDict)
+        costing, geograph = get_path_cost(geograph,layerDict,walkCost)
         tsp_sol.edge[edge[0]][edge[1]]['costing'] = costing
         tsp_sol.edge[edge[0]][edge[1]]['geobj'] = geograph
         tsp_sol.edge[edge[0]][edge[1]]['TotalCost'] = costing['total']
@@ -43,7 +41,8 @@ def get_geojson(solution,erectionCost,tpos):
     order = 0
     for index in range(len(sequence)):
         erection = {"type":"Feature","properties":{},"geometry":{}}
-        erection["properties"]['activity'] = 'Erect Turbine ' + str(sequence[index])
+        erection["properties"]['activity'] = 'Turbine Erection'
+        erection["properties"]["detail"] =  'Turbine: '+ str(sequence[index])
         erection["properties"]['cost'] = erectionCost
         erection["properties"]['order'] = order
         order = order + 1

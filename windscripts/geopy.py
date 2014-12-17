@@ -403,6 +403,9 @@ def transform_to_wgs84(crs,original):
         return pyproj.transform(proj1,wgs84,tpl[0],tpl[1])
     if geojson['type'] == 'Point':
         geojson['coordinates'] = trans84(geojson['coordinates'])
+    elif geojson['type'] == 'Polygon':
+        for element in geojson['coordinates']:
+            element = map(trans84,element)
     else:
         geojson['coordinates'] = tuple(map(trans84,geojson['coordinates']))
     return geojson
@@ -420,11 +423,13 @@ def geopack(pathArray,crs):
             geobj['properties']['activity'] = 'Crossing'
             geobj['geometry'] = transform_to_wgs84(crs,mapping(Point(step['coord'])))
             geobj['properties']['crossing'] = step['type']
+            geobj['properties']['detail'] = 'Crossed layer: ' + step['type']
             
         elif step.geom_type == 'LineString':
             geobj['properties']['length'] = step.length
             geobj['properties']['activity'] = 'CraneWalk'
             geobj['geometry'] = transform_to_wgs84(crs,mapping(step))
+            geobj['properties']['detail'] = 'Regular crane movement'
         
         geobj['properties']['order'] = i
         geopath.append(geobj)
@@ -475,3 +480,16 @@ def create_nx_graph(turbinesfn,tiffile,directory,layerDict):
             siteGraph.add_edge(combo[0],combo[1],weight=distance)
     return siteGraph, sitePos
 
+def shp2geojson(shpfile,properties=None):
+    features = []
+    with fiona.open(shpfile) as shp:
+        crs = shp.crs
+        for feat in shp:
+            feature = feat.copy()
+            feature['geometry'] = transform_to_wgs84(shp.crs,feature['geometry'])
+            if properties: feature['properties'] = properties
+            features.append(feature)
+            print feature
+    gjson =  {"type": "FeatureCollection","features": features}
+    print gjson
+    return gjson
