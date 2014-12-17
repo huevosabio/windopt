@@ -1,0 +1,39 @@
+<div class="row">
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-image"></i> Layer Information<button type="submit" id="tspopt" class="btn btn-default pull-right">Create Sequence</button>
+            </div>
+            <div class="widget-body no-padding">
+                <div class="form-group">
+                    <form id="daform" enctype="multipart/form-data">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Layer Name</th>
+                                        <th>Interpretation</th>
+                                        <th>Associated Cost [USD]</th>
+                                    </tr>
+                                    <tr ng-repeat="layer in layers">
+                                        <td>
+                                            {{layer}}
+                                        </td>
+                                        <td>
+                                            <select class="selectpicker" ng-model="layerdict.{{layer}}.interpretation"name = "{{layer}}.interpretation" form="daform"><option value="crossing">Crossing</option><option value="turbines">Turbines</option><option value="boundary">Boundary</option></select>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" type="decimal"ng-model="layerdict.{{layer}}.cost" name="{{layer}}.cost" onkeypress="return isDecimalKey(event)" onkeypress="return isDecimalKey(event)" placeholder="Associated Cost in USD" value="0.0"/>
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tbody id="formbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

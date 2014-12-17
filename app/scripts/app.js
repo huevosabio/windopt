@@ -17,9 +17,11 @@ angular
     'ngSanitize',
     'ngTouch',
     'ui.bootstrap',
-    'angularFileUpload'
+    'angularFileUpload',
+    'leaflet-directive'
   ])
-  .config(function ($routeProvider) {
+  .config(function ($routeProvider,$locationProvider) {
+    $locationProvider.html5Mode(true).hashPrefix('!');
     $routeProvider
       .when('/upload', {
         templateUrl: 'views/upload.html',
@@ -28,6 +30,18 @@ angular
       .when('/windday', {
         templateUrl: 'views/windday.html',
         controller: 'WinddayCtrl'
+      })
+      .when('/cranepath', {
+        templateUrl: 'views/cranepath.html',
+        controller: 'CranepathCtrl'
+      })
+      .when('/zipupload', {
+        templateUrl: 'views/zipupload.html',
+        controller: 'ZipuploadCtrl'
+      })
+      .when('/layerlist', {
+        templateUrl: 'views/layerlist.html',
+        controller: 'LayerlistCtrl'
       })
       .otherwise({
         redirectTo: '/windday'
