@@ -19,12 +19,14 @@ angular.module('windopsApp')
     $scope.conditions.certainty = 0.9;
     $scope.expectedLoaded = false;
     $scope.risksLoaded = false;
+    $scope.yearlyLoaded = false;
     $http.get('/api/windday')
     .success(function(data, status, headers, config) {
       if (!data.result.exists){
         $location.path('/upload');
       }
       $scope.seasonality = data.result.seasonality;
+      $scope.yearlyLoaded = true;
     })
     .error(function(data, status, headers, config) {
       //console.log(data);

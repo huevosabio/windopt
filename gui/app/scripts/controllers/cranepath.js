@@ -9,6 +9,8 @@
  */
 angular.module('windopsApp')
   .controller('CranepathCtrl', function ($scope, $location,$http,leafletData) {
+    $scope.mapLoaded = false;
+    $scope.bdLoaded = false;
     
     L.Icon.Default.imagePath = "images";
     
@@ -28,6 +30,25 @@ angular.module('windopsApp')
     .success(function(data, status, headers, config) {
       //console.log(data);
       $scope.schedule = data.schedule;
+      
+      $scope.costSeries = [];
+      $scope.costs = {};
+      
+      for (var i in data.schedule.features){
+        if ($scope.costs[data.schedule.features[i].properties.activity] === undefined){
+          $scope.costs[data.schedule.features[i].properties.activity] = data.schedule.features[i].properties.cost;
+        } else{
+          $scope.costs[data.schedule.features[i].properties.activity] += data.schedule.features[i].properties.cost;
+        }
+      }
+      
+      for (var i in $scope.costs){
+        $scope.costSeries.push({
+            name:i,
+            y:$scope.costs[i]
+        });
+      }
+      
       
       angular.extend($scope, {
         geojson: {
@@ -54,12 +75,15 @@ angular.module('windopsApp')
         }
       });
      
+     
     })
     .error(function(data, status, headers, config) {
       console.log(data);
       $location.path('/zipupload');
     })
     .then(function(){
+      $scope.mapLoaded = true;
+      $scope.bdLoaded = true;
       $scope.centerMap();
     });
     
