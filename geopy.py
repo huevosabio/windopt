@@ -404,8 +404,11 @@ def transform_to_wgs84(crs,original):
     if geojson['type'] == 'Point':
         geojson['coordinates'] = trans84(geojson['coordinates'])
     elif geojson['type'] == 'Polygon':
+        elements = []
         for element in geojson['coordinates']:
-            element = map(trans84,element)
+            elements.append(map(trans84,element))
+            print elements
+        geojson['coordinates'] = elements
     else:
         geojson['coordinates'] = tuple(map(trans84,geojson['coordinates']))
     return geojson
@@ -489,7 +492,5 @@ def shp2geojson(shpfile,properties=None):
             feature['geometry'] = transform_to_wgs84(shp.crs,feature['geometry'])
             if properties: feature['properties'] = properties
             features.append(feature)
-            print feature
     gjson =  {"type": "FeatureCollection","features": features}
-    print gjson
     return gjson
