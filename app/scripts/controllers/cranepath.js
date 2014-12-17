@@ -35,11 +35,21 @@ angular.module('windopsApp')
       $scope.costs = {};
       
       for (var i in data.schedule.features){
-        if ($scope.costs[data.schedule.features[i].properties.activity] === undefined){
-          $scope.costs[data.schedule.features[i].properties.activity] = data.schedule.features[i].properties.cost;
-        } else{
-          $scope.costs[data.schedule.features[i].properties.activity] += data.schedule.features[i].properties.cost;
+        if (data.schedule.features[i].properties.activity === 'Turbine Erection'){
+          continue;
+        } else {
+          var name = data.schedule.features[i].properties.activity
+          
+          if (name === 'Crossing'){
+            name = name +'-'+data.schedule.features[i].properties.crossing;
+          }
+          if ($scope.costs[name] === undefined){
+            $scope.costs[name] = data.schedule.features[i].properties.cost;
+          } else{
+            $scope.costs[name]+= data.schedule.features[i].properties.cost;
+          }
         }
+        
       }
       
       for (var i in $scope.costs){
