@@ -105,6 +105,7 @@ def new_raster(mbb, psize,bands,name,srs,travelDefault=0.0):
     #---Using Rasterio---
     transform = [x_min, psize,0.0,y_max,0.0,-psize]
     #Will work only if srs is formatted in the PROJ4 style
+    print mbb
     with rasterio.open(
         name, 'w',crs=srs,
         driver='GTiff', width=x_res, height=y_res,count=bands,
@@ -370,8 +371,11 @@ def shp2LS(outputPathfn,startCoord,stopCoord):
     with fiona.open(outputPathfn) as path:
         ls = []
         for p in path:
-            for pair in p['geometry']['coordinates']:
-                ls.append(pair)
+            #TODO: fix NoneType
+            if p['geometry'] is not None:
+                for pair in p['geometry']['coordinates']:
+                    ls.append(pair)
+            else: print "NoneType geometry Found!"
     graph = nx.Graph(ls)
     start = None
     minstart = 100000.0
@@ -407,7 +411,6 @@ def transform_to_wgs84(crs,original):
         elements = []
         for element in geojson['coordinates']:
             elements.append(map(trans84,element))
-            print elements
         geojson['coordinates'] = elements
     else:
         geojson['coordinates'] = tuple(map(trans84,geojson['coordinates']))
@@ -476,7 +479,14 @@ def create_nx_graph(turbinesfn,tiffile,directory,layerDict):
         else:
             def conversion(x,y):
                 return (x,y)
-        sitePos = dict((t['id'],conversion(*t['geometry']['coordinates'])) for t in turbines)
+        
+        sitePos = {}
+        for i,t in enumerate(turbines): 
+            try:
+                sitePos[t['id']]= t['geometry']['coordinates']
+            except:
+                print 'ERROR when reading Shapefile'
+                continue
         siteGraph.add_nodes_from(sitePos.keys())
         for combo in itertools.combinations(siteGraph.nodes(),2):
             distance = simple_shortest_path(tiffile,sitePos[combo[0]],sitePos[combo[1]])
