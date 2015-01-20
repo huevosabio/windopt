@@ -1,0 +1,4 @@
+affine>=1.0
+click>=3.0
+Numpy>=1.7
+enum34

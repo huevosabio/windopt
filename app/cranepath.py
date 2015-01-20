@@ -76,6 +76,8 @@ def tsp_sol():
             layerdict[layer]['cd'] = float(layerdict[layer]['cost'])
             layerdict[layer]['cc'] = 0.0
             layerdict[layer]['file'] =SHP_DIR+'/'+layer+'.shp'
+            boundary = layerdict[layer]['file']
+            walkCost = float(layerdict[layer]['cost'])
         else:
             layerdict[layer]['cc'] = float(layerdict[layer]['cost'])
             layerdict[layer]['cd'] = 0.0
@@ -100,7 +102,7 @@ def tsp_sol():
     print 'tsp'
     solved = tsp_ca(graph)
     #Detailed Path Structure
-    cost, solved = get_total_cost(solved,pos, layerdict,PATHS_DIR+'/',rasterfn)
+    cost, solved = get_total_cost(solved,pos, layerdict,PATHS_DIR+'/',rasterfn,walkCost)
     
     #Save to GeoJSON
     print 'GeoJson'
@@ -110,7 +112,9 @@ def tsp_sol():
             goodpos[d['id']] = transform_to_wgs84(s.crs,d['geometry'])['coordinates']
     
     schedule = get_geojson(solved,turbines['cost'],goodpos)
-    
+    properties={'activity':'boundary'}
+    boundary = shp2geojson(boundary,properties=properties)
+    schedule['features']+= boundary['features']
     
     if os.path.exists(os.path.join(app.config['STATIC'], 'schedule.json')):
         os.remove(os.path.join(app.config['STATIC'], 'schedule.json'))
@@ -133,3 +137,8 @@ def solved():
     with open(os.path.join(app.config['STATIC'], 'schedule.json'),'r') as j:
         result['schedule'] = json.load(j)
     return jsonify(result)
+    
+@app.route('/api/cranepath/schedule.csv',methods=['GET'])
+@auth.login_required
+def csv():
+    return app.send_static_file('schedule.csv')

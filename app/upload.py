@@ -12,6 +12,7 @@ from cStringIO import StringIO
 from bson.binary import Binary
 import cPickle
 import time
+import shutil
 
 
 ALLOWED_EXTENSIONS = set(['csv'])
@@ -37,12 +38,12 @@ def clear_shpfiles():
 def upload_file():
     print "At upload"
     if request.method == 'POST':
-        file = request.files['file']
+        fileobj = request.files['file']
         print "Got File"
-        if file and allowed_file(file.filename,ALLOWED_EXTENSIONS):
+        if fileobj and allowed_file(fileobj.filename,ALLOWED_EXTENSIONS):
             print "File is allowed"
             #filename = secure_filename(file.filename)
-            s = StringIO(file.read())
+            s = StringIO(fileobj.read())
             project, created = Project.objects.get_or_create(name='default')
             #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
             #else: project.windRaw.replace(file, content_type='text/csv')
@@ -69,12 +70,21 @@ def upload_ziplfile():
     clear_shpfiles()
     print "At upload"
     if request.method == 'POST':
-        file = request.files['file']
+        fileobj = request.files['file']
         print "Got File"
-        if file and allowed_file(file.filename,ZIP):
+        if fileobj and allowed_file(fileobj.filename,ZIP):
             print "File is allowed"
             #filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'))
+            fileobj.save(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'))
+            path = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
             with zipfile.ZipFile(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'), "r") as z:
-                z.extractall(app.config['UPLOAD_FOLDER'])
+                for member in z.namelist():
+                    filename = os.path.basename(member)
+                    if not filename: continue
+                    # copy file (taken from zipfile's extract)
+                    source = z.open(member)
+                    target = file(os.path.join(path, filename), "wb")
+                    with source, target:
+                        shutil.copyfileobj(source, target)
+                    
             return flask.jsonify(result={"status": 200})
