@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from app import app
 import scipy.stats as stats
-import plotly.plotly as py
 from app.dbmodel import *
 
 def df_to_iplot(df):

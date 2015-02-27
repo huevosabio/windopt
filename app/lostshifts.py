@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from app import app
 import scipy.stats as stats
-import plotly.plotly as py
 from flask_wtf.csrf import CsrfProtect
 from app.dbmodel import *
 

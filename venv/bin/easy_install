@@ -1,4 +1,4 @@
-#!/home/ubuntu/windDayApp/venv/bin/python
+#!/var/www/windDayApp/venv/bin/python
 
 # -*- coding: utf-8 -*-
 import re

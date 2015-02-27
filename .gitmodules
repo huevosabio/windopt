@@ -1,3 +1,6 @@
 [submodule "Responsive-Dashboard"]
 	path = Responsive-Dashboard
 	url = https://github.com/Ehesp/Responsive-Dashboard.git
+[submodule "app/windscripts"]
+	path = app/windscripts
+	url = https://github.com/huevosabio/windscripts.git

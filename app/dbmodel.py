@@ -7,7 +7,7 @@ from flask import Flask, abort, request, jsonify, g, url_for
 from app import app
 import cPickle
 
-with open('/home/ubuntu/windDayApp/config.json') as f:
+with open('/var/www/windDayApp/config.json') as f:
     dbdata = json.loads(f.read())
 
 conn = connect('', host='mongodb://'+dbdata['DB_USER']+':'+dbdata['DB_PWD']+'@ds049180.mongolab.com:49180/windops')
