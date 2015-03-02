@@ -27,7 +27,7 @@ class LinearRing(LineString):
     A LinearRing that crosses itself or touches itself at a single point is
     invalid and operations on it may fail.
     """
-    
+
     def __init__(self, coordinates=None):
         """
         Parameters
@@ -131,7 +131,7 @@ class InteriorRingSequence(object):
             self._index += 1
             return ring
         else:
-            raise StopIteration 
+            raise StopIteration
 
     if sys.version_info[0] < 3:
         next = __next__
@@ -182,7 +182,7 @@ class InteriorRingSequence(object):
             ring._ndim = self._ndim
             self.__rings__[i] = weakref.ref(ring)
         return self.__rings__[i]()
-        
+
 
 class Polygon(BaseGeometry):
     """
@@ -248,6 +248,24 @@ class Polygon(BaseGeometry):
             return []
         return InteriorRingSequence(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, Polygon):
+            return False
+        my_coords = [
+            tuple(self.exterior.coords),
+            [tuple(interior.coords) for interior in self.interiors]
+        ]
+        other_coords = [
+            tuple(other.exterior.coords),
+            [tuple(interior.coords) for interior in other.interiors]
+        ]
+        return my_coords == other_coords
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = object.__hash__
+
     @property
     def ctypes(self):
         if not self._ctypes_data:
@@ -282,29 +300,37 @@ class Polygon(BaseGeometry):
             'coordinates': tuple(coords)
             }
 
-    def svg(self, scale_factor=1.):
+    def svg(self, scale_factor=1., fill_color=None):
+        """Returns SVG path element for the Polygon geometry.
+
+        Parameters
+        ==========
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is to use "#66cc99" if
+            geometry is valid, and "#ff3333" if invalid.
         """
-        SVG representation of the geometry. Scale factor is multiplied by
-        the size of the SVG symbol so it can be scaled consistently for a
-        consistent appearance based on the canvas size.
-        """
-        exterior_coords = [["{0},{1}".format(*c) for c in self.exterior.coords]]
+        if self.is_empty:
+            return '<g />'
+        if fill_color is None:
+            fill_color = "#66cc99" if self.is_valid else "#ff3333"
+        exterior_coords = [
+            ["{0},{1}".format(*c) for c in self.exterior.coords]]
         interior_coords = [
             ["{0},{1}".format(*c) for c in interior.coords]
-            for interior in self.interiors ]
+            for interior in self.interiors]
         path = " ".join([
             "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
-            for coords in exterior_coords + interior_coords ])
-        return """
-            <g fill-rule="evenodd" fill="{2}" stroke="#555555" 
-            stroke-width="{0}" opacity="0.6">
-            <path d="{1}" />
-            </g>""".format(
-                2.*scale_factor, path, "#66cc99" if self.is_valid else "#ff3333")
+            for coords in exterior_coords + interior_coords])
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" />'
+            ).format(2. * scale_factor, path, fill_color)
 
 
 class PolygonAdapter(PolygonProxy, Polygon):
-    
+
     def __init__(self, shell, holes=None):
         self.shell = shell
         self.holes = holes
@@ -392,7 +418,7 @@ def geos_linearring_from_py(ob, update_geom=None, update_ndim=0):
 
         # add to coordinate sequence
         for i in range(m):
-            # Because of a bug in the GEOS C API, 
+            # Because of a bug in the GEOS C API,
             # always set X before Y
             lgeos.GEOSCoordSeq_setX(cs, i, cp[n*i])
             lgeos.GEOSCoordSeq_setY(cs, i, cp[n*i+1])
@@ -400,14 +426,14 @@ def geos_linearring_from_py(ob, update_geom=None, update_ndim=0):
                 lgeos.GEOSCoordSeq_setZ(cs, i, cp[n*i+2])
 
         # Add closing coordinates to sequence?
-        if M > m:        
-            # Because of a bug in the GEOS C API, 
+        if M > m:
+            # Because of a bug in the GEOS C API,
             # always set X before Y
             lgeos.GEOSCoordSeq_setX(cs, M-1, cp[0])
             lgeos.GEOSCoordSeq_setY(cs, M-1, cp[1])
             if n == 3:
                 lgeos.GEOSCoordSeq_setZ(cs, M-1, cp[2])
-            
+
     except AttributeError:
         # Fall back on list
         try:
@@ -437,11 +463,11 @@ def geos_linearring_from_py(ob, update_geom=None, update_ndim=0):
                 % update_ndim)
         else:
             cs = lgeos.GEOSCoordSeq_create(M, n)
-        
+
         # add to coordinate sequence
         for i in range(m):
             coords = ob[i]
-            # Because of a bug in the GEOS C API, 
+            # Because of a bug in the GEOS C API,
             # always set X before Y
             lgeos.GEOSCoordSeq_setX(cs, i, coords[0])
             lgeos.GEOSCoordSeq_setY(cs, i, coords[1])
@@ -454,7 +480,7 @@ def geos_linearring_from_py(ob, update_geom=None, update_ndim=0):
         # Add closing coordinates to sequence?
         if M > m:
             coords = ob[0]
-            # Because of a bug in the GEOS C API, 
+            # Because of a bug in the GEOS C API,
             # always set X before Y
             lgeos.GEOSCoordSeq_setX(cs, M-1, coords[0])
             lgeos.GEOSCoordSeq_setY(cs, M-1, coords[1])
@@ -490,7 +516,7 @@ def geos_polygon_from_py(shell, holes=None):
 
             # Array of pointers to ring geometries
             geos_holes = (c_void_p * L)()
-    
+
             # add to coordinate sequence
             for l in range(L):
                 geom, ndim = geos_linearring_from_py(ob[l])

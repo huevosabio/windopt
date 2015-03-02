@@ -1,4 +1,4 @@
-'''Parallel utility function using joblib
+"""Parallel utility function using joblib
 
 copied from https://github.com/mne-tools/mne-python
 
@@ -8,7 +8,11 @@ License: Simplified BSD
 changes for statsmodels (Josef Perktold)
 - try import from joblib directly, (doesn't import all of sklearn)
 
-'''
+"""
+from __future__ import print_function
+
+from statsmodels.tools.sm_exceptions import (ModuleUnavailableWarning,
+                                           module_unavailable_doc)
 
 
 def parallel_func(func, n_jobs, verbose=5):
@@ -39,7 +43,7 @@ def parallel_func(func, n_jobs, verbose=5):
     >>> from math import sqrt
     >>> from statsmodels.tools.parallel import parallel_func
     >>> parallel, p_func, n_jobs = parallel_func(sqrt, n_jobs=-1, verbose=0)
-    >>> print n_jobs
+    >>> print(n_jobs)
     >>> parallel(p_func(i**2) for i in range(10))
     """
     try:
@@ -56,11 +60,15 @@ def parallel_func(func, n_jobs, verbose=5):
                 import multiprocessing
                 n_jobs = multiprocessing.cpu_count()
             except (ImportError, NotImplementedError):
-                print "multiprocessing not installed. Cannot run in parallel."
+                import warnings
+                warnings.warn(module_unavailable_doc.format('multiprocessing'),
+                              ModuleUnavailableWarning)
                 n_jobs = 1
 
     except ImportError:
-        print "joblib not installed. Cannot run in parallel."
+        import warnings
+        warnings.warn(module_unavailable_doc.format('joblib'),
+                      ModuleUnavailableWarning)
         n_jobs = 1
         my_func = func
         parallel = list

@@ -10,7 +10,7 @@ import numpy as np
 from pandas import DataFrame, isnull
 import pandas.util.testing as ptesting
 
-from statsmodels.compatnp.py3k import BytesIO, asbytes
+from statsmodels.compat.python import BytesIO, asbytes
 import statsmodels.api as sm
 from statsmodels.iolib.foreign import (StataWriter, genfromdta,
             _datetime_to_stata_elapsed, _stata_elapsed_date_to_datetime)
@@ -33,11 +33,8 @@ def test_genfromdta():
     #NOTE: Stata handles data very oddly.  Round tripping from csv to dta
     #    to ndarray 2710.349 (csv) -> 2510.2491 (stata) -> 2710.34912109375
     #    (dta/ndarray)
-    #res2 = np.load(curdir+'/results/macrodata.npy')
-    #res2 = res2.view((float,len(res2[0])))
-    from results.macrodata import macrodata_result as res2
+    from .results.macrodata import macrodata_result as res2
     res1 = genfromdta(curdir+'/../../datasets/macrodata/macrodata.dta')
-    #res1 = res1.view((float,len(res1[0])))
     assert_array_equal(res1 == res2, True)
 
 def test_genfromdta_pandas():

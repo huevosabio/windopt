@@ -2,7 +2,7 @@
 Module containing the base object for multivariate kernel density and
 regression, plus some utilities.
 """
-
+from statsmodels.compat.python import range, string_types
 import copy
 
 import numpy as np
@@ -15,7 +15,7 @@ try:
 except ImportError:
     has_joblib = False
 
-import kernels
+from . import kernels
 
 
 kernel_func = dict(wangryzin=kernels.wang_ryzin,
@@ -60,19 +60,19 @@ def _compute_subset(class_type, data, bw, co, do, n_cvars, ix_ord,
         sub_data = data[bound[0]:bound[1], :]
 
     if class_type == 'KDEMultivariate':
-        from kernel_density import KDEMultivariate
+        from .kernel_density import KDEMultivariate
         var_type = class_vars[0]
         sub_model = KDEMultivariate(sub_data, var_type, bw=bw,
                         defaults=EstimatorSettings(efficient=False))
     elif class_type == 'KDEMultivariateConditional':
-        from kernel_density import KDEMultivariateConditional
+        from .kernel_density import KDEMultivariateConditional
         k_dep, dep_type, indep_type = class_vars
         endog = sub_data[:, :k_dep]
         exog = sub_data[:, k_dep:]
         sub_model = KDEMultivariateConditional(endog, exog, dep_type,
             indep_type, bw=bw, defaults=EstimatorSettings(efficient=False))
     elif class_type == 'KernelReg':
-        from kernel_regression import KernelReg
+        from .kernel_regression import KernelReg
         var_type, k_vars, reg_type = class_vars
         endog = _adjust_shape(sub_data[:, 0], 1)
         exog = _adjust_shape(sub_data[:, 1:], k_vars)
@@ -126,7 +126,7 @@ class GenericKDE (object):
             bwfunc = self.bw_func['normal_reference']
             return bwfunc()
 
-        if not isinstance(bw, basestring):
+        if not isinstance(bw, string_types):
             self._bw_method = "user-specified"
             res = np.asarray(bw)
         else:
@@ -173,6 +173,15 @@ class GenericKDE (object):
         ----------
         See p.9 in socserv.mcmaster.ca/racine/np_faq.pdf
         """
+
+        if bw is None:
+            self._bw_method = 'normal_reference'
+        if isinstance(bw, string_types):
+            self._bw_method = bw
+        else: 
+            self._bw_method = "user-specified"
+            return bw
+
         nobs = self.nobs
         n_sub = self.n_sub
         data = copy.deepcopy(self.data)
@@ -204,13 +213,13 @@ class GenericKDE (object):
                 for i in range(n_blocks))
         else:
             res = []
-            for i in xrange(n_blocks):
+            for i in range(n_blocks):
                 res.append(_compute_subset(class_type, data, bw, co, do,
                                            n_cvars, ix_ord, ix_unord, n_sub,
                                            class_vars, self.randomize,
                                            bounds[i]))
 
-        for i in xrange(n_blocks):
+        for i in range(n_blocks):
             sample_scale[i, :] = res[i][0]
             only_bw[i, :] = res[i][1]
 
@@ -365,7 +374,7 @@ class EstimatorSettings(object):
         ``joblib.Parallel``.  Default is -1, meaning ``n_cores - 1``, with
         ``n_cores`` the number of available CPU cores.
         See the `joblib documentation
-        <http://packages.python.org/joblib/parallel.html>`_ for more details.
+        <https://pythonhosted.org/joblib/parallel.html>`_ for more details.
 
     Examples
     --------
@@ -412,7 +421,7 @@ class LeaveOneOut(object):
         X = self.X
         nobs, k_vars = np.shape(X)
 
-        for i in xrange(nobs):
+        for i in range(nobs):
             index = np.ones(nobs, dtype=np.bool)
             index[i] = False
             yield X[index, :]

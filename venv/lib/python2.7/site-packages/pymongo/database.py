@@ -22,25 +22,14 @@ from bson.dbref import DBRef
 from bson.son import SON
 from pymongo import auth, common, helpers
 from pymongo.collection import Collection
+from pymongo.command_cursor import CommandCursor
 from pymongo.errors import (CollectionInvalid,
                             ConfigurationError,
-                            InvalidName,
                             OperationFailure)
 from pymongo.read_preferences import (modes,
                                       secondary_ok_commands,
                                       ReadPreference)
-
-
-def _check_name(name):
-    """Check if a database name is valid.
-    """
-    if not name:
-        raise InvalidName("database name cannot be the empty string")
-
-    for invalid_char in [" ", ".", "$", "/", "\\", "\x00"]:
-        if invalid_char in name:
-            raise InvalidName("database names cannot contain the "
-                              "character %r" % invalid_char)
+from pymongo.son_manipulator import SONManipulator
 
 
 class Database(common.BaseObject):
@@ -76,7 +65,7 @@ class Database(common.BaseObject):
                             "of %s" % (basestring.__name__,))
 
         if name != '$external':
-            _check_name(name)
+            helpers._check_database_name(name)
 
         self.__name = unicode(name)
         self.__connection = connection
@@ -94,9 +83,10 @@ class Database(common.BaseObject):
         :Parameters:
           - `manipulator`: the manipulator to add
         """
+        base = SONManipulator()
         def method_overwritten(instance, method):
-            return getattr(instance, method) != \
-                getattr(super(instance.__class__, instance), method)
+            return (getattr(
+                instance, method).im_func != getattr(base, method).im_func)
 
         if manipulator.will_copy():
             if method_overwritten(manipulator, "transform_incoming"):
@@ -219,14 +209,17 @@ class Database(common.BaseObject):
         creation. :class:`~pymongo.errors.CollectionInvalid` will be
         raised if the collection already exists.
 
-        Options should be passed as keyword arguments to this
-        method. Any of the following options are valid:
+        Options should be passed as keyword arguments to this method. Supported
+        options vary with MongoDB release. Some examples include:
 
           - "size": desired initial size for the collection (in
             bytes). For capped collections this size is the max
             size of the collection.
           - "capped": if True, this is a capped collection
           - "max": maximum number of objects if capped (optional)
+
+        See the MongoDB documentation for a full list of supported options by
+        server version.
 
         :Parameters:
           - `name`: the name of the collection to create
@@ -346,7 +339,8 @@ class Database(common.BaseObject):
             result = doc
 
         if check:
-            msg = "command %s failed: %%s" % repr(command).replace("%", "%%")
+            msg = "command %s on namespace %s failed: %%s" % (
+                repr(command).replace("%", "%%"), self.name + '.$cmd')
             helpers._check_command_response(result, self.connection.disconnect,
                                             msg, allowable_errors)
 
@@ -451,10 +445,26 @@ class Database(common.BaseObject):
           - `include_system_collections` (optional): if ``False`` list
             will not include system collections (e.g ``system.indexes``)
         """
-        results = self["system.namespaces"].find(_must_use_master=True)
-        names = [r["name"] for r in results]
-        names = [n[len(self.__name) + 1:] for n in names
-                 if n.startswith(self.__name + ".") and "$" not in n]
+        client = self.connection
+        client._ensure_connected(True)
+
+        if client.max_wire_version > 2:
+            res, addr = self._command("listCollections",
+                                      cursor={},
+                                      read_preference=ReadPreference.PRIMARY)
+            # MongoDB 2.8rc2
+            if "collections" in res:
+                results = res["collections"]
+            # >= MongoDB 2.8rc3
+            else:
+                results = CommandCursor(self["$cmd"], res["cursor"], addr)
+            names = [result["name"] for result in results]
+        else:
+            names = [result["name"] for result
+                     in self["system.namespaces"].find(_must_use_master=True)]
+            names = [n[len(self.__name) + 1:] for n in names
+                     if n.startswith(self.__name + ".") and "$" not in n]
+
         if not include_system_collections:
             names = [n for n in names if not n.startswith("system.")]
         return names
@@ -620,11 +630,26 @@ class Database(common.BaseObject):
         return list(self["system.profile"].find())
 
     def error(self):
-        """Get a database error if one occured on the last operation.
+        """**DEPRECATED**: Get the error if one occurred on the last operation.
+
+        This method is obsolete: all MongoDB write operations (insert, update,
+        remove, and so on) use the write concern ``w=1`` and report their
+        errors by default.
+
+        This method must be called in the same
+        :doc:`request </examples/requests>` as the preceding operation,
+        otherwise it is unreliable. Requests are deprecated and will be removed
+        in PyMongo 3.0.
 
         Return None if the last operation was error-free. Otherwise return the
         error that occurred.
+
+        .. versionchanged:: 2.8
+           Deprecated.
         """
+        warnings.warn("Database.error() is deprecated",
+                      DeprecationWarning, stacklevel=2)
+
         error = self.command("getlasterror",
                              read_preference=ReadPreference.PRIMARY)
         error_msg = error.get("err", "")
@@ -635,20 +660,51 @@ class Database(common.BaseObject):
         return error
 
     def last_status(self):
-        """Get status information from the last operation.
+        """**DEPRECATED**: Get status information from the last operation.
+
+        This method is obsolete: all MongoDB write operations (insert, update,
+        remove, and so on) use the write concern ``w=1`` and report their
+        errors by default.
+
+        This method must be called in the same
+        :doc:`request </examples/requests>` as the preceding operation,
+        otherwise it is unreliable. Requests are deprecated and will be removed
+        in PyMongo 3.0.
 
         Returns a SON object with status information.
+
+        .. versionchanged:: 2.8
+           Deprecated.
         """
+        warnings.warn("last_status() is deprecated",
+                      DeprecationWarning, stacklevel=2)
+
         return self.command("getlasterror",
                             read_preference=ReadPreference.PRIMARY)
 
     def previous_error(self):
-        """Get the most recent error to have occurred on this database.
+        """**DEPRECATED**: Get the most recent error on this database.
+
+        This method is obsolete: all MongoDB write operations (insert, update,
+        remove, and so on) use the write concern ``w=1`` and report their
+        errors by default.
+
+        This method must be called in the same
+        :doc:`request </examples/requests>` as the preceding operation,
+        otherwise it is unreliable. Requests are deprecated and will be removed
+        in PyMongo 3.0. Furthermore, the underlying database command
+        ``getpreverror`` will be removed in a future MongoDB release.
 
         Only returns errors that have occurred since the last call to
-        `Database.reset_error_history`. Returns None if no such errors have
+        :meth:`reset_error_history`. Returns None if no such errors have
         occurred.
+
+        .. versionchanged:: 2.8
+           Deprecated.
         """
+        warnings.warn("previous_error() is deprecated",
+                      DeprecationWarning, stacklevel=2)
+
         error = self.command("getpreverror",
                              read_preference=ReadPreference.PRIMARY)
         if error.get("err", 0) is None:
@@ -656,11 +712,27 @@ class Database(common.BaseObject):
         return error
 
     def reset_error_history(self):
-        """Reset the error history of this database.
+        """**DEPRECATED**: Reset the error history of this database.
 
-        Calls to `Database.previous_error` will only return errors that have
+        This method is obsolete: all MongoDB write operations (insert, update,
+        remove, and so on) use the write concern ``w=1`` and report their
+        errors by default.
+
+        This method must be called in the same
+        :doc:`request </examples/requests>` as the preceding operation,
+        otherwise it is unreliable. Requests are deprecated and will be removed
+        in PyMongo 3.0. Furthermore, the underlying database command
+        ``reseterror`` will be removed in a future MongoDB release.
+
+        Calls to :meth:`previous_error` will only return errors that have
         occurred since the most recent call to this method.
+
+        .. versionchanged:: 2.8
+           Deprecated.
         """
+        warnings.warn("reset_error_history() is deprecated",
+                      DeprecationWarning, stacklevel=2)
+
         self.command("reseterror",
                      read_preference=ReadPreference.PRIMARY)
 
@@ -708,7 +780,7 @@ class Database(common.BaseObject):
             opts["pwd"] = auth._password_digest(name, password)
             opts["digestPassword"] = False
 
-        opts["writeConcern"] = self._get_wc_override()
+        opts["writeConcern"] = self._get_wc_override() or self.write_concern
         opts.update(kwargs)
 
         if create:
@@ -818,9 +890,10 @@ class Database(common.BaseObject):
         """
 
         try:
+            write_concern = self._get_wc_override() or self.write_concern
             self.command("dropUser", name,
                          read_preference=ReadPreference.PRIMARY,
-                         writeConcern=self._get_wc_override())
+                         writeConcern=write_concern)
         except OperationFailure, exc:
             # See comment in add_user try / except above.
             if exc.code in common.COMMAND_NOT_FOUND_CODES:
@@ -830,7 +903,7 @@ class Database(common.BaseObject):
             raise
 
     def authenticate(self, name, password=None,
-                     source=None, mechanism='MONGODB-CR', **kwargs):
+                     source=None, mechanism='DEFAULT', **kwargs):
         """Authenticate to use this database.
 
         Authentication lasts for the life of the underlying client
@@ -866,10 +939,14 @@ class Database(common.BaseObject):
             specified the current database is used.
           - `mechanism` (optional): See
             :data:`~pymongo.auth.MECHANISMS` for options.
-            Defaults to MONGODB-CR (MongoDB Challenge Response protocol)
+            By default, use SCRAM-SHA-1 with MongoDB 3.0 and later,
+            MONGODB-CR (MongoDB Challenge Response protocol) for older servers.
           - `gssapiServiceName` (optional): Used with the GSSAPI mechanism
             to specify the service name portion of the service principal name.
             Defaults to 'mongodb'.
+
+        .. versionadded:: 2.8
+           Use SCRAM-SHA-1 with MongoDB 3.0 and later.
 
         .. versionchanged:: 2.5
            Added the `source` and `mechanism` parameters. :meth:`authenticate`
@@ -896,9 +973,8 @@ class Database(common.BaseObject):
             validated_options[normalized] = val
 
         credentials = auth._build_credentials_tuple(mechanism,
-                                source or self.name, unicode(name),
-                                password and unicode(password) or None,
-                                validated_options)
+                                source or self.name, name,
+                                password, validated_options)
         self.connection._cache_credentials(self.name, credentials)
         return True
 
@@ -913,7 +989,7 @@ class Database(common.BaseObject):
         # Sockets will be deauthenticated as they are used.
         self.connection._purge_credentials(self.name)
 
-    def dereference(self, dbref):
+    def dereference(self, dbref, **kwargs):
         """Dereference a :class:`~bson.dbref.DBRef`, getting the
         document it points to.
 
@@ -925,6 +1001,9 @@ class Database(common.BaseObject):
 
         :Parameters:
           - `dbref`: the reference
+          - `**kwargs` (optional): any additional keyword arguments
+            are the same as the arguments to
+            :meth:`~pymongo.collection.Collection.find`.
         """
         if not isinstance(dbref, DBRef):
             raise TypeError("cannot dereference a %s" % type(dbref))
@@ -932,7 +1011,7 @@ class Database(common.BaseObject):
             raise ValueError("trying to dereference a DBRef that points to "
                              "another database (%r not %r)" % (dbref.database,
                                                                self.__name))
-        return self[dbref.collection].find_one({"_id": dbref.id})
+        return self[dbref.collection].find_one({"_id": dbref.id}, **kwargs)
 
     def eval(self, code, *args):
         """Evaluate a JavaScript expression in MongoDB.

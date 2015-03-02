@@ -1,5 +1,6 @@
 #Copyright (c) 2008 Erik Tollerud (etolleru@uci.edu)
 
+from statsmodels.compat.python import zip
 import numpy as np
 from math import pi
 
@@ -24,12 +25,12 @@ class Pca(object):
         """
         p X N matrix input
         """
-        from warnings import warn
         A = np.array(data).T
         n,p = A.shape
         self.n,self.p = n,p
         if p > n:
-            warn('p > n - intentional?')
+            from warnings import warn
+            warn('p > n - intentional?', RuntimeWarning)
         self.A = A
         self._origA=A.copy()
 

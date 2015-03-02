@@ -1,7 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 from os import path
-import warnings
+
 
 DATA_PATH = path.join(path.dirname(__file__), 'data')
 
@@ -116,9 +116,7 @@ class TestCompressed(TestScalars):
     # Test that compressed .sav files can be read in
 
     def test_compressed(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', message="warning: empty strings")
-            s = readsav(path.join(DATA_PATH, 'various_compressed.sav'), verbose=False)
+        s = readsav(path.join(DATA_PATH, 'various_compressed.sav'), verbose=False)
 
         assert_identical(s.i8u, np.uint8(234))
         assert_identical(s.f32, np.float32(-3.1234567e+37))
@@ -380,12 +378,8 @@ class TestPointerStructures:
             assert_(np.all(vect_id(s.arrays_rep.h[i]) == id(s.arrays_rep.h[0][0])))
 
     def test_arrays_replicated_3d(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore',
-                    message="warning: multi-dimensional structures")
-            s = readsav(path.join(DATA_PATH,
-                                  'struct_pointer_arrays_replicated_3d.sav'),
-                        verbose=False)
+        pth = path.join(DATA_PATH, 'struct_pointer_arrays_replicated_3d.sav')
+        s = readsav(pth, verbose=False)
 
         # Check column types
         assert_(s.arrays_rep.g.dtype.type is np.object_)
@@ -405,7 +399,21 @@ class TestPointerStructures:
                             np.repeat(np.float32(4.), 3).astype(np.object_))
                     assert_(np.all(vect_id(s.arrays_rep.g[i, j, k]) == id(s.arrays_rep.g[0, 0, 0][0])))
                     assert_(np.all(vect_id(s.arrays_rep.h[i, j, k]) == id(s.arrays_rep.h[0, 0, 0][0])))
+class TestTags:
+    '''Test that sav files with description tag read at all'''
 
+    def test_description(self):
+        s = readsav(path.join(DATA_PATH, 'scalar_byte_descr.sav'), verbose=False)
+        assert_identical(s.i8u, np.uint8(234))
+
+
+def test_null_pointer():
+    """
+    Regression test for null pointers.
+    """
+    s = readsav(path.join(DATA_PATH, 'null_pointer.sav'), verbose=False)
+    assert_identical(s.point, None)
+    assert_identical(s.check, np.int16(5))
 
 if __name__ == "__main__":
     run_module_suite()

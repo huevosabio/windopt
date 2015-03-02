@@ -6,7 +6,7 @@ Created on Fri Mar 01 00:23:07 2013
 Author: Josef Perktold
 License: BSD-3
 """
-
+from statsmodels.compat.python import lzip, range
 import numpy as np
 from scipy import stats, optimize
 
@@ -249,7 +249,7 @@ def _power_ztost(mean_low, var_low, mean_upp, var_upp, mean_alt, var_alt,
     #print mean_upp, np.sqrt(var_upp), crit, var_upp
     if np.any(k_low > k_upp):   #vectorize
         import warnings
-        warnings.warn("no overlap, power is zero")
+        warnings.warn("no overlap, power is zero", UserWarning)
     std_alt = np.sqrt(var_alt)
     z_low = (k_low - mean_alt - continuity[0] * 0.5 / nobs) / std_alt
     z_upp = (k_upp - mean_alt + continuity[1] * 0.5 / nobs) / std_alt
@@ -729,8 +729,8 @@ def proportions_chisquare_allpairs(count, nobs, multitest_method='hs'):
     -----
     Yates continuity correction is not available.
     '''
-    #all_pairs = map(list, zip(*np.triu_indices(4, 1)))
-    all_pairs = zip(*np.triu_indices(4, 1))
+    #all_pairs = lmap(list, lzip(*np.triu_indices(4, 1)))
+    all_pairs = lzip(*np.triu_indices(len(count), 1))
     pvals = [proportions_chisquare(count[list(pair)], nobs[list(pair)])[1]
                for pair in all_pairs]
     return AllPairsResults(pvals, all_pairs, multitest_method=multitest_method)
@@ -779,7 +779,7 @@ def proportions_chisquare_pairscontrol(count, nobs, value=None,
     '''
     if (value is not None) or (not alternative in ['two-sided', '2s']):
         raise NotImplementedError
-    #all_pairs = map(list, zip(*np.triu_indices(4, 1)))
+    #all_pairs = lmap(list, lzip(*np.triu_indices(4, 1)))
     all_pairs = [(0, k) for k in range(1, len(count))]
     pvals = [proportions_chisquare(count[list(pair)], nobs[list(pair)],
                                    #alternative=alternative)[1]

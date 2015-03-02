@@ -1,8 +1,9 @@
 from __future__ import division, print_function, absolute_import
 
 import numpy as np
-from numpy.testing import TestCase, assert_almost_equal, assert_equal, assert_, \
-        assert_raises, assert_allclose, run_module_suite
+from numpy.testing import (TestCase, assert_almost_equal, assert_equal,
+                           assert_, assert_raises, run_module_suite,
+                           assert_allclose)
 
 import scipy.signal.waveforms as waveforms
 
@@ -77,7 +78,7 @@ class TestChirp(TestCase):
 
     def test_quadratic_at_zero2(self):
         w = waveforms.chirp(t=0, f0=1.0, f1=2.0, t1=1.0, method='quadratic',
-                                                                vertex_zero=False)
+                            vertex_zero=False)
         assert_almost_equal(w, 1.0)
 
     def test_quadratic_freq_01(self):
@@ -148,10 +149,10 @@ class TestChirp(TestCase):
         t1 = 1.0
         t = np.linspace(0, t1, 10000)
         #           f0     f1
-        cases = [[ 10.0,   1.0],
-                 [  1.0,  10.0],
-                 [-10.0,  -1.0],
-                 [ -1.0, -10.0]]
+        cases = [[10.0, 1.0],
+                 [1.0, 10.0],
+                 [-10.0, -1.0],
+                 [-1.0, -10.0]]
         for f0, f1 in cases:
             phase = waveforms._chirp_phase(t, f0, t1, f1, method)
             tf, f = compute_frequency(t, phase)

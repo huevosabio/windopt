@@ -333,7 +333,10 @@ def _elements_to_dict(data, as_class, tz_aware, uuid_subtype, compile_re):
     return result
 
 def _bson_to_dict(data, as_class, tz_aware, uuid_subtype, compile_re):
-    obj_size = struct.unpack("<i", data[:4])[0]
+    try:
+        obj_size = struct.unpack("<i", data[:4])[0]
+    except struct.error, e:
+        raise InvalidBSON(str(e))
     length = len(data)
     if length < obj_size:
         raise InvalidBSON("objsize too large")
@@ -493,7 +496,6 @@ if _use_c:
     _dict_to_bson = _cbson._dict_to_bson
 
 
-
 def decode_all(data, as_class=dict,
                tz_aware=True, uuid_subtype=OLD_UUID_SUBTYPE, compile_re=True):
     """Decode BSON data to multiple documents.
@@ -507,6 +509,8 @@ def decode_all(data, as_class=dict,
         documents
       - `tz_aware` (optional): if ``True``, return timezone-aware
         :class:`~datetime.datetime` instances
+      - `uuid_subtype` (optional): The BSON representation to use for UUIDs.
+        See the :mod:`bson.binary` module for all options.
       - `compile_re` (optional): if ``False``, don't attempt to compile
         BSON regular expressions into Python regular expressions. Return
         instances of :class:`~bson.regex.Regex` instead. Can avoid
@@ -540,6 +544,82 @@ def decode_all(data, as_class=dict,
         raise InvalidBSON, str(exc_value), exc_tb
 if _use_c:
     decode_all = _cbson.decode_all
+
+
+def decode_iter(data, as_class=dict, tz_aware=True,
+                uuid_subtype=OLD_UUID_SUBTYPE, compile_re=True):
+    """Decode BSON data to multiple documents as a generator.
+
+    Works similarly to the decode_all function, but yields one document at a
+    time.
+
+    `data` must be a string of concatenated, valid, BSON-encoded
+    documents.
+
+    :Parameters:
+      - `data`: BSON data
+      - `as_class` (optional): the class to use for the resulting
+        documents
+      - `tz_aware` (optional): if ``True``, return timezone-aware
+        :class:`~datetime.datetime` instances
+      - `uuid_subtype` (optional): The BSON representation to use for UUIDs.
+        See the :mod:`bson.binary` module for all options.
+      - `compile_re` (optional): if ``False``, don't attempt to compile
+        BSON regular expressions into Python regular expressions. Return
+        instances of
+        :class:`~bson.regex.Regex` instead. Can avoid
+        :exc:`~bson.errors.InvalidBSON` errors when receiving
+        Python-incompatible regular expressions, for example from
+        ``currentOp``
+
+    .. versionadded:: 2.8
+    """
+    position = 0
+    end = len(data) - 1
+    while position < end:
+        obj_size = struct.unpack("<i", data[position:position + 4])[0]
+        elements = data[position:position + obj_size]
+        position += obj_size
+        yield _bson_to_dict(elements, as_class,
+                            tz_aware, uuid_subtype, compile_re)[0]
+
+
+def decode_file_iter(file_obj, as_class=dict, tz_aware=True,
+                     uuid_subtype=OLD_UUID_SUBTYPE, compile_re=True):
+    """Decode bson data from a file to multiple documents as a generator.
+
+    Works similarly to the decode_all function, but reads from the file object
+    in chunks and parses bson in chunks, yielding one document at a time.
+
+    :Parameters:
+      - `file_obj`: A file object containing BSON data.
+      - `as_class` (optional): the class to use for the resulting
+        documents
+      - `tz_aware` (optional): if ``True``, return timezone-aware
+        :class:`~datetime.datetime` instances
+      - `uuid_subtype` (optional): The BSON representation to use for UUIDs.
+        See the :mod:`bson.binary` module for all options.
+      - `compile_re` (optional): if ``False``, don't attempt to compile
+        BSON regular expressions into Python regular expressions. Return
+        instances of
+        :class:`~bson.regex.Regex` instead. Can avoid
+        :exc:`~bson.errors.InvalidBSON` errors when receiving
+        Python-incompatible regular expressions, for example from
+        ``currentOp``
+
+    .. versionadded:: 2.8
+    """
+    while True:
+        # Read size of next object.
+        size_data = file_obj.read(4)
+        if len(size_data) == 0:
+            break  # Finished with file normaly.
+        elif len(size_data) != 4:
+            raise InvalidBSON("cut off in middle of objsize")
+        obj_size = struct.unpack("<i", size_data)[0] - 4
+        elements = size_data + file_obj.read(obj_size)
+        yield _bson_to_dict(elements, as_class,
+                            tz_aware, uuid_subtype, compile_re)[0]
 
 
 def is_valid(bson):
@@ -584,6 +664,8 @@ class BSON(binary_type):
           - `check_keys` (optional): check if keys start with '$' or
             contain '.', raising :class:`~bson.errors.InvalidDocument` in
             either case
+          - `uuid_subtype` (optional): The BSON representation to use for
+            UUIDs. See the :mod:`bson.binary` module for all options.
 
         .. versionadded:: 1.9
         """
@@ -610,6 +692,8 @@ class BSON(binary_type):
             document
           - `tz_aware` (optional): if ``True``, return timezone-aware
             :class:`~datetime.datetime` instances
+          - `uuid_subtype` (optional): The BSON representation to use for
+            UUIDs. See the :mod:`bson.binary` module for all options.
           - `compile_re` (optional): if ``False``, don't attempt to compile
             BSON regular expressions into Python regular expressions. Return
             instances of

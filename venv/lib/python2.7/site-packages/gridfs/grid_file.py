@@ -111,7 +111,7 @@ class GridIn(object):
             for the file
 
           - ``"chunkSize"`` or ``"chunk_size"``: size of each of the
-            chunks, in bytes (default: 256 kb)
+            chunks, in bytes (default: 255 kb)
 
           - ``"encoding"``: encoding used for this file. In Python 2,
             any :class:`unicode` that is written to the file will be
@@ -256,7 +256,7 @@ class GridIn(object):
             # connection, can succeed out-of-order due to the writebackListener.
             # We mustn't call "filemd5" until all inserts are complete, which
             # we ensure by calling getLastError (and ignoring the result).
-            db.error()
+            db.command('getlasterror', read_preference=ReadPreference.PRIMARY)
 
             md5 = db.command(
                 "filemd5", self._id, root=self._coll.name,
@@ -441,19 +441,21 @@ class GridOut(object):
         """Reads a chunk at a time. If the current position is within a
         chunk the remainder of the chunk is returned.
         """
+        self._ensure_file()
         received = len(self.__buffer)
         chunk_data = EMPTY
+        chunk_size = int(self.chunk_size)
 
         if received > 0:
             chunk_data = self.__buffer
         elif self.__position < int(self.length):
-            chunk_number = int((received + self.__position) / self.chunk_size)
+            chunk_number = int((received + self.__position) / chunk_size)
             chunk = self.__chunks.find_one({"files_id": self._id,
                                             "n": chunk_number})
             if not chunk:
                 raise CorruptGridFile("no chunk #%d" % chunk_number)
 
-            chunk_data = chunk["data"][self.__position % self.chunk_size:]
+            chunk_data = chunk["data"][self.__position % chunk_size:]
 
         self.__position += len(chunk_data)
         self.__buffer = EMPTY

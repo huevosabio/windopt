@@ -1,6 +1,7 @@
 from numpy.testing import assert_almost_equal
-import statsmodels.api as sm
-from results.el_results import OriginResults
+from statsmodels.emplike.originregress import ELOriginRegress
+from statsmodels.datasets import cancer
+from .results.el_results import OriginResults
 import numpy as np
 
 class GenRes(object):
@@ -9,8 +10,8 @@ class GenRes(object):
 
     """
     def __init__(self):
-        data = sm.datasets.cancer.load()
-        self.res1 = sm.emplike.ELOriginRegress(data.endog, data.exog).fit()
+        data = cancer.load()
+        self.res1 = ELOriginRegress(data.endog, data.exog).fit()
         self.res2 = OriginResults()
 
 

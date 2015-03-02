@@ -24,7 +24,8 @@ Harvey uses Durbin and Koopman notation.
 # http://www.federalreserve.gov/pubs/oss/oss4/aimindex.html
 # Harvey notes that the square root filter will keep P_t pos. def. but
 # is not strictly needed outside of the engineering (long series)
-
+from __future__ import print_function
+from statsmodels.compat.python import lzip, lmap, callable, range
 import numpy as np
 from numpy import dot, identity, kron, log, zeros, pi, exp, eye, issubdtype, ones
 from numpy.linalg import inv, pinv
@@ -357,7 +358,7 @@ class StateSpaceModel(object):
             H = H(params)
         elif H == None:
             H = 0
-        print callable(Q)
+        print(callable(Q))
         if Q != None and callable(Q):
             Q = Q(params)
         elif Q == None:
@@ -505,9 +506,11 @@ class KalmanFilter(object):
         ----------
         Durbin and Koopman Section 3.7.
         """
-        arr = zeros((r,r), dtype=params.dtype) # allows for complex-step
-                                                  # derivative
-        params_padded = zeros(r, dtype=params.dtype) # handle zero coefficients if necessary
+        arr = zeros((r, r), dtype=params.dtype, order="F")
+        # allows for complex-step derivative
+        params_padded = zeros(r, dtype=params.dtype,
+                              order="F")
+                        # handle zero coefficients if necessary
         #NOTE: squeeze added for cg optimizer
         params_padded[:p] = params[k:p+k]
         arr[:,0] = params_padded   # first p params are AR coeffs w/ short params
@@ -538,8 +541,9 @@ class KalmanFilter(object):
         ----------
         Durbin and Koopman Section 3.7.
         """
-        arr = zeros((r,1), dtype=params.dtype) # this allows zero coefficients
-                                                  # dtype allows for compl. der.
+        arr = zeros((r, 1), dtype=params.dtype, order="F")
+                               # this allows zero coefficients
+                               # dtype allows for compl. der.
         arr[1:q+1,:] = params[p+k:p+k+q][:,None]
         arr[0] = 1.0
         return arr
@@ -560,7 +564,7 @@ class KalmanFilter(object):
         Currently only returns a 1 x r vector [1,0,0,...0].  Will need to
         be generalized when the Kalman Filter becomes more flexible.
         """
-        arr = zeros((1,r))
+        arr = zeros((1,r), order="F")
         arr[:,0] = 1.
         return arr
 
@@ -611,7 +615,7 @@ class KalmanFilter(object):
                newparams, Z_mat, m, R_mat, T_mat, paramsdtype)
 
     @classmethod
-    def loglike(cls, params, arma_model):
+    def loglike(cls, params, arma_model, set_sigma2=True):
         """
         The loglikelihood for an ARMA model using the Kalman Filter recursions.
 
@@ -623,6 +627,10 @@ class KalmanFilter(object):
             coefficients, then the `q` MA coefficients.
         arma_model : `statsmodels.tsa.arima.ARMA` instance
             A reference to the ARMA model instance.
+        set_sigma2 : bool, optional
+            True if arma_model.sigma2 should be set.
+            Note that sigma2 will be computed in any case,
+            but it will be discarded if set_sigma2 is False.
 
         Notes
         -----
@@ -635,20 +643,22 @@ class KalmanFilter(object):
         #TODO: this won't work for time-varying parameters
         (y, k, nobs, k_ar, k_ma, k_lags, newparams, Z_mat, m, R_mat, T_mat,
                 paramsdtype) = cls._init_kalman_state(params, arma_model)
-
         if issubdtype(paramsdtype, float):
             loglike, sigma2 =  kalman_loglike.kalman_loglike_double(y, k,
                                     k_ar, k_ma, k_lags, int(nobs), Z_mat,
                                     R_mat, T_mat)
         elif issubdtype(paramsdtype, complex):
             loglike, sigma2 =  kalman_loglike.kalman_loglike_complex(y, k,
-                                    k_ar, k_ma, k_lags, int(nobs), Z_mat,
+                                    k_ar, k_ma, k_lags, int(nobs),
+                                    Z_mat.astype(complex),
                                     R_mat, T_mat)
         else:
             raise TypeError("This dtype %s is not supported "
                             " Please files a bug report." % paramsdtype)
-        arma_model.sigma2 = sigma2
-        return loglike.item() # return a scalar not a 0d array
+        if set_sigma2:
+            arma_model.sigma2 = sigma2
+
+        return loglike
 
 
 if __name__ == "__main__":
@@ -780,7 +790,7 @@ if __name__ == "__main__":
     lowerbounds = np.array([-.999, .001, .001])
     xi10 = xihistory[:,0]
     ntrain = 1
-    bounds = zip(lowerbounds,upperbounds) # if you use fmin_l_bfgs_b
+    bounds = lzip(lowerbounds,upperbounds) # if you use fmin_l_bfgs_b
 #    results = optimize.fmin_bfgs(updatematrices, params,
 #        args=(y,xi10,ntrain,penalty,upperbounds,lowerbounds),
 #        gtol = 1e-8, epsilon=1e-10)
@@ -843,7 +853,7 @@ if __name__ == "__main__":
 
 # p. 162 univariate structural time series example
     seatbelt = dk.open('Seatbelt.dat').readlines()
-    seatbelt = [map(float,_.split()) for _ in seatbelt[2:]]
+    seatbelt = [lmap(float,_.split()) for _ in seatbelt[2:]]
     sb_ssm = StateSpaceModel(seatbelt)
     s = 12 # monthly data
 # s p.

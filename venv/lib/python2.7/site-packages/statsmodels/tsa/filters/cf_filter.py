@@ -1,7 +1,7 @@
-from __future__ import absolute_import
+from statsmodels.compat.python import range
 
 import numpy as np
-from .utils import _maybe_get_pandas_wrapper
+from ._utils import _maybe_get_pandas_wrapper
 
 # the data is sampled quarterly, so cut-off frequency of 18
 
@@ -38,6 +38,24 @@ def cffilter(X, low=6, high=32, drift=True):
         The features of `X` between periodicities given by low and high
     trend : array
         The trend in the data with the cycles removed.
+
+    Examples
+    --------
+    >>> import statsmodels.api as sm
+    >>> import pandas as pd
+    >>> dta = sm.datasets.macrodata.load_pandas().data
+    >>> dates = sm.tsa.datetools.dates_from_range('1959Q1', '2009Q3')
+    >>> index = pd.DatetimeIndex(dates)
+    >>> dta.set_index(index, inplace=True)
+
+    >>> cf_cycles, cf_trend = sm.tsa.filters.cffilter(dta[["infl", "unemp"]])
+
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots()
+    >>> cf_cycles.plot(ax=ax, style=['r--', 'b-'])
+    >>> plt.show()
+
+    .. plot:: plots/cff_plot.py
     """
     #TODO: cythonize/vectorize loop?, add ability for symmetric filter,
     #      and estimates of theta other than random walk.
@@ -60,7 +78,7 @@ def cffilter(X, low=6, high=32, drift=True):
     Bj = np.r_[B0,Bj][:,None]
     y = np.zeros((nobs,nseries))
 
-    for i in xrange(nobs):
+    for i in range(nobs):
 
         B = -.5*Bj[0] -np.sum(Bj[1:-i-2])
         A = -Bj[0] - np.sum(Bj[1:-i-2]) - np.sum(Bj[1:i]) - B

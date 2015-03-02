@@ -12,12 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Master-Slave connection to Mongo.
+"""**DEPRECATED**: Master-Slave connection to Mongo.
 
 Performs all writes to Master instance and distributes reads among all
 slaves. Reads are tried on each slave in turn until the read succeeds
 or all slaves failed.
+
+MasterSlaveConnection is deprecated and will be removed in PyMongo 3.0.
+Deploy your MongoDB servers as a replica set instead of a master-slave set,
+and use a :class:`~pymongo.mongo_replica_set_client.MongoReplicaSetClient`.
+If you cannot replace your master-slave set with a replica set, connect
+directly to the master and each slave with instances of
+:class:`~pymongo.mongo_client.MongoClient`.
+
+.. seealso:: `replica set documentation <http://dochub.mongodb.org/core/rs>`_.
+
+.. versionchanged:: 2.8
+   Deprecated.
 """
+
+import warnings
 
 from pymongo import helpers, thread_util
 from pymongo import ReadPreference
@@ -28,9 +42,6 @@ from pymongo.errors import AutoReconnect
 
 
 class MasterSlaveConnection(BaseObject):
-    """A master-slave connection to Mongo.
-    """
-
     def __init__(self, master, slaves=[], document_class=dict, tz_aware=False):
         """Create a new Master-Slave connection.
 
@@ -66,6 +77,10 @@ class MasterSlaveConnection(BaseObject):
             if not isinstance(slave, MongoClient):
                 raise TypeError("slave %r is not an instance of MongoClient" %
                                 slave)
+
+        warnings.warn("MasterSlaveConnection is deprecated, and will be"
+                      " removed in PyMongo 3.0.",
+                      DeprecationWarning, stacklevel=2)
 
         super(MasterSlaveConnection,
               self).__init__(read_preference=ReadPreference.SECONDARY,
@@ -179,6 +194,14 @@ class MasterSlaveConnection(BaseObject):
         for slave in self.__slaves:
             slave.disconnect()
 
+    def close(self):
+        """Alias for :meth:`disconnect`
+
+        .. seealso:: :meth:`end_request`
+        .. versionadded:: 2.8
+        """
+        self.disconnect()
+
     def set_cursor_manager(self, manager_class):
         """Set the cursor manager for this connection.
 
@@ -194,12 +217,9 @@ class MasterSlaveConnection(BaseObject):
         """
         self.__master._ensure_connected(sync)
 
-    # _connection_to_use is a hack that we need to include to make sure
-    # that killcursor operations can be sent to the same instance on which
-    # the cursor actually resides...
     def _send_message(self, message,
                       with_last_error=False,
-                      command=False, _connection_to_use=None):
+                      command=False):
         """Say something to Mongo.
 
         Sends a message on the Master connection. This is used for inserts,
@@ -213,11 +233,8 @@ class MasterSlaveConnection(BaseObject):
           - `data`: data to send
           - `safe`: perform a getLastError after sending the message
         """
-        if _connection_to_use is None or _connection_to_use == -1:
-            return self.__master._send_message(message,
-                                               with_last_error, command)
-        return self.__slaves[_connection_to_use]._send_message(
-            message, with_last_error, command, check_primary=False)
+        return self.__master._send_message(message,
+                                           with_last_error, command)
 
     # _connection_to_use is a hack that we need to include to make sure
     # that getmore operations can be sent to the same instance on which
@@ -366,3 +383,26 @@ class MasterSlaveConnection(BaseObject):
         return self.__master._purge_index(database_name,
                                           collection_name,
                                           index_name)
+
+    def server_info(self):
+        """Get information about the MongoDB master we're connected to.
+
+        .. versionadded:: 2.8
+        """
+        return self.__master.admin.command("buildinfo")
+
+    def _cache_credentials(self, source, credentials, connect=True):
+        self.__master._cache_credentials(source, credentials, connect)
+        for slave in self.__slaves:
+            # Use connect=False here so that credentials are cached
+            # on the slaves no matter what. Since auth succeeded on the
+            # master we know the credentials are correct and the slaves
+            # will authenticate as needed. This avoids issues with slave
+            # auth problems due to problems other than bad credentials
+            # (e.g. network errors).
+            slave._cache_credentials(source, credentials, connect=False)
+
+    def _purge_credentials(self, source):
+        self.__master._purge_credentials(source)
+        for slave in self.__slaves:
+            slave._purge_credentials(source)

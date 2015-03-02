@@ -976,13 +976,11 @@ class Collection(common.BaseObject):
           >>> my_collection.create_index([("mike", pymongo.DESCENDING)],
           ...                            background=True)
 
-        Valid options include:
+        Valid options include, but are not limited to:
 
           - `name`: custom name to use for this index - if none is
             given, a name will be generated
           - `unique`: if ``True`` creates a unique constraint on the index
-          - `dropDups` or `drop_dups`: if ``True`` duplicate values are dropped
-            during index creation when creating a unique index
           - `background`: if ``True`` this index should be created in the
             background
           - `sparse`: if ``True``, omit from the index any documents that lack
@@ -998,6 +996,17 @@ class Collection(common.BaseObject):
             collection. MongoDB will automatically delete documents from
             this collection after <int> seconds. The indexed field must
             be a UTC datetime or the data will not expire.
+          - `dropDups` or `drop_dups` (**deprecated**): if ``True`` duplicate
+            values are dropped during index creation when creating a unique
+            index
+
+        See the MongoDB documentation for a full list of supported options by
+        server version.
+
+        .. warning:: `dropDups` / `drop_dups` is no longer supported by
+          MongoDB starting with server version 2.7.5. The option is silently
+          ignored by the server and unique index builds using the option will
+          fail if a duplicate value is detected.
 
         .. note:: `expireAfterSeconds` requires server version **>= 2.1.2**
 
@@ -1105,13 +1114,12 @@ class Collection(common.BaseObject):
         ``None`` if the index is already cached.
 
         All optional index creation parameters should be passed as
-        keyword arguments to this method. Valid options include:
+        keyword arguments to this method. Valid options include, but are not
+        limited to:
 
           - `name`: custom name to use for this index - if none is
             given, a name will be generated
           - `unique`: if ``True`` creates a unique constraint on the index
-          - `dropDups` or `drop_dups`: if ``True`` duplicate values are dropped
-            during index creation when creating a unique index
           - `background`: if ``True`` this index should be created in the
             background
           - `sparse`: if ``True``, omit from the index any documents that lack
@@ -1127,6 +1135,17 @@ class Collection(common.BaseObject):
             collection. MongoDB will automatically delete documents from
             this collection after <int> seconds. The indexed field must
             be a UTC datetime or the data will not expire.
+          - `dropDups` or `drop_dups` (**deprecated**): if ``True`` duplicate
+            values are dropped during index creation when creating a unique
+            index
+
+        See the MongoDB documentation for a full list of supported options by
+        server version.
+
+        .. warning:: `dropDups` / `drop_dups` is no longer supported by
+          MongoDB starting with server version 2.7.5. The option is silently
+          ignored by the server and unique index builds using the option will
+          fail if a duplicate value is detected.
 
         .. note:: `expireAfterSeconds` requires server version **>= 2.1.2**
 
@@ -1232,7 +1251,7 @@ class Collection(common.BaseObject):
         guaranteed to contain at least a single key, ``"key"`` which
         is a list of (key, direction) pairs specifying the index (as
         passed to create_index()). It will also contain any other
-        information in `system.indexes`, except for the ``"ns"`` and
+        metadata about the indexes, except for the ``"ns"`` and
         ``"name"`` keys, which are cleaned. Example output might look
         like this:
 
@@ -1248,8 +1267,23 @@ class Collection(common.BaseObject):
            themselves, whose ``"key"`` item contains the list that was
            the value in previous versions of PyMongo.
         """
-        raw = self.__database.system.indexes.find({"ns": self.__full_name},
-                                                  {"ns": 0}, as_class=SON)
+        client = self.database.connection
+        client._ensure_connected(True)
+
+        if client.max_wire_version > 2:
+            res, addr = self.__database._command(
+                "listIndexes", self.__name, as_class=SON,
+                cursor={}, read_preference=ReadPreference.PRIMARY)
+            # MongoDB 2.8rc2
+            if "indexes" in res:
+                raw = res["indexes"]
+            # >= MongoDB 2.8rc3
+            else:
+                raw = CommandCursor(self, res["cursor"], addr)
+        else:
+            raw = self.__database.system.indexes.find({"ns": self.__full_name},
+                                                      {"ns": 0}, as_class=SON,
+                                                      _must_use_master=True)
         info = {}
         for index in raw:
             index["key"] = index["key"].items()
@@ -1265,8 +1299,28 @@ class Collection(common.BaseObject):
         information on the possible options. Returns an empty
         dictionary if the collection has not been created yet.
         """
-        result = self.__database.system.namespaces.find_one(
-            {"name": self.__full_name})
+        client = self.database.connection
+        client._ensure_connected(True)
+
+        result = None
+        if client.max_wire_version > 2:
+            res, addr = self.__database._command(
+                "listCollections",
+                cursor={},
+                filter={"name": self.__name},
+                read_preference=ReadPreference.PRIMARY)
+            # MongoDB 2.8rc2
+            if "collections" in res:
+                results = res["collections"]
+            # >= MongoDB 2.8rc3
+            else:
+                results = CommandCursor(self, res["cursor"], addr)
+            for doc in results:
+                result = doc
+                break
+        else:
+            result = self.__database.system.namespaces.find_one(
+                {"name": self.__full_name}, _must_use_master=True)
 
         if not result:
             return {}
@@ -1588,7 +1642,8 @@ class Collection(common.BaseObject):
             return res.get("results")
 
     def find_and_modify(self, query={}, update=None,
-                        upsert=False, sort=None, full_response=False, **kwargs):
+                        upsert=False, sort=None, full_response=False,
+                        manipulate=False, **kwargs):
         """Update and return an object.
 
         This is a thin wrapper around the findAndModify_ command. The
@@ -1620,6 +1675,9 @@ class Collection(common.BaseObject):
             - `new`: return updated rather than original object
               (default ``False``)
             - `fields`: see second argument to :meth:`find` (default all)
+            - `manipulate`: (optional): If ``True``, apply any outgoing SON
+              manipulators before returning. Ignored when `full_response`
+              is set to True. Defaults to ``False``.
             - `**kwargs`: any other options the findAndModify_ command
               supports can be passed here.
 
@@ -1629,6 +1687,9 @@ class Collection(common.BaseObject):
         .. _findAndModify: http://dochub.mongodb.org/core/findAndModify
 
         .. note:: Requires server version **>= 1.3.0**
+
+        .. versionchanged:: 2.8
+           Added the optional manipulate parameter
 
         .. versionchanged:: 2.5
            Added the optional full_response parameter
@@ -1686,7 +1747,10 @@ class Collection(common.BaseObject):
         if full_response:
             return out
         else:
-            return out.get('value')
+            document = out.get('value')
+            if manipulate:
+                document = self.__database._fix_outgoing(document, self)
+            return document
 
     def __iter__(self):
         return self

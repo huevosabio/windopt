@@ -8,7 +8,7 @@ from numpy import (atleast_1d, dot, take, triu, shape, eye,
                    transpose, zeros, product, greater, array,
                    all, where, isscalar, asarray, inf, abs,
                    finfo, inexact, issubdtype, dtype)
-from .optimize import OptimizeResult, _check_unknown_options
+from .optimize import OptimizeResult, _check_unknown_options, OptimizeWarning
 
 error = _minpack.error
 
@@ -268,7 +268,8 @@ def leastsq(func, x0, args=(), Dfun=None, full_output=0,
     ----------
     func : callable
         should take at least one (possibly length N vector) argument and
-        returns M floating point numbers.
+        returns M floating point numbers. It must not return NaNs or
+        fitting might fail.
     x0 : ndarray
         The starting estimate for the minimization.
     args : tuple
@@ -292,10 +293,11 @@ def leastsq(func, x0, args=(), Dfun=None, full_output=0,
         The maximum number of calls to the function. If zero, then 100*(N+1) is
         the maximum where N is the number of elements in x0.
     epsfcn : float
-        A suitable step length for the forward-difference approximation of the
-        Jacobian (for Dfun=None). If epsfcn is less than the machine precision,
-        it is assumed that the relative errors in the functions are of the
-        order of the machine precision.
+        A variable used in determining a suitable step length for the forward-
+        difference approximation of the Jacobian (for Dfun=None). 
+        Normally the actual step length will be sqrt(epsfcn)*x
+        If epsfcn is less than the machine precision, it is assumed that the 
+        relative errors are of the order of the machine precision.
     factor : float
         A parameter determining the initial step bound
         (``factor * || diag * x||``). Should be in interval ``(0.1, 100)``.
@@ -449,7 +451,8 @@ def _weighted_general_function(params, xdata, ydata, function, weights):
     return weights * (function(xdata, *params) - ydata)
 
 
-def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
+def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False,
+              check_finite=True, **kw):
     """
     Use non-linear least squares to fit a function, f, to data.
 
@@ -472,8 +475,10 @@ def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
         can be determined using introspection, otherwise a ValueError
         is raised).
     sigma : None or M-length sequence, optional
-        If not None, these values are used as weights in the
-        least-squares problem.
+        If not None, the uncertainties in the ydata array. These are used as
+        weights in the least-squares problem
+        i.e. minimising ``np.sum( ((f(xdata, *popt) - ydata) / sigma)**2 )``
+        If None, the uncertainties are assumed to be 1.
     absolute_sigma : bool, optional
         If False, `sigma` denotes relative weights of the data points.
         The returned covariance matrix `pcov` is based on *estimated*
@@ -484,6 +489,12 @@ def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
         If True, `sigma` describes one standard deviation errors of
         the input data points. The estimated covariance in `pcov` is
         based on these values.
+    check_finite : bool, optional
+        If True, check that the input arrays do not contain nans of infs,
+        and raise a ValueError if they do. Setting this parameter to
+        False may silently produce nonsensical results if the input arrays
+        do contain nans.
+        Default is True.
 
     Returns
     -------
@@ -497,6 +508,14 @@ def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
 
         How the `sigma` parameter affects the estimated covariance
         depends on `absolute_sigma` argument, as described above.
+
+    Raises
+    ------
+    OptimizeWarning
+        if covariance of the parameters can not be estimated.
+
+    ValueError
+        if ydata and xdata contain NaNs.
 
     See Also
     --------
@@ -537,11 +556,18 @@ def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
     if isscalar(p0):
         p0 = array([p0])
 
-    ydata = np.asanyarray(ydata)
-    if isinstance(xdata, (list, tuple)):
+    # NaNs can not be handled
+    if check_finite:
+        ydata = np.asarray_chkfinite(ydata)
+    else:
+        ydata = np.asarray(ydata)
+    if isinstance(xdata, (list, tuple, np.ndarray)):
         # `xdata` is passed straight to the user-defined `f`, so allow
         # non-array_like `xdata`.
-        xdata = np.asarray(xdata)
+        if check_finite:
+            xdata = np.asarray_chkfinite(xdata)
+        else:
+            xdata = np.asarray(xdata)
 
     args = (xdata, ydata, f)
     if sigma is None:
@@ -559,16 +585,23 @@ def curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False, **kw):
         msg = "Optimal parameters not found: " + errmsg
         raise RuntimeError(msg)
 
+    warn_cov = False
     if pcov is None:
         # indeterminate covariance
         pcov = zeros((len(popt), len(popt)), dtype=float)
         pcov.fill(inf)
+        warn_cov = True
     elif not absolute_sigma:
         if len(ydata) > len(p0):
             s_sq = (asarray(func(popt, *args))**2).sum() / (len(ydata) - len(p0))
             pcov = pcov * s_sq
         else:
             pcov.fill(inf)
+            warn_cov = True
+
+    if warn_cov:
+        warnings.warn('Covariance of the parameters could not be estimated',
+                category=OptimizeWarning)
 
     if return_full:
         return popt, pcov, infodict, errmsg, ier

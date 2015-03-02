@@ -39,7 +39,8 @@ import numpy as np
 from numpy import array, asarray, float64, int32, zeros
 from . import _lbfgsb
 from .optimize import (approx_fprime, MemoizeJac, OptimizeResult,
-                       _check_unknown_options, wrap_function)
+                       _check_unknown_options, wrap_function,
+                       _approx_fprime_helper)
 
 __all__ = ['fmin_l_bfgs_b']
 
@@ -258,7 +259,7 @@ def _minimize_lbfgsb(fun, x0, args=(), jac=None, bounds=None,
     if jac is None:
         def func_and_grad(x):
             f = fun(x, *args)
-            g = approx_fprime(x, fun, epsilon, *args)
+            g = _approx_fprime_helper(x, fun, epsilon, args=args, f0=f)
             return f, g
     else:
         def func_and_grad(x):
@@ -299,7 +300,7 @@ def _minimize_lbfgsb(fun, x0, args=(), jac=None, bounds=None,
     n_iterations = 0
 
     while 1:
-#        x, f, g, wa, iwa, task, csave, lsave, isave, dsave = \
+        # x, f, g, wa, iwa, task, csave, lsave, isave, dsave = \
         _lbfgsb.setulb(m, x, low_bnd, upper_bnd, nbd, f, g, factr,
                        pgtol, wa, iwa, task, iprint, csave, lsave,
                        isave, dsave)

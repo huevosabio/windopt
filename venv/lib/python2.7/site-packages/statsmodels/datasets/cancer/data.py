@@ -7,7 +7,7 @@ TITLE       = """Breast Cancer Data"""
 SOURCE      = """
 This is the breast cancer data used in Owen's empirical likelihood.  It is taken from
 Rice, J.A. Mathematical Statistics and Data Analysis.
-http://www.thomsonedu.com/statistics/discipline_content/dataLibrary.html
+http://www.cengage.com/statistics/discipline_content/dataLibrary.html
 """
 
 DESCRSHORT  = """Breast Cancer and county population"""
@@ -15,13 +15,14 @@ DESCRSHORT  = """Breast Cancer and county population"""
 DESCRLONG   = """The number of breast cancer observances in various counties"""
 
 #suggested notes
-NOTE        = """
-Number of observations: 301
-Number of variables: 2
-Variable name definitions:
+NOTE        = """::
 
-    cancer - The number of breast cancer observances
-    population - The population of the county
+    Number of observations: 301
+    Number of variables: 2
+    Variable name definitions:
+
+        cancer - The number of breast cancer observances
+        population - The population of the county
 
 """
 

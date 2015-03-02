@@ -46,11 +46,15 @@ benchmark against the parametric GLM results.
 # NOTE: example script is now in examples folder
 #update: I did some of the above, see module docstring
 
+from statsmodels.compat.python import next, range
 import numpy as np
 
 from statsmodels.genmod import families
 from statsmodels.sandbox.nonparametric.smoothers import PolySmoother
 from statsmodels.genmod.generalized_linear_model import GLM
+from statsmodels.tools.sm_exceptions import IterationLimitWarning, iteration_limit_doc
+
+import warnings
 
 DEBUG = False
 
@@ -234,8 +238,8 @@ class AdditiveModel(object):
             #print 'next shape', (Y - alpha - mu + tmp).shape
             bad = np.isnan(Y - alpha - mu + tmp).any()
             if bad: #temporary assert while debugging
-                print Y, alpha, mu, tmp
-                raise
+                print(Y, alpha, mu, tmp)
+                raise ValueError("nan encountered")
             #self.smoothers[i].smooth(Y - alpha - mu + tmp,
             self.smoothers[i].smooth(Y - mu + tmp,
                                      weights=self.weights)
@@ -243,7 +247,7 @@ class AdditiveModel(object):
             self.results.offset[i] = -(tmp2*self.weights).sum() / self.weights.sum()
             #self.offset used in smoothed
             if DEBUG:
-                print self.smoothers[i].params
+                print(self.smoothers[i].params)
             mu += tmp2 - tmp
         #change setting offset here: tests still pass, offset equal to constant
         #in component ??? what's the effect of offset
@@ -267,8 +271,8 @@ class AdditiveModel(object):
         '''
         self.iter += 1 #moved here to always count, not necessary
         if DEBUG:
-            print self.iter, self.results.Y.shape,
-            print self.results.predict(self.exog).shape, self.weights.shape
+            print(self.iter, self.results.Y.shape)
+            print(self.results.predict(self.exog).shape, self.weights.shape)
         curdev = (((self.results.Y - self.results.predict(self.exog))**2) * self.weights).sum()
 
         if self.iter > self.maxiter: #kill it, no max iterationoption
@@ -321,8 +325,7 @@ class AdditiveModel(object):
             self.results = self.next()
 
         if self.iter >= self.maxiter:
-            import warnings
-            warnings.warn('maximum number of iterations reached')
+            warnings.warn(iteration_limit_doc, IterationLimitWarning)
 
         return self.results
 
@@ -353,7 +356,7 @@ class Model(GLM, AdditiveModel):
         _results = self.results
         Y = _results.Y
         if np.isnan(self.weights).all():
-            print "nanweights1"
+            print("nanweights1")
 
         _results.mu = self.family.link.inverse(_results.predict(self.exog))
         #eta = _results.predict(self.exog)
@@ -361,10 +364,10 @@ class Model(GLM, AdditiveModel):
         weights = self.family.weights(_results.mu)
         if np.isnan(weights).all():
             self.weights = weights
-            print "nanweights2"
+            print("nanweights2")
         self.weights = weights
         if DEBUG:
-            print 'deriv isnan', np.isnan(self.family.link.deriv(_results.mu)).any()
+            print('deriv isnan', np.isnan(self.family.link.deriv(_results.mu)).any())
 
         #Z = _results.predict(self.exog) + \
         Z = _results.predict(self.exog) + \
@@ -426,6 +429,6 @@ class Model(GLM, AdditiveModel):
 
         if self.iter >= self.maxiter:
             import warnings
-            warnings.warn('maximum number of iterations reached')
+            warnings.warn(iteration_limit_doc, IterationLimitWarning)
 
         return self.results

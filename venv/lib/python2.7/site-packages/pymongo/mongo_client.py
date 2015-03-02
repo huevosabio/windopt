@@ -137,27 +137,28 @@ class MongoClient(common.BaseObject):
 
           | **Other optional parameters can be passed as keyword arguments:**
 
-          - `socketTimeoutMS`: (integer) How long (in milliseconds) a send or
-            receive on a socket can take before timing out. Defaults to ``None``
-            (no timeout).
-          - `connectTimeoutMS`: (integer) How long (in milliseconds) a
+          - `socketTimeoutMS`: (integer or None) How long (in milliseconds) a
+            send or receive on a socket can take before timing out. Defaults to
+            ``None`` (no timeout).
+          - `connectTimeoutMS`: (integer or None) How long (in milliseconds) a
             connection can take to be opened before timing out. Defaults to
             ``20000``.
-          - `waitQueueTimeoutMS`: (integer) How long (in milliseconds) a
-            thread will wait for a socket from the pool if the pool has no
+          - `waitQueueTimeoutMS`: (integer or None) How long (in milliseconds)
+            a thread will wait for a socket from the pool if the pool has no
             free sockets. Defaults to ``None`` (no timeout).
-          - `waitQueueMultiple`: (integer) Multiplied by max_pool_size to give
-            the number of threads allowed to wait for a socket at one time.
-            Defaults to ``None`` (no waiters).
-          - `auto_start_request`: If ``True``, each thread that accesses
-            this :class:`MongoClient` has a socket allocated to it for the
-            thread's lifetime.  This ensures consistent reads, even if you
-            read after an unacknowledged write. Defaults to ``False``
+          - `waitQueueMultiple`: (integer or None) Multiplied by max_pool_size
+            to give the number of threads allowed to wait for a socket at one
+            time. Defaults to ``None`` (no waiters).
+          - `socketKeepAlive`: (boolean) Whether to send periodic keep-alive
+            packets on connected sockets. Defaults to ``False`` (do not send
+            keep-alive packets).
+          - `auto_start_request`: Deprecated.
           - `use_greenlets`: If ``True``, :meth:`start_request()` will ensure
             that the current greenlet uses the same socket for all
-            operations until :meth:`end_request()`
+            operations until :meth:`end_request()`. Defaults to ``False``.
 
           | **Write Concern options:**
+          | (Only set if passed. No default values.)
 
           - `w`: (integer or string) If this is a replica set, write operations
             will block until they have been replicated to the specified number
@@ -185,31 +186,35 @@ class MongoClient(common.BaseObject):
             - either directly or via a mongos:**
           | (ignored by standalone mongod instances)
 
-          - `replicaSet`: (string) The name of the replica set to connect to.
-            The driver will verify that the replica set it connects to matches
-            this name. Implies that the hosts specified are a seed list and the
-            driver should attempt to find all members of the set. *Ignored by
-            mongos*.
+          - `replicaSet`: (string or None) The name of the replica set to
+            connect to. The driver will verify that the replica set it connects
+            to matches this name. Implies that the hosts specified are a seed
+            list and the driver should attempt to find all members of the set.
+            *Ignored by mongos*. Defaults to ``None``.
           - `read_preference`: The read preference for this client. If
             connecting to a secondary then a read preference mode *other* than
             PRIMARY is required - otherwise all queries will throw
             :class:`~pymongo.errors.AutoReconnect` "not master".
             See :class:`~pymongo.read_preferences.ReadPreference` for all
-            available read preference options.
+            available read preference options. Defaults to ``PRIMARY``.
           - `tag_sets`: Ignored unless connecting to a replica set via mongos.
             Specify a priority-order for tag sets, provide a list of
             tag sets: ``[{'dc': 'ny'}, {'dc': 'la'}, {}]``. A final, empty tag
             set, ``{}``, means "read from any member that matches the mode,
-            ignoring tags.
+            ignoring tags. Defaults to ``[{}]``, meaning "ignore members'
+            tags."
 
           | **SSL configuration:**
 
           - `ssl`: If ``True``, create the connection to the server using SSL.
+            Defaults to ``False``.
           - `ssl_keyfile`: The private keyfile used to identify the local
             connection against mongod.  If included with the ``certfile`` then
             only the ``ssl_certfile`` is needed.  Implies ``ssl=True``.
+            Defaults to ``None``.
           - `ssl_certfile`: The certificate file used to identify the local
-            connection against mongod. Implies ``ssl=True``.
+            connection against mongod. Implies ``ssl=True``. Defaults to
+            ``None``.
           - `ssl_cert_reqs`: Specifies whether a certificate is required from
             the other side of the connection, and whether it will be validated
             if provided. It must be one of the three values ``ssl.CERT_NONE``
@@ -217,11 +222,12 @@ class MongoClient(common.BaseObject):
             (not required, but validated if provided), or ``ssl.CERT_REQUIRED``
             (required and validated). If the value of this parameter is not
             ``ssl.CERT_NONE``, then the ``ssl_ca_certs`` parameter must point
-            to a file of CA certificates. Implies ``ssl=True``.
+            to a file of CA certificates. Implies ``ssl=True``. Defaults to
+            ``ssl.CERT_NONE``.
           - `ssl_ca_certs`: The ca_certs file contains a set of concatenated
             "certification authority" certificates, which are used to validate
             certificates passed from the other end of the connection.
-            Implies ``ssl=True``.
+            Implies ``ssl=True``. Defaults to ``None``.
 
         .. seealso:: :meth:`end_request`
 
@@ -294,9 +300,10 @@ class MongoClient(common.BaseObject):
         self.__direct = len(seeds) == 1 and not self.__repl
 
         self.__net_timeout = options.get('sockettimeoutms')
-        self.__conn_timeout = options.get('connecttimeoutms')
+        self.__conn_timeout = options.get('connecttimeoutms', 20.0)
         self.__wait_queue_timeout = options.get('waitqueuetimeoutms')
         self.__wait_queue_multiple = options.get('waitqueuemultiple')
+        self.__socket_keepalive = options.get('socketkeepalive', False)
 
         self.__use_ssl = options.get('ssl', None)
         self.__ssl_keyfile = options.get('ssl_keyfile', None)
@@ -304,7 +311,8 @@ class MongoClient(common.BaseObject):
         self.__ssl_cert_reqs = options.get('ssl_cert_reqs', None)
         self.__ssl_ca_certs = options.get('ssl_ca_certs', None)
 
-        ssl_kwarg_keys = [k for k in kwargs.keys() if k.startswith('ssl_')]
+        ssl_kwarg_keys = [k for k in kwargs.keys()
+                          if k.startswith('ssl_') and kwargs[k]]
         if self.__use_ssl == False and ssl_kwarg_keys:
             raise ConfigurationError("ssl has not been enabled but the "
                                      "following ssl parameters have been set: "
@@ -369,7 +377,7 @@ class MongoClient(common.BaseObject):
                 raise ConnectionFailure(str(e))
 
         if username:
-            mechanism = options.get('authmechanism', 'MONGODB-CR')
+            mechanism = options.get('authmechanism', 'DEFAULT')
             source = (
                 options.get('authsource')
                 or self.__default_database_name
@@ -377,8 +385,8 @@ class MongoClient(common.BaseObject):
 
             credentials = auth._build_credentials_tuple(mechanism,
                                                         source,
-                                                        unicode(username),
-                                                        unicode(password),
+                                                        username,
+                                                        password,
                                                         options)
             try:
                 self._cache_credentials(source, credentials, _connect)
@@ -459,7 +467,7 @@ class MongoClient(common.BaseObject):
                 auth.authenticate(credentials, sock_info, self.__simple_command)
                 sock_info.authset.add(credentials)
             finally:
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
 
         self.__auth_credentials[source] = credentials
 
@@ -482,7 +490,8 @@ class MongoClient(common.BaseObject):
             ssl_cert_reqs=self.__ssl_cert_reqs,
             ssl_ca_certs=self.__ssl_ca_certs,
             wait_queue_timeout=self.__wait_queue_timeout,
-            wait_queue_multiple=self.__wait_queue_multiple)
+            wait_queue_multiple=self.__wait_queue_multiple,
+            socket_keepalive=self.__socket_keepalive)
 
     def __check_auth(self, sock_info):
         """Authenticate using cached database credentials.
@@ -592,8 +601,7 @@ class MongoClient(common.BaseObject):
 
     @property
     def auto_start_request(self):
-        """Is auto_start_request enabled?
-        """
+        """**DEPRECATED** Is auto_start_request enabled?"""
         return self.__auto_start_request
 
     def get_document_class(self):
@@ -675,7 +683,8 @@ class MongoClient(common.BaseObject):
     def __simple_command(self, sock_info, dbname, spec):
         """Send a command to the server. May raise AutoReconnect.
         """
-        rqst_id, msg, _ = message.query(0, dbname + '.$cmd', 0, -1, spec)
+        ns = dbname + '.$cmd'
+        rqst_id, msg, _ = message.query(0, ns, 0, -1, spec)
         start = time.time()
         try:
             sock_info.sock.sendall(msg)
@@ -689,7 +698,8 @@ class MongoClient(common.BaseObject):
 
         end = time.time()
         response = helpers._unpack_response(response)['data'][0]
-        msg = "command %r failed: %%s" % spec
+        msg = "command %s on namespace %s failed: %%s" % (
+            repr(spec).replace("%", "%%"), ns)
         helpers._check_command_response(response, None, msg)
         return response, end - start
 
@@ -900,12 +910,11 @@ class MongoClient(common.BaseObject):
 
         Calls disconnect() on error.
         """
-        connection_pool = member.pool
         try:
-            if self.auto_start_request and not connection_pool.in_request():
-                connection_pool.start_request()
+            if self.auto_start_request and not member.in_request():
+                member.start_request()
 
-            sock_info = connection_pool.get_socket()
+            sock_info = member.get_socket()
         except socket.error, why:
             self.disconnect()
 
@@ -920,7 +929,7 @@ class MongoClient(common.BaseObject):
         try:
             self.__check_auth(sock_info)
         except:
-            connection_pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
             raise
         return sock_info
 
@@ -947,7 +956,7 @@ class MongoClient(common.BaseObject):
 
         # Close sockets promptly.
         if member:
-            member.pool.reset()
+            member.reset()
 
     def close(self):
         """Alias for :meth:`disconnect`
@@ -992,12 +1001,12 @@ class MongoClient(common.BaseObject):
             sock_info = None
             try:
                 try:
-                    sock_info = member.pool.get_socket()
+                    sock_info = member.get_socket()
                     return not pool._closed(sock_info.sock)
                 except (socket.error, ConnectionFailure):
                     return False
             finally:
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
 
     def set_cursor_manager(self, manager_class):
         """Set this client's cursor manager.
@@ -1087,7 +1096,7 @@ class MongoClient(common.BaseObject):
             return message
 
     def _send_message(self, message,
-                      with_last_error=False, command=False, check_primary=True):
+                      with_last_error=False, command=False):
         """Say something to Mongo.
 
         Raises ConnectionFailure if the message cannot be sent. Raises
@@ -1100,11 +1109,9 @@ class MongoClient(common.BaseObject):
           - `message`: message to send
           - `with_last_error`: check getLastError status after sending the
             message
-          - `check_primary`: don't try to write to a non-primary; see
-            kill_cursors for an exception to this rule
         """
         member = self.__ensure_member()
-        if check_primary and not with_last_error and not self.is_primary:
+        if not with_last_error and not self.is_primary:
             # The write won't succeed, bail as if we'd done a getLastError
             raise AutoReconnect("not master")
 
@@ -1133,7 +1140,7 @@ class MongoClient(common.BaseObject):
                 sock_info.close()
                 raise
         finally:
-            member.pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
 
     def __receive_data_on_socket(self, length, sock_info):
         """Lowest level receive operation.
@@ -1201,15 +1208,15 @@ class MongoClient(common.BaseObject):
                 if "network_timeout" in kwargs:
                     sock_info.sock.settimeout(self.__net_timeout)
 
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
 
             return (None, (response, sock_info, member.pool))
         except (ConnectionFailure, socket.error), e:
             self.disconnect()
-            member.pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
             raise AutoReconnect(str(e))
         except:
-            member.pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
             raise
 
     def _exhaust_next(self, sock_info):
@@ -1223,26 +1230,17 @@ class MongoClient(common.BaseObject):
             raise AutoReconnect(str(e))
 
     def start_request(self):
-        """Ensure the current thread or greenlet always uses the same socket
-        until it calls :meth:`end_request`. This ensures consistent reads,
-        even if you read after an unacknowledged write.
+        """**DEPRECATED**: start_request will be removed in PyMongo 3.0.
 
-        In Python 2.6 and above, or in Python 2.5 with
-        "from __future__ import with_statement", :meth:`start_request` can be
-        used as a context manager:
+        When doing w=0 writes to MongoDB 2.4 or earlier, :meth:`start_request`
+        was sometimes useful to ensure the current thread always used the same
+        socket until it called :meth:`end_request`. This made consistent reads
+        more likely after an unacknowledged write. Requests are no longer
+        useful in modern MongoDB applications, see
+        `PYTHON-785 <https://jira.mongodb.org/browse/PYTHON-785>`_.
 
-        >>> client = pymongo.MongoClient(auto_start_request=False)
-        >>> db = client.test
-        >>> _id = db.test_collection.insert({})
-        >>> with client.start_request():
-        ...     for i in range(100):
-        ...         db.test_collection.update({'_id': _id}, {'$set': {'i':i}})
-        ...
-        ...     # Definitely read the document after the final update completes
-        ...     print db.test_collection.find({'_id': _id})
-
-        If a thread or greenlet calls start_request multiple times, an equal
-        number of calls to :meth:`end_request` is required to end the request.
+        .. versionchanged:: 2.8
+           Deprecated.
 
         .. versionchanged:: 2.4
            Now counts the number of calls to start_request and doesn't end
@@ -1253,21 +1251,21 @@ class MongoClient(common.BaseObject):
            :meth:`start_request` previously returned None
         """
         member = self.__ensure_member()
-        member.pool.start_request()
+        member.start_request()
         return pool.Request(self)
 
     def in_request(self):
-        """True if this thread is in a request, meaning it has a socket
-        reserved for its exclusive use.
+        """**DEPRECATED**: True if this thread is in a request, meaning it has
+        a socket reserved for its exclusive use.
         """
         member = self.__member  # Don't try to connect if disconnected.
-        return member and member.pool.in_request()
+        return member and member.in_request()
 
     def end_request(self):
-        """Undo :meth:`start_request`. If :meth:`end_request` is called as many
-        times as :meth:`start_request`, the request is over and this thread's
-        connection returns to the pool. Extra calls to :meth:`end_request` have
-        no effect.
+        """**DEPRECATED**: Undo :meth:`start_request`. If :meth:`end_request`
+        is called as many times as :meth:`start_request`, the request is over
+        and this thread's connection returns to the pool. Extra calls to
+        :meth:`end_request` have no effect.
 
         Ending a request allows the :class:`~socket.socket` that has
         been reserved for this thread by :meth:`start_request` to be returned to
@@ -1281,7 +1279,7 @@ class MongoClient(common.BaseObject):
         """
         member = self.__member  # Don't try to connect if disconnected.
         if member:
-            member.pool.end_request()
+            member.end_request()
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -1345,8 +1343,25 @@ class MongoClient(common.BaseObject):
         """
         if not isinstance(cursor_ids, list):
             raise TypeError("cursor_ids must be a list")
-        return self._send_message(
-            message.kill_cursors(cursor_ids), check_primary=False)
+
+        member = self.__member
+
+        # We can't risk taking the lock to reconnect if we're being called
+        # from Cursor.__del__, see PYTHON-799.
+        if not member:
+            warnings.warn("not connected, couldn't close cursor")
+            return
+
+        _, kill_cursors_msg = message.kill_cursors(cursor_ids)
+        sock_info = self.__socket(member)
+        try:
+            try:
+                sock_info.sock.sendall(kill_cursors_msg)
+            except:
+                sock_info.close()
+                raise
+        finally:
+            member.maybe_return_socket(sock_info)
 
     def server_info(self):
         """Get information about the MongoDB server we're connected to.
@@ -1385,8 +1400,12 @@ class MongoClient(common.BaseObject):
                            read_preference=ReadPreference.PRIMARY)
 
     def copy_database(self, from_name, to_name,
-                      from_host=None, username=None, password=None):
-        """Copy a database, potentially from another host.
+                      from_host=None, username=None, password=None,
+                      mechanism='DEFAULT'):
+        """**DEPRECATED**: Copy a database, potentially from another host.
+
+        :meth:`copy_database` will be removed in PyMongo 3.0. See the
+        :doc:`copy_database examples </examples/copydb>` for alternatives.
 
         Raises :class:`TypeError` if `from_name` or `to_name` is not
         an instance of :class:`basestring` (:class:`str` in python 3).
@@ -1397,7 +1416,13 @@ class MongoClient(common.BaseObject):
         source. Otherwise the database is copied from `from_host`.
 
         If the source database requires authentication, `username` and
-        `password` must be specified.
+        `password` must be specified. By default, use SCRAM-SHA-1 with
+        MongoDB 3.0 and later, MONGODB-CR (MongoDB Challenge Response
+        protocol) for older servers.
+
+        .. note:: mongos does not support copying a database from a server
+           with authentication, see
+           `SERVER-6427 <https://jira.mongodb.org/browse/SERVER-6427>`_.
 
         :Parameters:
           - `from_name`: the name of the source database
@@ -1405,42 +1430,25 @@ class MongoClient(common.BaseObject):
           - `from_host` (optional): host name to copy from
           - `username` (optional): username for source database
           - `password` (optional): password for source database
+          - `mechanism` (optional): auth method, 'MONGODB-CR' or 'SCRAM-SHA-1'
 
-        .. note:: Specifying `username` and `password` requires server
-           version **>= 1.3.3+**.
-
-        .. versionadded:: 1.5
+        .. versionchanged:: 2.8
+           Deprecated copy_database, and added SCRAM-SHA-1 support.
         """
-        if not isinstance(from_name, basestring):
-            raise TypeError("from_name must be an instance "
-                            "of %s" % (basestring.__name__,))
-        if not isinstance(to_name, basestring):
-            raise TypeError("to_name must be an instance "
-                            "of %s" % (basestring.__name__,))
-
-        database._check_name(to_name)
-
-        command = {"fromdb": from_name, "todb": to_name}
-
-        if from_host is not None:
-            command["fromhost"] = from_host
-
+        member = self.__ensure_member()
+        sock_info = self.__socket(member)
         try:
-            self.start_request()
-
-            if username is not None:
-                nonce = self.admin.command("copydbgetnonce",
-                    read_preference=ReadPreference.PRIMARY,
-                    fromhost=from_host)["nonce"]
-                command["username"] = username
-                command["nonce"] = nonce
-                command["key"] = auth._auth_key(nonce, username, password)
-
-            return self.admin.command("copydb",
-                                      read_preference=ReadPreference.PRIMARY,
-                                      **command)
+            helpers._copy_database(
+                fromdb=from_name,
+                todb=to_name,
+                fromhost=from_host,
+                mechanism=mechanism,
+                username=username,
+                password=password,
+                sock_info=sock_info,
+                cmd_func=self.__simple_command)
         finally:
-            self.end_request()
+            member.pool.maybe_return_socket(sock_info)
 
     def get_default_database(self):
         """Get the database named in the MongoDB connection URI.

@@ -8,38 +8,25 @@ Compatibility tools for various data structure inputs
 # good: if ndarray check passes then loading pandas is not triggered,
 
 
+from statsmodels.compat.python import range
 import numpy as np
+import pandas as pd
 
-def have_pandas():
-    try:
-        import pandas
-        return True
-    except ImportError:
-        return False
-    except Exception:
-        return False
+def _check_period_index(x, freq="M"):
+    from pandas import PeriodIndex, DatetimeIndex
+    if not isinstance(x.index, (DatetimeIndex, PeriodIndex)):
+        raise ValueError("The index must be a DatetimeIndex or PeriodIndex")
 
-def have_patsy():
-    try:
-        import patsy
-        return True
-    except ImportError:
-        return False
-    except Exception:
-        return False
+    from statsmodels.tsa.base.datetools import _infer_freq
+    inferred_freq = _infer_freq(x.index)
+    if not inferred_freq.startswith(freq):
+        raise ValueError("Expected frequency {}. Got {}".format(inferred_freq,
+                                                                freq))
 
 def is_data_frame(obj):
-    if not have_pandas():
-        return False
-
-    import pandas as pn
-
-    return isinstance(obj, pn.DataFrame)
+    return isinstance(obj, pd.DataFrame)
 
 def is_design_matrix(obj):
-    if not have_patsy():
-        return False
-
     from patsy import DesignMatrix
     return isinstance(obj, DesignMatrix)
 
@@ -106,10 +93,7 @@ def _is_using_ndarray(endog, exog):
             (isinstance(exog, np.ndarray) or exog is None))
 
 def _is_using_pandas(endog, exog):
-    if not have_pandas():
-        return False
-    from pandas import Series, DataFrame, WidePanel
-    klasses = (Series, DataFrame, WidePanel)
+    klasses = (pd.Series, pd.DataFrame, pd.WidePanel)
     return (isinstance(endog, klasses) or isinstance(exog, klasses))
 
 def _is_array_like(endog, exog):

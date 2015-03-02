@@ -47,6 +47,16 @@ It won't handle :class:`~bson.binary.Binary` and :class:`~bson.code.Code`
 instances (as they are extended strings you can't provide custom defaults),
 but it will be faster as there is less recursion.
 
+.. versionchanged:: 2.8
+   The output format for :class:`~bson.timestamp.Timestamp` has changed from
+   '{"t": <int>, "i": <int>}' to '{"$timestamp": {"t": <int>, "i": <int>}}'.
+   This new format will be decoded to an instance of
+   :class:`~bson.timestamp.Timestamp`. The old format will continue to be
+   decoded to a python dict as before. Encoding to the old format is no longer
+   supported as it was never correct and loses type information.
+   Added support for $numberLong and $undefined - new in MongoDB 2.6 - and
+   parsing $date in ISO-8601 format.
+
 .. versionchanged:: 2.7
    Preserves order when rendering SON, Timestamp, Code, Binary, and DBRef
    instances. (But not in Python 2.4.)
@@ -76,6 +86,7 @@ import base64
 import calendar
 import datetime
 import re
+import time
 
 json_lib = True
 try:
@@ -96,6 +107,7 @@ from bson.min_key import MinKey
 from bson.objectid import ObjectId
 from bson.regex import Regex
 from bson.timestamp import Timestamp
+from bson.tz_util import utc
 
 from bson.py3compat import PY3, binary_type, string_types
 
@@ -166,7 +178,34 @@ def object_hook(dct, compile_re=True):
     if "$ref" in dct:
         return DBRef(dct["$ref"], dct["$id"], dct.get("$db", None))
     if "$date" in dct:
-        secs = float(dct["$date"]) / 1000.0
+        dtm = dct["$date"]
+        # mongoexport 2.6 and newer
+        if isinstance(dtm, basestring):
+            # datetime.datetime.strptime is new in python 2.5
+            naive = datetime.datetime(
+                *(time.strptime(dtm[:19], "%Y-%m-%dT%H:%M:%S")[0:6]))
+            # The %f format is new in python 2.6
+            micros = int(dtm[20:23]) * 1000
+            aware = naive.replace(microsecond=micros, tzinfo=utc)
+            offset = dtm[23:]
+            if not offset:
+                # No offset, assume UTC.
+                return aware
+            elif len(offset) == 5:
+                # Offset from mongoexport is in format (+|-)HHMM
+                secs = (int(offset[1:3]) * 3600 + int(offset[3:]) * 60)
+                if offset[0] == "-":
+                    secs *= -1
+                return aware - datetime.timedelta(seconds=secs)
+            else:
+                # Some other tool created this, or mongoexport changed again?
+                raise ValueError("invalid format for offset")
+        # mongoexport 2.6 and newer, time before the epoch (SERVER-15275)
+        elif isinstance(dtm, dict):
+            secs = float(dtm["$numberLong"]) / 1000.0
+        # mongoexport before 2.6
+        else:
+            secs = float(dtm) / 1000.0
         return EPOCH_AWARE + datetime.timedelta(seconds=secs)
     if "$regex" in dct:
         flags = 0
@@ -193,6 +232,15 @@ def object_hook(dct, compile_re=True):
         return Code(dct["$code"], dct.get("$scope"))
     if bson.has_uuid() and "$uuid" in dct:
         return bson.uuid.UUID(dct["$uuid"])
+    if "$undefined" in dct:
+        return None
+    if "$numberLong" in dct:
+        # 2to3 will change this to int. PyMongo 3.0 supports
+        # a new type, Int64, to avoid round trip issues.
+        return long(dct["$numberLong"])
+    if "$timestamp" in dct:
+        tsp = dct["$timestamp"]
+        return Timestamp(tsp["t"], tsp["i"])
     return dct
 
 
@@ -240,7 +288,7 @@ def default(obj):
     if isinstance(obj, MaxKey):
         return {"$maxKey": 1}
     if isinstance(obj, Timestamp):
-        return SON([("t", obj.time), ("i", obj.inc)])
+        return {"$timestamp": SON([("t", obj.time), ("i", obj.inc)])}
     if isinstance(obj, Code):
         return SON([('$code', str(obj)), ('$scope', obj.scope)])
     if isinstance(obj, Binary):

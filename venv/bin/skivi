@@ -1,4 +1,4 @@
-#!/home/ubuntu/windDayApp/venv/bin/python
+#!/var/www/windDayApp/venv/bin/python
 # EASY-INSTALL-ENTRY-SCRIPT: 'scikit-image==0.10.1','console_scripts','skivi'
 __requires__ = 'scikit-image==0.10.1'
 import sys

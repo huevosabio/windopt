@@ -63,6 +63,9 @@ class SocketInfo(object):
         self.last_checkout = time.time()
         self.forced = False
 
+        self._min_wire_version = None
+        self._max_wire_version = None
+
         # The pool's pool_id changes with each reset() so we can close sockets
         # created before the last reset.
         self.pool_id = pool_id
@@ -74,6 +77,20 @@ class SocketInfo(object):
             self.sock.close()
         except:
             pass
+        
+    def set_wire_version_range(self, min_wire_version, max_wire_version):
+        self._min_wire_version = min_wire_version
+        self._max_wire_version = max_wire_version
+        
+    @property
+    def min_wire_version(self):
+        assert self._min_wire_version is not None
+        return self._min_wire_version
+        
+    @property
+    def max_wire_version(self):
+        assert self._max_wire_version is not None
+        return self._max_wire_version
 
     def __eq__(self, other):
         # Need to check if other is NO_REQUEST or NO_SOCKET_YET, and then check
@@ -100,7 +117,8 @@ class Pool:
     def __init__(self, pair, max_size, net_timeout, conn_timeout, use_ssl,
                  use_greenlets, ssl_keyfile=None, ssl_certfile=None,
                  ssl_cert_reqs=None, ssl_ca_certs=None,
-                 wait_queue_timeout=None, wait_queue_multiple=None):
+                 wait_queue_timeout=None, wait_queue_multiple=None,
+                 socket_keepalive=False):
         """
         :Parameters:
           - `pair`: a (hostname, port) tuple
@@ -136,6 +154,9 @@ class Pool:
             free sockets.
           - `wait_queue_multiple`: (integer) Multiplied by max_pool_size to give
             the number of threads allowed to wait for a socket at one time.
+          - `socket_keepalive`: (boolean) Whether to send periodic keep-alive
+            packets on connected sockets. Defaults to ``False`` (do not send
+            keep-alive packets).
         """
         # Only check a socket's health with _closed() every once in a while.
         # Can override for testing: 0 to always check, None to never check.
@@ -154,6 +175,7 @@ class Pool:
         self.conn_timeout = conn_timeout
         self.wait_queue_timeout = wait_queue_timeout
         self.wait_queue_multiple = wait_queue_multiple
+        self.socket_keepalive = socket_keepalive
         self.use_ssl = use_ssl
         self.ssl_keyfile = ssl_keyfile
         self.ssl_certfile = ssl_certfile
@@ -191,13 +213,12 @@ class Pool:
         self.pool_id += 1
         self.pid = os.getpid()
 
-        sockets = None
+        # Allocate outside the lock. Triggering a GC while holding the lock
+        # could run Cursor.__del__ and deadlock. See PYTHON-799.
+        new_sockets = set()
+        self.lock.acquire()
         try:
-            # Swapping variables is not atomic. We need to ensure no other
-            # thread is modifying self.sockets, or replacing it, in this
-            # critical section.
-            self.lock.acquire()
-            sockets, self.sockets = self.sockets, set()
+            sockets, self.sockets = self.sockets, new_sockets
         finally:
             self.lock.release()
 
@@ -240,7 +261,9 @@ class Pool:
             try:
                 sock = socket.socket(af, socktype, proto)
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                sock.settimeout(self.conn_timeout or 20.0)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,
+                                self.socket_keepalive)
+                sock.settimeout(self.conn_timeout)
                 sock.connect(sa)
                 return sock
             except socket.error, e:
@@ -528,8 +551,11 @@ class Pool:
         for sock_info in self.sockets:
             sock_info.close()
 
-        for request_sock in self._tid_to_sock.values():
-            if request_sock not in (NO_REQUEST, NO_SOCKET_YET):
+        # Don't use self._tid_to_sock.values(): 2to3 would translate to
+        # list(self._tid_to_sock.values()), but during interpreter shutdown
+        # list() may already be set to None.
+        for request_sock in self._tid_to_sock.itervalues():
+            if request_sock not in (None, -1):
                 request_sock.close()
 
 

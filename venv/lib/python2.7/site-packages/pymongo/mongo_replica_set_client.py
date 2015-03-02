@@ -87,7 +87,7 @@ def shutdown_monitors():
         monitor = ref()
         if monitor:
             monitor.shutdown()
-            monitor.join()
+            monitor.join(10)
 atexit.register(shutdown_monitors)
 
 def _partition_node(node):
@@ -488,33 +488,31 @@ class MongoReplicaSetClient(common.BaseObject):
             precedence.
           - `port`: For compatibility with :class:`~mongo_client.MongoClient`.
             The default port number to use for hosts.
-          - `socketTimeoutMS`: (integer) How long (in milliseconds) a send or
-            receive on a socket can take before timing out. Defaults to ``None``
-            (no timeout).
-          - `connectTimeoutMS`: (integer) How long (in milliseconds) a
+          - `socketTimeoutMS`: (integer or None) How long (in milliseconds) a
+            send or receive on a socket can take before timing out. Defaults to
+            ``None`` (no timeout).
+          - `connectTimeoutMS`: (integer or None) How long (in milliseconds) a
             connection can take to be opened before timing out. Defaults to
             ``20000``.
-          - `waitQueueTimeoutMS`: (integer) How long (in milliseconds) a
-            thread will wait for a socket from the pool if the pool has no
+          - `waitQueueTimeoutMS`: (integer or None) How long (in milliseconds)
+            a thread will wait for a socket from the pool if the pool has no
             free sockets. Defaults to ``None`` (no timeout).
-          - `waitQueueMultiple`: (integer) Multiplied by max_pool_size to give
-            the number of threads allowed to wait for a socket at one time.
-            Defaults to ``None`` (no waiters).
-          - `auto_start_request`: If ``True``, each thread that accesses
-            this :class:`MongoReplicaSetClient` has a socket allocated to it
-            for the thread's lifetime, for each member of the set. For
-            :class:`~pymongo.read_preferences.ReadPreference` PRIMARY,
-            auto_start_request=True ensures consistent reads, even if you read
-            after an unacknowledged write. For read preferences other than
-            PRIMARY, there are no consistency guarantees. Default to ``False``.
+          - `waitQueueMultiple`: (integer or None) Multiplied by max_pool_size
+            to give the number of threads allowed to wait for a socket at one
+            time. Defaults to ``None`` (no waiters).
+          - `socketKeepAlive`: (boolean) Whether to send periodic keep-alive
+            packets on connected sockets. Defaults to ``False`` (do not send
+            keep-alive packets).
+          - `auto_start_request`: Deprecated.
           - `use_greenlets`: If ``True``, use a background Greenlet instead of
-            a background thread to monitor state of replica set. Additionally,
-            :meth:`start_request()` assigns a greenlet-local, rather than
-            thread-local, socket.
+            a background thread to monitor the state of the replica set.
+            Additionally, :meth:`start_request` assigns a greenlet-local,
+            rather than thread-local, socket. Defaults to ``False``.
             `use_greenlets` with :class:`MongoReplicaSetClient` requires
             `Gevent <http://gevent.org/>`_ to be installed.
 
           | **Write Concern options:**
+          | (Only set if passed. No default values.)
 
           - `w`: (integer or string) Write operations will block until they have
             been replicated to the specified number or tagged set of servers.
@@ -542,14 +540,14 @@ class MongoReplicaSetClient(common.BaseObject):
 
           - `read_preference`: The read preference for this client.
             See :class:`~pymongo.read_preferences.ReadPreference` for available
-            options.
+            options. Defaults to ``PRIMARY``.
           - `tag_sets`: Read from replica-set members with these tags.
             To specify a priority-order for tag sets, provide a list of
             tag sets: ``[{'dc': 'ny'}, {'dc': 'la'}, {}]``. A final, empty tag
             set, ``{}``, means "read from any member that matches the mode,
             ignoring tags." :class:`MongoReplicaSetClient` tries each set of
             tags in turn until it finds a set of tags with at least one matching
-            member.
+            member. Defaults to ``[{}]``, meaning "ignore members' tags."
           - `secondary_acceptable_latency_ms`: (integer) Any replica-set member
             whose ping time is within secondary_acceptable_latency_ms of the
             nearest member may accept reads. Default 15 milliseconds.
@@ -559,11 +557,14 @@ class MongoReplicaSetClient(common.BaseObject):
           | **SSL configuration:**
 
           - `ssl`: If ``True``, create the connection to the servers using SSL.
+            Defaults to ``False``.
           - `ssl_keyfile`: The private keyfile used to identify the local
             connection against mongod.  If included with the ``certfile`` then
             only the ``ssl_certfile`` is needed.  Implies ``ssl=True``.
+            Defaults to ``None``.
           - `ssl_certfile`: The certificate file used to identify the local
-            connection against mongod. Implies ``ssl=True``.
+            connection against mongod. Implies ``ssl=True``. Defaults to
+            ``None``.
           - `ssl_cert_reqs`: Specifies whether a certificate is required from
             the other side of the connection, and whether it will be validated
             if provided. It must be one of the three values ``ssl.CERT_NONE``
@@ -571,11 +572,12 @@ class MongoReplicaSetClient(common.BaseObject):
             (not required, but validated if provided), or ``ssl.CERT_REQUIRED``
             (required and validated). If the value of this parameter is not
             ``ssl.CERT_NONE``, then the ``ssl_ca_certs`` parameter must point
-            to a file of CA certificates. Implies ``ssl=True``.
+            to a file of CA certificates. Implies ``ssl=True``. Defaults to
+            ``ssl.CERT_NONE``.
           - `ssl_ca_certs`: The ca_certs file contains a set of concatenated
             "certification authority" certificates, which are used to validate
             certificates passed from the other end of the connection.
-            Implies ``ssl=True``.
+            Implies ``ssl=True``. Defaults to ``None``.
 
         .. versionchanged:: 2.5
            Added additional ssl options
@@ -648,16 +650,18 @@ class MongoReplicaSetClient(common.BaseObject):
                                      "keyword parameter is required.")
 
         self.__net_timeout = self.__opts.get('sockettimeoutms')
-        self.__conn_timeout = self.__opts.get('connecttimeoutms')
+        self.__conn_timeout = self.__opts.get('connecttimeoutms', 20.0)
         self.__wait_queue_timeout = self.__opts.get('waitqueuetimeoutms')
         self.__wait_queue_multiple = self.__opts.get('waitqueuemultiple')
+        self.__socket_keepalive = self.__opts.get('socketkeepalive', False)
         self.__use_ssl = self.__opts.get('ssl', None)
         self.__ssl_keyfile = self.__opts.get('ssl_keyfile', None)
         self.__ssl_certfile = self.__opts.get('ssl_certfile', None)
         self.__ssl_cert_reqs = self.__opts.get('ssl_cert_reqs', None)
         self.__ssl_ca_certs = self.__opts.get('ssl_ca_certs', None)
 
-        ssl_kwarg_keys = [k for k in kwargs.keys() if k.startswith('ssl_')]
+        ssl_kwarg_keys = [k for k in kwargs.keys()
+                          if k.startswith('ssl_') and kwargs[k]]
         if self.__use_ssl is False and ssl_kwarg_keys:
             raise ConfigurationError("ssl has not been enabled but the "
                                      "following ssl parameters have been set: "
@@ -694,7 +698,7 @@ class MongoReplicaSetClient(common.BaseObject):
                 raise ConnectionFailure(str(e))
 
         if username:
-            mechanism = options.get('authmechanism', 'MONGODB-CR')
+            mechanism = options.get('authmechanism', 'DEFAULT')
             source = (
                 options.get('authsource')
                 or self.__default_database_name
@@ -702,8 +706,8 @@ class MongoReplicaSetClient(common.BaseObject):
 
             credentials = auth._build_credentials_tuple(mechanism,
                                                         source,
-                                                        unicode(username),
-                                                        unicode(password),
+                                                        username,
+                                                        password,
                                                         options)
             try:
                 self._cache_credentials(source, credentials, _connect)
@@ -815,7 +819,7 @@ class MongoReplicaSetClient(common.BaseObject):
                 auth.authenticate(credentials, sock_info, self.__simple_command)
                 sock_info.authset.add(credentials)
             finally:
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
 
         self.__auth_credentials[source] = credentials
 
@@ -1003,15 +1007,15 @@ class MongoReplicaSetClient(common.BaseObject):
 
     @property
     def auto_start_request(self):
-        """Is auto_start_request enabled?
-        """
+        """**DEPRECATED** Is auto_start_request enabled?"""
         return self.__auto_start_request
 
     def __simple_command(self, sock_info, dbname, spec):
         """Send a command to the server.
            Returns (response, ping_time in seconds).
         """
-        rqst_id, msg, _ = message.query(0, dbname + '.$cmd', 0, -1, spec)
+        ns = dbname + '.$cmd'
+        rqst_id, msg, _ = message.query(0, ns, 0, -1, spec)
         start = time.time()
         try:
             sock_info.sock.sendall(msg)
@@ -1022,7 +1026,8 @@ class MongoReplicaSetClient(common.BaseObject):
 
         end = time.time()
         response = helpers._unpack_response(response)['data'][0]
-        msg = "command %r failed: %%s" % spec
+        msg = "command %s on namespace %s failed: %%s" % (
+            repr(spec).replace("%", "%%"), ns)
         helpers._check_command_response(response, None, msg)
         return response, end - start
 
@@ -1038,6 +1043,7 @@ class MongoReplicaSetClient(common.BaseObject):
             self.__use_ssl,
             wait_queue_timeout=self.__wait_queue_timeout,
             wait_queue_multiple=self.__wait_queue_multiple,
+            socket_keepalive=self.__socket_keepalive,
             use_greenlets=self.__use_greenlets,
             ssl_keyfile=self.__ssl_keyfile,
             ssl_certfile=self.__ssl_certfile,
@@ -1138,7 +1144,7 @@ class MongoReplicaSetClient(common.BaseObject):
                     sock_info = self.__socket(member, force=True)
                     response, ping_time = self.__simple_command(
                         sock_info, 'admin', {'ismaster': 1})
-                    member.pool.maybe_return_socket(sock_info)
+                    member.maybe_return_socket(sock_info)
                     new_member = member.clone_with(response, ping_time)
                 else:
                     response, pool, ping_time = self.__is_master(node)
@@ -1176,7 +1182,7 @@ class MongoReplicaSetClient(common.BaseObject):
 
             except (ConnectionFailure, socket.error), why:
                 if member:
-                    member.pool.discard_socket(sock_info)
+                    member.discard_socket(sock_info)
                 errors.append("%s:%d: %s" % (node[0], node[1], str(why)))
             if hosts:
                 break
@@ -1204,7 +1210,7 @@ class MongoReplicaSetClient(common.BaseObject):
                         # Not a member of this set.
                         continue
 
-                    member.pool.maybe_return_socket(sock_info)
+                    member.maybe_return_socket(sock_info)
                     new_member = member.clone_with(res, ping_time)
                 else:
                     res, connection_pool, ping_time = self.__is_master(host)
@@ -1219,7 +1225,7 @@ class MongoReplicaSetClient(common.BaseObject):
 
             except (ConnectionFailure, socket.error):
                 if member:
-                    member.pool.discard_socket(sock_info)
+                    member.discard_socket(sock_info)
                 continue
 
             if res['ismaster']:
@@ -1296,12 +1302,12 @@ class MongoReplicaSetClient(common.BaseObject):
         if self.auto_start_request and not self.in_request():
             self.start_request()
 
-        sock_info = member.pool.get_socket(force=force)
+        sock_info = member.get_socket(force=force)
 
         try:
             self.__check_auth(sock_info)
         except OperationFailure:
-            member.pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
             raise
         return sock_info
 
@@ -1322,7 +1328,7 @@ class MongoReplicaSetClient(common.BaseObject):
         """
         rs_state = self.__rs_state
         if rs_state.primary_member:
-            rs_state.primary_member.pool.reset()
+            rs_state.primary_member.reset()
 
         threadlocal = self.__make_threadlocal()
         self.__rs_state = rs_state.clone_without_writer(threadlocal)
@@ -1358,10 +1364,9 @@ class MongoReplicaSetClient(common.BaseObject):
         primary, else ``True``.
 
         This method attempts to check the status of the primary with minimal
-        I/O. The current thread / greenlet retrieves a socket (its request
-        socket if it's in a request, or a random idle socket if it's not in a
-        request) from the primary's connection pool and checks whether calling
-        select_ on it raises an error. If there are currently no idle sockets,
+        I/O. The current thread / greenlet retrieves a socket from the
+        primary's connection pool and checks whether calling select_ on it
+        raises an error. If there are currently no idle sockets,
         :meth:`alive` attempts to connect a new socket.
 
         A more certain way to determine primary availability is to ping it::
@@ -1387,7 +1392,7 @@ class MongoReplicaSetClient(common.BaseObject):
                 return False
         finally:
             if primary:
-                primary.pool.maybe_return_socket(sock_info)
+                primary.maybe_return_socket(sock_info)
 
     def __check_response_to_last_error(self, response, is_command):
         """Check a response to a lastError message for errors.
@@ -1514,7 +1519,7 @@ class MongoReplicaSetClient(common.BaseObject):
             except OperationFailure:
                 raise
             except(ConnectionFailure, socket.error), why:
-                member.pool.discard_socket(sock_info)
+                member.discard_socket(sock_info)
                 if _connection_to_use in (None, -1):
                     self.disconnect()
                 raise AutoReconnect(str(why))
@@ -1522,7 +1527,7 @@ class MongoReplicaSetClient(common.BaseObject):
                 sock_info.close()
                 raise
         finally:
-            member.pool.maybe_return_socket(sock_info)
+            member.maybe_return_socket(sock_info)
 
     def __send_and_receive(self, member, msg, **kwargs):
         """Send a message on the given socket and return the response data.
@@ -1544,13 +1549,13 @@ class MongoReplicaSetClient(common.BaseObject):
             if not exhaust:
                 if "network_timeout" in kwargs:
                     sock_info.sock.settimeout(self.__net_timeout)
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
 
             return response, sock_info, member.pool
         except:
             if sock_info is not None:
                 sock_info.close()
-                member.pool.maybe_return_socket(sock_info)
+                member.maybe_return_socket(sock_info)
             raise
 
     def __try_read(self, member, msg, **kwargs):
@@ -1720,26 +1725,17 @@ class MongoReplicaSetClient(common.BaseObject):
             raise AutoReconnect(str(e))
 
     def start_request(self):
-        """Ensure the current thread or greenlet always uses the same socket
-        until it calls :meth:`end_request`. For
-        :class:`~pymongo.read_preferences.ReadPreference` PRIMARY,
-        auto_start_request=True ensures consistent reads, even if you read
-        after an unacknowledged write. For read preferences other than PRIMARY,
-        there are no consistency guarantees.
+        """**DEPRECATED**: start_request will be removed in PyMongo 3.0.
 
-        In Python 2.6 and above, or in Python 2.5 with
-        "from __future__ import with_statement", :meth:`start_request` can be
-        used as a context manager:
+        When doing w=0 writes to MongoDB 2.4 or earlier, :meth:`start_request`
+        was sometimes useful to ensure the current thread always used the same
+        socket until it called :meth:`end_request`. This made consistent reads
+        more likely after an unacknowledged write. Requests are no longer
+        useful in modern MongoDB applications, see
+        `PYTHON-785 <https://jira.mongodb.org/browse/PYTHON-785>`_.
 
-        >>> client = pymongo.MongoReplicaSetClient()
-        >>> db = client.test
-        >>> _id = db.test_collection.insert({})
-        >>> with client.start_request():
-        ...     for i in range(100):
-        ...         db.test_collection.update({'_id': _id}, {'$set': {'i':i}})
-        ...
-        ...     # Definitely read the document after the final update completes
-        ...     print db.test_collection.find({'_id': _id})
+        .. versionchanged:: 2.8
+           Deprecated.
 
         .. versionadded:: 2.2
            The :class:`~pymongo.pool.Request` return value.
@@ -1753,36 +1749,24 @@ class MongoReplicaSetClient(common.BaseObject):
         # within a request.
         if 1 == self.__request_counter.inc():
             for member in self.__rs_state.members:
-                member.pool.start_request()
+                member.start_request()
 
         return pool.Request(self)
 
     def in_request(self):
-        """True if :meth:`start_request` has been called, but not
-        :meth:`end_request`, or if `auto_start_request` is True and
+        """**DEPRECATED**: True if :meth:`start_request` has been called, but
+        not :meth:`end_request`, or if `auto_start_request` is True and
         :meth:`end_request` has not been called in this thread or greenlet.
         """
         return bool(self.__request_counter.get())
 
     def end_request(self):
-        """Undo :meth:`start_request` and allow this thread's connections to
-        replica set members to return to the pool.
-
-        Calling :meth:`end_request` allows the :class:`~socket.socket` that has
-        been reserved for this thread by :meth:`start_request` to be returned
-        to the pool. Other threads will then be able to re-use that
-        :class:`~socket.socket`. If your application uses many threads, or has
-        long-running threads that infrequently perform MongoDB operations, then
-        judicious use of this method can lead to performance gains. Care should
-        be taken, however, to make sure that :meth:`end_request` is not called
-        in the middle of a sequence of operations in which ordering is
-        important. This could lead to unexpected results.
-        """
+        """**DEPRECATED**: Undo :meth:`start_request`."""
         rs_state = self.__rs_state
         if 0 == self.__request_counter.dec():
             for member in rs_state.members:
                 # No effect if not in a request
-                member.pool.end_request()
+                member.end_request()
 
             rs_state.unpin_host()
 
@@ -1823,8 +1807,7 @@ class MongoReplicaSetClient(common.BaseObject):
         """Close a single database cursor.
 
         Raises :class:`TypeError` if `cursor_id` is not an instance of
-        ``(int, long)``. What closing the cursor actually means
-        depends on this client's cursor manager.
+        ``(int, long)``.
 
         :Parameters:
           - `cursor_id`: id of cursor to close
@@ -1832,8 +1815,25 @@ class MongoReplicaSetClient(common.BaseObject):
         if not isinstance(cursor_id, (int, long)):
             raise TypeError("cursor_id must be an instance of (int, long)")
 
-        self._send_message(message.kill_cursors([cursor_id]),
-                           _connection_to_use=_conn_id)
+        member = self.__get_rs_state().get(_conn_id)
+
+        # We can't risk taking the lock to reconnect if we're being called
+        # from Cursor.__del__, see PYTHON-799.
+        if not member:
+            warnings.warn("not connected, couldn't close cursor",
+                          stacklevel=2)
+            return
+
+        _, kill_cursors_msg = message.kill_cursors([cursor_id])
+        sock_info = self.__socket(member)
+        try:
+            try:
+                sock_info.sock.sendall(kill_cursors_msg)
+            except:
+                sock_info.close()
+                raise
+        finally:
+            member.maybe_return_socket(sock_info)
 
     def server_info(self):
         """Get information about the MongoDB primary we're connected to.
@@ -1872,8 +1872,12 @@ class MongoReplicaSetClient(common.BaseObject):
                            read_preference=ReadPreference.PRIMARY)
 
     def copy_database(self, from_name, to_name,
-                      from_host=None, username=None, password=None):
-        """Copy a database, potentially from another host.
+                      from_host=None, username=None, password=None,
+                      mechanism='DEFAULT'):
+        """**DEPRECATED**: Copy a database, potentially from another host.
+
+        :meth:`copy_database` will be removed in PyMongo 3.0. See the
+        :doc:`copy_database examples </examples/copydb>` for alternatives.
 
         Raises :class:`TypeError` if `from_name` or `to_name` is not
         an instance of :class:`basestring` (:class:`str` in python 3).
@@ -1884,7 +1888,9 @@ class MongoReplicaSetClient(common.BaseObject):
         source. Otherwise the database is copied from `from_host`.
 
         If the source database requires authentication, `username` and
-        `password` must be specified.
+        `password` must be specified. By default, use SCRAM-SHA-1 with
+        MongoDB 3.0 and later, MONGODB-CR (MongoDB Challenge Response
+        protocol) for older servers.
 
         :Parameters:
           - `from_name`: the name of the source database
@@ -1892,40 +1898,27 @@ class MongoReplicaSetClient(common.BaseObject):
           - `from_host` (optional): host name to copy from
           - `username` (optional): username for source database
           - `password` (optional): password for source database
+          - `mechanism` (optional): auth method, 'MONGODB-CR' or 'SCRAM-SHA-1'
 
-        .. note:: Specifying `username` and `password` requires server
-           version **>= 1.3.3+**.
+        .. seealso:: The :doc:`copy_database examples </examples/copydb>`.
+
+        .. versionchanged:: 2.8
+           Deprecated copy_database, and added SCRAM-SHA-1 support.
         """
-        if not isinstance(from_name, basestring):
-            raise TypeError("from_name must be an instance "
-                            "of %s" % (basestring.__name__,))
-        if not isinstance(to_name, basestring):
-            raise TypeError("to_name must be an instance "
-                            "of %s" % (basestring.__name__,))
-
-        database._check_name(to_name)
-
-        command = {"fromdb": from_name, "todb": to_name}
-
-        if from_host is not None:
-            command["fromhost"] = from_host
-
+        member = self.__find_primary()
+        sock_info = self.__socket(member)
         try:
-            self.start_request()
-
-            if username is not None:
-                nonce = self.admin.command("copydbgetnonce",
-                    read_preference=ReadPreference.PRIMARY,
-                    fromhost=from_host)["nonce"]
-                command["username"] = username
-                command["nonce"] = nonce
-                command["key"] = auth._auth_key(nonce, username, password)
-
-            return self.admin.command("copydb",
-                                      read_preference=ReadPreference.PRIMARY,
-                                      **command)
+            helpers._copy_database(
+                fromdb=from_name,
+                todb=to_name,
+                fromhost=from_host,
+                mechanism=mechanism,
+                username=username,
+                password=password,
+                sock_info=sock_info,
+                cmd_func=self.__simple_command)
         finally:
-            self.end_request()
+            member.pool.maybe_return_socket(sock_info)
 
     def get_default_database(self):
         """Get the database named in the MongoDB connection URI.

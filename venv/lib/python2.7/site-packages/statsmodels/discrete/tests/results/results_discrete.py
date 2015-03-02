@@ -10,7 +10,7 @@ import numpy as np
 
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 
-class Anes():
+class Anes(object):
     def __init__(self):
         """
         Results are from Stata 11 (checked vs R nnet package).
@@ -368,7 +368,7 @@ class DiscreteL1(object):
         self.bic = 3174.6431733460686
 
 
-class Spector():
+class Spector(object):
     """
     Results are from Stata 11
     """
@@ -716,7 +716,7 @@ class Spector():
         self.pred_table = np.array([[18, 3], [3, 8]])
 
 
-class RandHIE():
+class RandHIE(object):
     """
     Results obtained from Stata 11
     """
@@ -937,14 +937,14 @@ class RandHIE():
         self.z = [-10.41567024, -12.92281571, 10.8755779 , -12.27364916,
                 9.95160202,  28.76323587,  -2.36514487,   0.59040434,
                 2.70792943,  29.54148082]
-        self.aic = 87101.160011780419
-        self.bic = 87180.289438893495
+        self.aic = 87101.159433012392 # old value 87101.160011780419
+        self.bic = 87180.288860125467 # old value 87180.289438893495
         self.df_model = 9.0
         self.df_resid = 20180.0
         self.llf = -43540.58000589021
-        self.llnull = -44199.27443567125
-        self.llr = 1317.3888595620811
-        self.llr_pvalue = 5.4288002863296022e-278
+        self.llnull = -44586.650971362695 # old value -44199.27443567125
+        self.llr = 2092.1425097129977 # old value 1317.3888595620811
+        self.llr_pvalue = 0 # old value 5.4288002863296022e-278
         self.fittedvalues = [ 0.89348994,  0.89348994,  0.89348994,
                 0.89348994,  0.89348994, 0.9365745 ,  0.9365745 ,  0.9365745 ,
                 0.9365745 ,  0.9365745 ]

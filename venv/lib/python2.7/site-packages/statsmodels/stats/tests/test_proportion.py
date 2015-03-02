@@ -11,12 +11,13 @@ from numpy.testing import assert_almost_equal, assert_equal, assert_array_less
 
 from statsmodels.stats.proportion import proportion_confint
 import statsmodels.stats.proportion as smprop
+import warnings
 
 class Holder(object):
     pass
 
 def test_confint_proportion():
-    from results.results_proportion import res_binom, res_binom_methods
+    from .results.results_proportion import res_binom, res_binom_methods
     methods = {'agresti_coull' : 'agresti-coull',
                'normal' : 'asymptotic',
                'beta' : 'exact',
@@ -80,6 +81,17 @@ class CheckProportionMixin(object):
                                   self.nobs, multitest_method='hommel')
         assert_almost_equal(pptd.pvals_raw, ppt.pvals_raw[:len(self.nobs) - 1],
                             decimal=13)
+
+
+    def test_number_pairs_1493(self):
+        ppt = smprop.proportions_chisquare_allpairs(self.n_success[:3],
+                                                    self.nobs[:3],
+                                                    multitest_method=None)
+
+        assert_equal(len(ppt.pvals_raw), 3)
+        idx = [0, 1, 3]
+        assert_almost_equal(ppt.pvals_raw, self.res_ppt_pvals_raw[idx])
+
 
 class TestProportion(CheckProportionMixin):
     def setup(self):
@@ -302,7 +314,6 @@ def test_power_ztost_prop():
                          discrete=True, dist='binom')[0]
     assert_almost_equal(power, 0.8204, decimal=4) # PASS example
 
-    import warnings
     with warnings.catch_warnings():  # python >= 2.6
         warnings.simplefilter("ignore")
         power = smprop.power_ztost_prop(0.4, 0.6, np.arange(20, 210, 20),

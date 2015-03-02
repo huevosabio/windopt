@@ -45,7 +45,7 @@ MAX_WRITE_BATCH_SIZE = 1000
 
 # What this version of PyMongo supports.
 MIN_SUPPORTED_WIRE_VERSION = 0
-MAX_SUPPORTED_WIRE_VERSION = 2
+MAX_SUPPORTED_WIRE_VERSION = 3
 
 # mongod/s 2.6 and above return code 59 when a
 # command doesn't exist. mongod versions previous
@@ -109,6 +109,8 @@ def validate_positive_integer(option, value):
 def validate_readable(option, value):
     """Validates that 'value' is file-like and readable.
     """
+    if value is None:
+        return value
     # First make sure its a string py3.3 open(True, 'r') succeeds
     # Used in ssl cert checking due to poor ssl module error reporting
     value = validate_basestring(option, value)
@@ -148,6 +150,14 @@ def validate_basestring(option, value):
         return value
     raise TypeError("Wrong type for %s, value must be an "
                     "instance of %s" % (option, basestring.__name__))
+
+
+def validate_basestring_or_none(option, value):
+    """Validates that 'value' is an instance of `basestring` or `None`.
+    """
+    if value is None:
+        return value
+    return validate_basestring(option, value)
 
 
 def validate_int_or_basestring(option, value):
@@ -255,11 +265,33 @@ def validate_uuid_subtype(dummy, value):
     return value
 
 
+_MECHANISM_PROPS = frozenset(['SERVICE_NAME'])
+
+
+def validate_auth_mechanism_properties(option, value):
+    """Validate authMechanismProperties."""
+    value = validate_basestring(option, value)
+    props = {}
+    for opt in value.split(','):
+        try:
+            key, val = opt.split(':')
+            if key not in _MECHANISM_PROPS:
+                raise ConfigurationError("%s is not a supported auth "
+                                         "mechanism property. Must be one of "
+                                         "%s." % (key, tuple(_MECHANISM_PROPS)))
+            props[key] = val
+        except ValueError:
+            raise ConfigurationError("auth mechanism properties must be "
+                                     "key:value pairs like SERVICE_NAME:"
+                                     "mongodb, not %s." % (opt,))
+    return props
+
+
 # jounal is an alias for j,
 # wtimeoutms is an alias for wtimeout,
 # readpreferencetags is an alias for tag_sets.
 VALIDATORS = {
-    'replicaset': validate_basestring,
+    'replicaset': validate_basestring_or_none,
     'slaveok': validate_boolean,
     'slave_okay': validate_boolean,
     'safe': validate_boolean,
@@ -289,11 +321,13 @@ VALIDATORS = {
     'authmechanism': validate_auth_mechanism,
     'authsource': validate_basestring,
     'gssapiservicename': validate_basestring,
+    'authmechanismproperties': validate_auth_mechanism_properties,
     'uuidrepresentation': validate_uuid_representation,
+    'socketkeepalive': validate_boolean
 }
 
 
-_AUTH_OPTIONS = frozenset(['gssapiservicename'])
+_AUTH_OPTIONS = frozenset(['gssapiservicename', 'authmechanismproperties'])
 
 
 def validate_auth_option(option, value):
@@ -688,12 +722,6 @@ class BaseObject(object):
 
         .. versionadded:: 2.3
         """
-        # Don't ever send w=1 to the server.
-        def pop1(dct):
-            if dct.get('w') == 1:
-                dct.pop('w')
-            return dct
-
         if safe is not None:
             warnings.warn("The safe parameter is deprecated. Please use "
                           "write concern options instead.", DeprecationWarning,
@@ -714,7 +742,7 @@ class BaseObject(object):
                     if options.get('w') == 0:
                         return True, {}
                 # Passing w=0 overrides passing safe=True.
-                return options.get('w') != 0, pop1(options)
+                return options.get('w') != 0, options
             return False, {}
 
         # Fall back to collection level defaults.
@@ -722,6 +750,6 @@ class BaseObject(object):
         if self.__write_concern.get('w') == 0:
             return False, {}
         elif self.safe or self.__write_concern.get('w', 0) != 0:
-            return True, pop1(self.__write_concern.copy())
+            return True, self.__write_concern.copy()
 
         return False, {}

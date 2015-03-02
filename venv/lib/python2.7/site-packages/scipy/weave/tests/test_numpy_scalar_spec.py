@@ -5,12 +5,14 @@ import sys
 import tempfile
 
 import numpy
-from numpy.testing import TestCase, dec, assert_, run_module_suite
+from numpy.testing import TestCase, assert_, run_module_suite
 
-from scipy.weave import inline_tools,ext_tools
+from scipy.weave import inline_tools, ext_tools
 from scipy.weave.build_tools import msvc_exists, gcc_exists
 from scipy.weave.catalog import unique_file
 from scipy.weave.numpy_scalar_spec import numpy_complex_scalar_converter
+
+from weave_test_utils import dec
 
 
 def unique_mod(d,file_name):
@@ -126,14 +128,17 @@ def teardown_test_location():
 
 if not msvc_exists():
     for _n in dir():
-        if _n[:8] == 'TestMsvc': exec('del '+_n)
+        if _n[:8] == 'TestMsvc':
+            exec('del '+_n)
 else:
     for _n in dir():
-        if _n[:8] == 'TestUnix': exec('del '+_n)
+        if _n[:8] == 'TestUnix':
+            exec('del '+_n)
 
 if not (gcc_exists() and msvc_exists() and sys.platform == 'win32'):
     for _n in dir():
-        if _n[:7] == 'TestGcc': exec('del '+_n)
+        if _n[:7] == 'TestGcc':
+            exec('del '+_n)
 
 
 if __name__ == "__main__":

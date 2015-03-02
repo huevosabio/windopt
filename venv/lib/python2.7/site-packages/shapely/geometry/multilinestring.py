@@ -61,26 +61,24 @@ class MultiLineString(BaseMultipartGeometry):
             'coordinates': tuple(tuple(c for c in g.coords) for g in self.geoms)
             }
 
-    def svg(self, scale_factor=1.):
+    def svg(self, scale_factor=1., stroke_color=None):
+        """Returns a group of SVG polyline elements for the LineString geometry.
+
+        Parameters
+        ==========
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        stroke_color : str, optional
+            Hex string for stroke color. Default is to use "#66cc99" if
+            geometry is valid, and "#ff3333" if invalid.
         """
-        SVG representation of the geometry. Scale factor is multiplied by
-        the size of the SVG symbol so it can be scaled consistently for a
-        consistent appearance based on the canvas size.
-        """
-        parts = []
-        for part in self.geoms:
-            pnt_format = " ".join(["{0},{1}".format(*c) for c in part.coords])
-            parts.append("""<polyline
-                fill="none"
-                stroke="{2}"
-                stroke-width={1}
-                points="{0}"
-                opacity=".8"
-                />""".format(
-                    pnt_format,
-                    2.*scale_factor,
-                    "#66cc99" if self.is_valid else "#ff3333"))
-        return "\n".join(parts)
+        if self.is_empty:
+            return '<g />'
+        if stroke_color is None:
+            stroke_color = "#66cc99" if self.is_valid else "#ff3333"
+        return '<g>' + \
+            ''.join(p.svg(scale_factor, stroke_color) for p in self) + \
+            '</g>'
 
 
 class MultiLineStringAdapter(CachingGeometryProxy, MultiLineString):
@@ -117,45 +115,27 @@ def geos_multilinestring_from_py(ob):
     if isinstance(ob, MultiLineString):
          return geos_geom_from_py(ob)
 
+    obs = getattr(ob, 'geoms', ob)
+    L = len(obs)
+    assert L >= 1
+    exemplar = obs[0]
     try:
-        # From array protocol
-        array = ob.__array_interface__
-        assert len(array['shape']) == 1
-        L = array['shape'][0]
-        assert L >= 1
+        N = len(exemplar[0])
+    except TypeError:
+        N = exemplar._ndim
+    if N not in (2, 3):
+        raise ValueError("Invalid coordinate dimensionality")
 
-        # Array of pointers to sub-geometries
-        subs = (c_void_p * L)()
-
-        for l in range(L):
-            geom, ndims = linestring.geos_linestring_from_py(array['data'][l])
-            subs[i] = cast(geom, c_void_p)
-
-        if lgeos.GEOSHasZ(subs[0]):
-            N = 3
-        else:
-            N = 2
-
-    except (NotImplementedError, AttributeError):
-        obs = getattr(ob, 'geoms', ob)
-        L = len(obs)
-        exemplar = obs[0]
-        try:
-            N = len(exemplar[0])
-        except TypeError:
-            N = exemplar._ndim
-        assert L >= 1
-        assert N == 2 or N == 3
-
-        # Array of pointers to point geometries
-        subs = (c_void_p * L)()
-        
-        # add to coordinate sequence
-        for l in range(L):
-            geom, ndims = linestring.geos_linestring_from_py(obs[l])
-            subs[l] = cast(geom, c_void_p)
+    # Array of pointers to point geometries
+    subs = (c_void_p * L)()
+    
+    # add to coordinate sequence
+    for l in range(L):
+        geom, ndims = linestring.geos_linestring_from_py(obs[l])
+        subs[l] = cast(geom, c_void_p)
             
     return (lgeos.GEOSGeom_createCollection(5, subs, L), N)
+
 
 # Test runner
 def _test():

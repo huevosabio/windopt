@@ -58,6 +58,62 @@ class MyTest(object):
        0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0,
        0, 0, 0, 0]
 
+        self.weights = np.random.random(nobs)
+
+
+class TestKDEUnivariate(MyTest):
+
+    def test_pdf_non_fft(self):
+
+        kde = nparam.KDEUnivariate(self.noise)
+        kde.fit(fft=False, bw='scott')
+
+
+        grid = kde.support
+        testx = [grid[10*i] for i in range(6)]
+
+        # Test against values from R 'ks' package
+        kde_expected = [0.00016808277984236013,
+                        0.030759614592368954,
+                        0.14123404934759243,
+                        0.28807147408162409,
+                        0.25594519303876273,
+                        0.056593973915651047]
+
+        kde_vals0 = kde.density[10 * np.arange(6)]
+        kde_vals = kde.evaluate(testx)
+
+        npt.assert_allclose(kde_vals, kde_expected,
+                            atol=1e-6)
+        npt.assert_allclose(kde_vals0, kde_expected,
+                            atol=1e-6)
+
+
+    def test_weighted_pdf_non_fft(self):
+
+        kde = nparam.KDEUnivariate(self.noise)
+        kde.fit(weights=self.weights, fft=False, bw='scott')
+
+        grid = kde.support
+        testx = [grid[10*i] for i in range(6)]
+
+        # Test against values from R 'ks' package
+        kde_expected = [9.1998858033950757e-05,
+                        0.018761981151370496,
+                        0.14425925509365087,
+                        0.30307631742267443,
+                        0.2405445849994125,
+                        0.06433170684797665]
+
+        kde_vals0 = kde.density[10 * np.arange(6)]
+        kde_vals = kde.evaluate(testx)
+
+        npt.assert_allclose(kde_vals, kde_expected,
+                            atol=1e-6)
+        npt.assert_allclose(kde_vals0, kde_expected,
+                            atol=1e-6)
+
+
 
 class TestKDEMultivariate(MyTest):
     @dec.slow
@@ -191,6 +247,19 @@ class TestKDEMultivariate(MyTest):
         dens = nparam.KDEMultivariate(data=[Y, C1], var_type='cc', bw='cv_ml')
         npt.assert_allclose(dens.bw, dens_efficient.bw, atol=0.1, rtol = 0.2)
 
+    def test_efficient_user_specified_bw(self):
+        nobs = 400
+        np.random.seed(12345)
+        C1 = np.random.normal(size=(nobs, ))
+        C2 = np.random.normal(2, 1, size=(nobs, ))
+        bw_user=[0.23, 434697.22]
+        
+        dens = nparam.KDEMultivariate(data=[C1, C2], var_type='cc',
+            bw=bw_user, defaults=nparam.EstimatorSettings(efficient=True,
+                                                          randomize=False,
+                                                          n_sub=100))
+        npt.assert_equal(dens.bw, bw_user)
+
 
 class TestKDEMultivariateConditional(MyTest):
     @dec.slow
@@ -305,3 +374,20 @@ class TestKDEMultivariateConditional(MyTest):
         bw_expected = np.array([0.73387, 0.43715])
         npt.assert_allclose(dens_efficient.bw, bw_expected, atol=0, rtol=1e-3)
 
+    def test_efficient_user_specified_bw(self):
+        nobs = 400
+        np.random.seed(12345)
+        C1 = np.random.normal(size=(nobs, ))
+        C2 = np.random.normal(2, 1, size=(nobs, ))
+        bw_user=[0.23, 434697.22]
+        
+        dens = nparam.KDEMultivariate(data=[C1, C2], var_type='cc',
+            bw=bw_user, defaults=nparam.EstimatorSettings(efficient=True,
+                                                          randomize=False,
+                                                          n_sub=100))
+        npt.assert_equal(dens.bw, bw_user)
+
+if __name__ == "__main__":
+    import nose
+    nose.runmodule(argv=[__file__,'-vvs','-x','--pdb'],
+                       exit=False)

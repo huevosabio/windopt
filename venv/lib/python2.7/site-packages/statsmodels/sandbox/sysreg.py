@@ -1,8 +1,9 @@
+from statsmodels.compat.python import iterkeys
 from statsmodels.regression.linear_model import GLS
 import numpy as np
-import statsmodels.tools.tools as tools
 from statsmodels.base.model import LikelihoodModelResults
 from scipy import sparse
+from statsmodels.compat.numpy import np_matrix_rank
 
 #http://www.irisa.fr/aladin/wg-statlin/WORKSHOPS/RENNES02/SLIDES/Foschi.pdf
 
@@ -114,9 +115,8 @@ exogenous variables.  Got length %s" % len(sys))
 # Degrees of Freedom
         df_resid = []
         df_model = []
-        [df_resid.append(self.nobs - tools.rank(_)) \
-                for _ in sys[1::2]]
-        [df_model.append(tools.rank(_) - 1) for _ in sys[1::2]]
+        [df_resid.append(self.nobs - np_matrix_rank(_)) for _ in sys[1::2]]
+        [df_model.append(np_matrix_rank(_) - 1) for _ in sys[1::2]]
         self.df_resid = np.asarray(df_resid)
         self.df_model = np.asarray(df_model)
 
@@ -290,14 +290,14 @@ exogenous variables.  Got length %s" % len(sys))
 # The lists are probably a bad idea
         self.endog = sys[::2]   # these are just list containers
         self.exog = sys[1::2]
-        self._K = [tools.rank(_) for _ in sys[1::2]]
+        self._K = [np_matrix_rank(_) for _ in sys[1::2]]
 #        fullexog = np.column_stack((_ for _ in self.exog))
 
         self.instruments = instruments
 
         # Keep the Y_j's in a container to get IVs
         instr_endog = {}
-        [instr_endog.setdefault(_,[]) for _ in indep_endog.keys()]
+        [instr_endog.setdefault(_,[]) for _ in iterkeys(indep_endog)]
 
         for eq_key in indep_endog:
             for varcol in indep_endog[eq_key]:

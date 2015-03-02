@@ -46,11 +46,13 @@ class TestGLSARCorc(CheckStataResultsPMixin):
         mod1 = GLSAR(g_inv, exogg, 1)
         self.res = mod1.iterative_fit(5)
 
-        from results.macro_gr_corc_stata import results
+        from .results.macro_gr_corc_stata import results
         self.results = results
 
     def test_rho(self):
         assert_almost_equal(self.res.model.rho, self.results.rho, 3)  # pylint: disable-msg=E1101
+
+        assert_almost_equal(self.res.llf, self.results.ll, 4)
 
 
 if __name__=="__main__":

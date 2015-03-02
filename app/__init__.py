@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 
-UPLOAD_FOLDER = '/home/ubuntu/windDayApp/tmp'
+UPLOAD_FOLDER = '/var/www/windDayApp/tmp'
 
 app = Flask(__name__)
 app.config.from_object('config')
