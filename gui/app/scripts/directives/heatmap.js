@@ -12,11 +12,11 @@ angular.module('windopsApp')
     restrict: 'C',
     replace: true,
     scope: {
-      items: '='
+      items: '=items'
     },
     controller: function ($scope, $element, $attrs) {
-      //console.log(2);
-
+      console.log(2);
+      //console.log($scope.items);
     },
     template: '<div id="container" style="margin: 0 auto">not working</div>',
     link: function (scope, element, attrs) {
@@ -91,7 +91,7 @@ angular.module('windopsApp')
         series: [{
             name: 'Median Wind Speed',
             borderWidth: 1,
-            data: data,
+            data: scope.items,
             dataLabels: {
                 enabled: false,
                 color: 'black',
