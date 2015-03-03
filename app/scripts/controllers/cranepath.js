@@ -12,7 +12,7 @@ angular.module('windopsApp')
     $scope.mapLoaded = false;
     $scope.bdLoaded = false;
     
-    L.Icon.Default.imagePath = "images";
+    L.Icon.Default.imagePath = 'images';
     
     var turbineIcon = {
       iconUrl:'/images/turbine.png',
@@ -35,10 +35,11 @@ angular.module('windopsApp')
       $scope.costs = {};
       
       for (var i in data.schedule.features){
-        if (data.schedule.features[i].properties.activity === 'Turbine Erection'){
+        var activity = data.schedule.features[i].properties.activity;
+        if (activity === 'Turbine Erection' || activity === 'boundary'){
           continue;
         } else {
-          var name = data.schedule.features[i].properties.activity
+          var name = data.schedule.features[i].properties.activity;
           
           if (name === 'Crossing'){
             name = name +'-'+data.schedule.features[i].properties.crossing;
@@ -64,13 +65,13 @@ angular.module('windopsApp')
         geojson: {
           data: data.schedule,
           onEachFeature: function (feature, layer) {
-            var txt = "";
+            var txt = '';
             if (feature.properties.activity === 'Crossing'){
-              txt = "Activity: Crossing "+feature.properties.crossing+
-              "<br>Cost: $"+feature.properties.cost;
+              txt = 'Activity: Crossing '+feature.properties.crossing+
+              '<br>Cost: $'+feature.properties.cost;
             } else {
-              txt = "Activity:"+feature.properties.activity+
-              "<br>Cost: $"+feature.properties.cost;
+              txt = 'Activity:'+feature.properties.activity+
+              '<br>Cost: $'+feature.properties.cost;
             }
             layer.bindPopup(txt);
           },
@@ -82,9 +83,8 @@ angular.module('windopsApp')
             } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
             
           }
-        }
-      });
-     
+         }
+        });
      
     })
     .error(function(data, status, headers, config) {
@@ -99,13 +99,13 @@ angular.module('windopsApp')
     
     var tilesDict = {
       openstreetmap: {
-        url: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         options: {
           attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }
       },
       opencyclemap: {
-        url: "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png",
+        url: 'http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png',
         options: {
           attribution: 'All maps &copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, map data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a> (<a href="http://www.openstreetmap.org/copyright">ODbL</a>'
         }
@@ -144,6 +144,9 @@ angular.module('windopsApp')
         }
         map.fitBounds(latlngs);
       });
+    };
+    $scope.goToZip = function(){
+        $location.path('/zipupload');
     };
   });
 
