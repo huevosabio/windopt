@@ -1,7 +1,13 @@
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+import six
+
 import numpy as np
 
 from matplotlib.testing.decorators import image_comparison, knownfailureif, cleanup
+from matplotlib.image import BboxImage, imread
+from matplotlib.transforms import Bbox
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 from nose.tools import assert_raises
@@ -147,7 +153,8 @@ def test_imsave_color_alpha():
     # Wherever alpha values were rounded down to 0, the rgb values all get set
     # to 0 during imsave (this is reasonable behaviour).
     # Recreate that here:
-    data[data[:, :, 3] == 0] = 0
+    for j in range(3):
+        data[data[:, :, 3] == 0, j] = 1
 
     assert_array_equal(data, arr_buf)
 
@@ -161,6 +168,19 @@ def test_image_clip():
     d = [[1,2],[3,4]]
 
     im = ax.imshow(d, extent=(-pi,pi,-pi/2,pi/2))
+
+@image_comparison(baseline_images=['image_cliprect'])
+def test_image_cliprect():
+    import matplotlib.patches as patches
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    d = [[1,2],[3,4]]
+
+    im = ax.imshow(d, extent=(0,5,0,5))
+
+    rect = patches.Rectangle(xy=(1,1), width=2, height=2, transform=im.axes.transData)
+    im.set_clip_path(rect)
 
 @image_comparison(baseline_images=['imshow'], remove_text=True)
 def test_imshow():
@@ -286,7 +306,33 @@ def test_rasterize_dpi():
     axes[2].plot([0,1],[0,1], linewidth=20.)
     axes[2].set(xlim = (0,1), ylim = (-1, 2))
 
+    # Low-dpi PDF rasterization errors prevent proper image comparison tests.
+    # Hide detailed structures like the axes spines.
+    for ax in axes:
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
     rcParams['savefig.dpi'] = 10
+
+
+@image_comparison(baseline_images=['bbox_image_inverted'],
+                  extensions=['png', 'pdf'])
+def test_bbox_image_inverted():
+    # This is just used to produce an image to feed to BboxImage
+    fig = plt.figure()
+    axes = fig.add_subplot(111)
+    axes.plot([1, 2, 3])
+
+    im_buffer = io.BytesIO()
+    fig.savefig(im_buffer)
+    im_buffer.seek(0)
+    image = imread(im_buffer)
+
+    bbox_im = BboxImage(Bbox([[100, 100], [0, 0]]))
+    bbox_im.set_data(image)
+    axes.add_artist(bbox_im)
 
 
 if __name__=='__main__':

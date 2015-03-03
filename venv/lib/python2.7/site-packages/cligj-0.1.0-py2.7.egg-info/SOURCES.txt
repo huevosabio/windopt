@@ -1,0 +1,10 @@
+README.rst
+setup.cfg
+setup.py
+cligj/__init__.py
+cligj.egg-info/PKG-INFO
+cligj.egg-info/SOURCES.txt
+cligj.egg-info/dependency_links.txt
+cligj.egg-info/not-zip-safe
+cligj.egg-info/requires.txt
+cligj.egg-info/top_level.txt

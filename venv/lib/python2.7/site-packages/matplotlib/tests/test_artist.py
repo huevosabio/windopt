@@ -1,10 +1,11 @@
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-import copy
+import six
 
+import io
 
 import numpy as np
-
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -93,16 +94,6 @@ def test_collection_transform_of_none():
     assert isinstance(c._transOffset, mtrans.IdentityTransform)
 
 
-def test_point_in_path():
-    # Test #1787
-    verts2 = [(0,0), (0,1), (1,1), (1,0), (0,0)]
-
-    path = mpath.Path(verts2, closed=True)
-    points = [(0.5,0.5), (1.5,0.5)]
-
-    assert np.all(path.contains_points(points) == [True, False])
-
-
 @image_comparison(baseline_images=["clip_path_clipping"], remove_text=True)
 def test_clipping():
     exterior = mpath.Path.unit_rectangle().deepcopy()
@@ -134,6 +125,25 @@ def test_clipping():
     ax1.set_ylim([-3, 3])
 
 
-if __name__=='__main__':
+@cleanup
+def test_cull_markers():
+    x = np.random.random(20000)
+    y = np.random.random(20000)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(x, y, 'k.')
+    ax.set_xlim(2, 3)
+
+    pdf = io.BytesIO()
+    fig.savefig(pdf, format="pdf")
+    assert len(pdf.getvalue()) < 8000
+
+    svg = io.BytesIO()
+    fig.savefig(svg, format="svg")
+    assert len(svg.getvalue()) < 20000
+
+
+if __name__ == '__main__':
     import nose
-    nose.runmodule(argv=['-s','--with-doctest'], exit=False)
+    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)

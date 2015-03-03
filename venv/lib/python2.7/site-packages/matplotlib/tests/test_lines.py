@@ -1,6 +1,10 @@
 """
 Tests specific to the lines module.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+import six
 
 from nose.tools import assert_true
 from timeit import repeat
@@ -14,7 +18,7 @@ from matplotlib.testing.decorators import cleanup, image_comparison
 def test_invisible_Line_rendering():
     """
     Github issue #1256 identified a bug in Line.draw method
-    
+
     Despite visibility attribute set to False, the draw method was not
     returning early enough and some pre-rendering code was executed
     though not necessary.
@@ -67,6 +71,19 @@ def test_set_line_coll_dash():
     assert True
 
 
+@cleanup
+def test_line_colors():
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.plot(range(10), color='none')
+    ax.plot(range(10), color='r')
+    ax.plot(range(10), color='.3')
+    ax.plot(range(10), color=(1, 0, 0, 1))
+    ax.plot(range(10), color=(1, 0, 0))
+    fig.canvas.draw()
+    assert True
+
+
 @image_comparison(baseline_images=['line_collection_dashes'], remove_text=True)
 def test_set_line_coll_dash_image():
     fig = plt.figure()
@@ -74,3 +91,15 @@ def test_set_line_coll_dash_image():
 
     np.random.seed(0)
     cs = ax.contour(np.random.randn(20, 30), linestyles=[(0, (3, 3))])
+
+
+def test_nan_is_sorted():
+    # Exercises issue from PR #2744 (NaN throwing warning in _is_sorted)
+    line = mpl.lines.Line2D([],[])
+    assert_true(line._is_sorted(np.array([1,2,3])))
+    assert_true(not line._is_sorted(np.array([1,np.nan,3])))
+
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)

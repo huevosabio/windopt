@@ -83,7 +83,10 @@ Following attributes can be customized (use set_xxx method)
  * AxisLabel : pad
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
+import six
 
 # FIXME :
 
@@ -110,7 +113,7 @@ import numpy as np
 
 
 import matplotlib.lines as mlines
-from axisline_style import AxislineStyle
+from .axisline_style import AxislineStyle
 
 
 class BezierPath(mlines.Line2D):
@@ -1376,7 +1379,7 @@ class AxisArtist(martist.Artist):
         self.offsetText.set_text( self.axis.major.formatter.get_offset() )
         self.offsetText.set_size(self.major_ticklabels.get_size())
         offset = self.major_ticklabels.get_pad() + self.major_ticklabels.get_size() + 2.
-        self.offsetText.xytext= (0, offset)
+        self.offsetText.xyann= (0, offset)
 
 
     def _draw_offsetText(self, renderer):

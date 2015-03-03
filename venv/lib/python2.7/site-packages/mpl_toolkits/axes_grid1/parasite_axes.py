@@ -1,3 +1,8 @@
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+import six
+
 import warnings
 
 import matplotlib
@@ -8,7 +13,7 @@ import matplotlib.collections as mcoll
 import matplotlib.legend as mlegend
 
 from matplotlib.axes import subplot_class_factory
-from mpl_axes import Axes
+from .mpl_axes import Axes
 
 from matplotlib.transforms import Bbox
 
@@ -59,7 +64,7 @@ def parasite_axes_class_factory(axes_class=None):
         def _get_base_axes_attr(self, attrname):
             return getattr(axes_class, attrname)
 
-        new_class = type("%sParasite" % (axes_class.__name__),
+        new_class = type(str("%sParasite" % (axes_class.__name__)),
                          (ParasiteAxesBase, axes_class),
                          {'_get_base_axes_attr': _get_base_axes_attr})
         _parasite_axes_classes[axes_class] = new_class
@@ -135,7 +140,7 @@ class ParasiteAxesAuxTransBase:
 
         pcolor_routine = self._get_base_axes_attr(method_name)
 
-        if kwargs.has_key("transform"):
+        if "transform" in kwargs:
             mesh = pcolor_routine(self, X, Y, C, **kwargs)
         else:
             orig_shape = X.shape
@@ -172,7 +177,7 @@ class ParasiteAxesAuxTransBase:
 
         contour_routine = self._get_base_axes_attr(method_name)
 
-        if kwargs.has_key("transform"):
+        if "transform" in kwargs:
             cont = contour_routine(self, X, Y, *CL, **kwargs)
         else:
             orig_shape = X.shape
@@ -210,7 +215,7 @@ def parasite_axes_auxtrans_class_factory(axes_class=None):
 
     new_class = _parasite_axes_auxtrans_classes.get(parasite_axes_class)
     if new_class is None:
-        new_class = type("%sParasiteAuxTrans" % (parasite_axes_class.__name__),
+        new_class = type(str("%sParasiteAuxTrans" % (parasite_axes_class.__name__)),
                          (ParasiteAxesAuxTransBase, parasite_axes_class),
                          {'_parasite_axes_class': parasite_axes_class,
                          'name': 'parasite_axes'})
@@ -255,7 +260,7 @@ class HostAxesBase:
 
     def _get_legend_handles(self, legend_handler_map=None):
         Axes_get_legend_handles = self._get_base_axes_attr("_get_legend_handles")
-        all_handles = Axes_get_legend_handles(self, legend_handler_map)
+        all_handles = list(Axes_get_legend_handles(self, legend_handler_map))
 
         for ax in self.parasites:
             all_handles.extend(ax._get_legend_handles(legend_handler_map))
@@ -460,7 +465,7 @@ def host_axes_class_factory(axes_class=None):
         def _get_base_axes_attr(self, attrname):
             return getattr(axes_class, attrname)
 
-        new_class = type("%sHostAxes" % (axes_class.__name__),
+        new_class = type(str("%sHostAxes" % (axes_class.__name__)),
                          (HostAxesBase, axes_class),
                          {'_get_base_axes_attr': _get_base_axes_attr,
                           '_get_base_axes': _get_base_axes})
