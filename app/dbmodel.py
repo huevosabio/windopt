@@ -50,7 +50,7 @@ def verify_password(username_or_token, password):
         try:
             user = User.objects(email=username_or_token)[0]
             if not user.verify_password(password): return False
-        except User.DoesNotExist:
+        except (User.DoesNotExist, IndexError):
             return False
     g.user = user
     return True
