@@ -34,7 +34,7 @@ def get_mbb(layerDict,crs):
             with fiona.open(layerDict[name]['file']) as s:
                 x1, y1, x2, y2 = s.bounds
                 if to_string(crs) != to_string(s.crs):
-                    proj1=pyproj.Proj(s.crs)
+                    proj1=pyproj.Proj(s.crs,preserve_units=True)
                     proj2=pyproj.Proj(crs,preserve_units=True)
                     minx, miny = pyproj.transform(proj1,proj2,x1,y1)
                     maxx, maxy = pyproj.transform(proj1,proj2,x2,y2)
@@ -105,7 +105,7 @@ def new_raster(mbb, psize,bands,name,srs,travelDefault=0.0):
     #---Using Rasterio---
     transform = [x_min, psize,0.0,y_max,0.0,-psize]
     #Will work only if srs is formatted in the PROJ4 style
-    print mbb
+    print name
     with rasterio.open(
         name, 'w',crs=srs,
         driver='GTiff', width=x_res, height=y_res,count=bands,
@@ -204,7 +204,11 @@ def coord2pixelOffset(rasterfn,x,y):
     return xOffset,yOffset
 
 def createPath(CostSurfacefn,costSurfaceArray,startCoord,stopCoord,pathValue=255):
-
+    print np.min(costSurfaceArray)
+    print costSurfaceArray.shape
+    
+    print startCoord
+    print stopCoord
     # coordinates to array index
     startCoordX = startCoord[0]
     startCoordY = startCoord[1]
@@ -214,6 +218,7 @@ def createPath(CostSurfacefn,costSurfaceArray,startCoord,stopCoord,pathValue=255
     stopCoordY = stopCoord[1]
     stopIndexX,stopIndexY = coord2pixelOffset(CostSurfacefn,stopCoordX,stopCoordY)
 
+    print startIndexX,startIndexY,stopIndexX,stopIndexY
     # create path
     indices, weight = route_through_array(costSurfaceArray, (startIndexY,startIndexX), (stopIndexY,stopIndexX),geometric=True,fully_connected=True)
     indices = np.array(indices).T
@@ -483,7 +488,7 @@ def create_nx_graph(turbinesfn,tiffile,directory,layerDict):
         sitePos = {}
         for i,t in enumerate(turbines): 
             try:
-                sitePos[t['id']]= t['geometry']['coordinates']
+                sitePos[t['id']]= conversion(*t['geometry']['coordinates'])
             except:
                 print 'ERROR when reading Shapefile'
                 continue
