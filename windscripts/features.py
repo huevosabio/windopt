@@ -156,20 +156,20 @@ class GeoFeat:
         
 
 class CraneProject:
-    def __init__(self,turbines,boundary,psize=50.0):
+    def __init__(self,turbines=None,boundary=None,features=[],psize=50.0):
+        self.boundary = boundary
+        if boundary:
+            self.set_boundary(boundary)
+        self.turbines=turbines
+        self.features = features
+        self.psize = psize
+    
+    def set_boundary(self,boundary):
         self.boundary = boundary
         self.walkCost = boundary.cost
         self.crs = createCustomCRS(boundary.bounds[1],boundary.bounds[0])
         self.reproject = pointTrans(self.crs)
         self.bounds = list(self.reproject(boundary.bounds[:2])) + list(self.reproject(boundary.bounds[2:]))        
-        self.turbines=turbines
-        self.features = []
-        self.psize = psize
-    
-    def set_boundary(self,boundary):
-        if boundary:
-            self.bounds = boundary.bounds
-            self.walkCost = boundary.cost
     
     def createCostRaster(self):
         #t= [psize,rotation,topleft-x-coord,rotation,-psize,topleft-y-coord]
@@ -309,7 +309,7 @@ class CraneProject:
             return [self.shape2GJSON(split[0]),self.shape2GJSON(thisCoord)]+self.split_by_coords(split[1],i_coords)
                 
     def shape2GJSON(self,shape):
-        gjsoned = {'geometry':customTransform(self.crs,mapping(shape),toLatLon=True)}
+        gjsoned = {'type':'Feature','geometry':customTransform(self.crs,mapping(shape),toLatLon=True)}
         properties = None
         if gjsoned['geometry']['type'] == 'LineString':
             properties = {
@@ -322,3 +322,28 @@ class CraneProject:
         
         gjsoned['properties'] = properties
         return gjsoned
+
+    def get_geojson(self):
+        """
+        Returns the Geo JSON to be displayed by Leaflet in the GUI
+        """
+        sequence = nx.topological_sort(self.solvedGraph)
+        schedule = {"type":"FeatureCollection","features":[]}
+        order = 0
+        trans = pointTrans(self.crs,inverse=True)
+        for pair in zip(sequence,sequence[1:]):
+            erection = {"type":"Feature","properties":{},"geometry":{}}
+            erection["properties"]["activity"] = 'Turbine Erection'
+            erection["properties"]["detail"] =  'Turbine: '+ str(pair[0])
+            erection["properties"]['cost'] = self.turbines.cost
+            erection["properties"]['order'] = order
+            order += 1
+            erection["geometry"]["coordinates"] = trans(self.sitePos[pair[0]])
+            erection["geometry"]["type"] = "Point"
+            schedule["features"].append(erection)
+            for step in self.solvedGraph[pair[0]][pair[1]]['steps']:
+                step['properties']['order'] = order
+                order += 1
+                schedule["features"].append(step)
+
+        return schedule
