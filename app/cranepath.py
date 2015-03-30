@@ -5,8 +5,9 @@ from flask import Flask, request, redirect, url_for, render_template, jsonify
 from app import app
 from werkzeug.utils import secure_filename
 from windscripts.costing import *
-from windscripts.geopy import *
+#from windscripts.geopy import *
 from windscripts.tsp import *
+from windscripts.features import *
 import fiona
 import pandas as pd
 from app.dbmodel import *
@@ -54,67 +55,46 @@ def send_layer_file():
 
 @app.route('/api/cranepath/tsp',methods=['POST'])
 @auth.login_required
-def tsp_sol():
+def tsp_sol_legacy():
     clear_uploads(RASTER_DIR)
     clear_uploads(PATHS_DIR)
     #Create Layer Dictionary and identify turbines
     print "we are at tsp_sol()"
-    turbines = {}
+    project = CraneProject()
     try:
         layerdict = request.json
     except Exception, e:
         print e
     print "we created the layerdict"
     for layer in layerdict:
-        print layer
+        feature = GeoFeat()
+        feature.read_shapefile(SHP_DIR+'/'+layer+'.shp')
+        feature.cost = float(layerdict[layer]['cost'])
+        feature.name = layer
         if layerdict[layer]['interpretation'] == 'turbines':
-            turbines['file'] =SHP_DIR+'/'+layer+'.shp'
-            turbines['cost'] = float(layerdict[layer]['cost'])
-            turbines['name'] = layer
+            project.turbines = feature
         elif layerdict[layer]['interpretation'] == 'boundary':
-            layerdict[layer]['logic'] = 'boundary'
-            layerdict[layer]['cd'] = float(layerdict[layer]['cost'])
-            layerdict[layer]['cc'] = 0.0
-            layerdict[layer]['file'] =SHP_DIR+'/'+layer+'.shp'
-            boundary = layerdict[layer]['file']
-            walkCost = float(layerdict[layer]['cost'])
+            project.set_boundary(feature)
         else:
-            layerdict[layer]['cc'] = float(layerdict[layer]['cost'])
-            layerdict[layer]['cd'] = 0.0
-            layerdict[layer]['file'] =SHP_DIR+'/'+layer+'.shp'
-    
-    
-    del layerdict[turbines['name']]
+            project.features.append(feature)
             
     #Create Cost Ratser
     print "cost raster"
-    rasterfn = RASTER_DIR+'/costraster.tif'
-    create_cost_raster(rasterfn,layerdict,50.0)
+    project.createCostRaster()
     
     #Create Complete NetworkX graph
     print 'graph'
-    
-    complete = create_nx_graph(turbines['file'],rasterfn,PATHS_DIR+'/',layerdict)
-    graph = complete[0]
-    pos = complete[1]
+    project.create_nx_graph()
     
     #Solve the graph
     print 'tsp'
-    solved = tsp_ca(graph)
-    #Detailed Path Structure
-    cost, solved = get_total_cost(solved,pos, layerdict,PATHS_DIR+'/',rasterfn,walkCost)
+    project.solve_tsp()
+    project.expandPaths()
     
     #Save to GeoJSON
     print 'GeoJson'
-    goodpos = {}
-    with fiona.open(turbines['file']) as s:
-        for d in s:
-            goodpos[d['id']] = transform_to_wgs84(s.crs,d['geometry'])['coordinates']
     
-    schedule = get_geojson(solved,turbines['cost'],goodpos)
-    properties={'activity':'boundary'}
-    boundary = shp2geojson(boundary,properties=properties)
-    schedule['features']+= boundary['features']
+    schedule = project.get_geojson()
     
     if os.path.exists(os.path.join(app.config['STATIC'], 'schedule.json')):
         os.remove(os.path.join(app.config['STATIC'], 'schedule.json'))
@@ -129,6 +109,7 @@ def tsp_sol():
     pd.DataFrame(activities).to_csv(os.path.join(app.config['STATIC'], 'schedule.csv'))
     
     return jsonify({'result':'Success'})
+
 
 @app.route('/api/cranepath/schedule',methods=['GET'])
 @auth.login_required
