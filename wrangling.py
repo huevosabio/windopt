@@ -11,7 +11,7 @@ def get_train_set(filename):
     formatted wind time series
     """
     #Read the wind time series and interpret the columns correctly
-    windseries = pd.DataFrame.from_csv(filename,infer_datetime_format=True)
+    windseries = pd.read_csv(filename,parse_dates=True,na_values=[' '],index_col=0,)
     assert len(windseries.columns) > 0
     #windseries = windseries.set_index(windseries.columns[0])
     #windseries.index = pd.to_datetime(windseries.index)
