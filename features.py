@@ -197,7 +197,7 @@ class CraneProject:
         originX = self.transform[2]
         originY = self.transform[5]
         coordX = originX+self.psize*xOffset+self.psize/2
-        coordY = originY+self.psize*yOffset+self.psize/2
+        coordY = originY-self.psize*yOffset+self.psize/2
         return coordX, coordY
     
     def shortest_path(self,p1,p2):
