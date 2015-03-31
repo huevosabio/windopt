@@ -109,13 +109,18 @@ class GeoFeat:
         features = []
         with fiona.open(filename) as shp:
             crs = shp.crs
-            trans = pointTrans(crs,inverse=True)
-            x1,y1 = trans(shp.bounds[:2])
-            x2,y2 = trans(shp.bounds[2:])
-            self.bounds = (x1,y1,x2,y2)
+            proj = pyproj.Proj(crs)
+            if not proj.is_latlong():
+                trans = pointTrans(crs,inverse=True)
+                x1,y1 = trans(shp.bounds[:2])
+                x2,y2 = trans(shp.bounds[2:])
+                self.bounds = (x1,y1,x2,y2)
+            else:
+                self.bounds = shp.bounds
             for feat in shp:
                 feature = feat.copy()
-                feature['geometry'] = customTransform(shp.crs,feature['geometry'],toLatLon=True)
+                if not proj.is_latlong():
+                    feature['geometry'] = customTransform(shp.crs,feature['geometry'],toLatLon=True)
                 features.append(feature)
         self.geojson = {"type": "FeatureCollection","features": features}
         
