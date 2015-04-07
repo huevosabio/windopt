@@ -104,7 +104,11 @@ class GeoFeat:
         self.interpretation = interpretation
         self.cost = cost
         self.name = name
-    
+        self.geojson = None 
+
+    def __str__(self):
+        return str(self.geojson)
+        
     def read_shapefile(self,filename,properties=None):
         features = []
         with fiona.open(filename) as shp:
