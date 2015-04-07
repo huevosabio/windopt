@@ -55,7 +55,7 @@ def send_layer_file():
 
 @app.route('/api/cranepath/tsp',methods=['POST'])
 @auth.login_required
-def tsp_solsol_legacy():
+def tsp_sol_legacy():
     clear_uploads(RASTER_DIR)
     clear_uploads(PATHS_DIR)
     #Create Layer Dictionary and identify turbines
@@ -68,7 +68,7 @@ def tsp_solsol_legacy():
     print "we created the layerdict"
     for layer in layerdict:
         feature = GeoFeat()
-        feature.read_shapefile(shp_DIR+'/'+layer+'.shp')
+        feature.read_shapefile(SHP_DIR+'/'+layer+'.shp')
         feature.cost = float(layerdict[layer]['cost'])
         feature.name = layer
         print feature
