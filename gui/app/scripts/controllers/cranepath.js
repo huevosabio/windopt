@@ -41,8 +41,8 @@ angular.module('windopsApp')
         } else {
           var name = data.schedule.features[i].properties.activity;
           
-          if (name === 'Crossing'){
-            name = name +'-'+data.schedule.features[i].properties.crossing;
+          if (name === 'crossing'){
+            name = name +'-'+data.schedule.features[i].properties.detail;
           }
           if ($scope.costs[name] === undefined){
             $scope.costs[name] = data.schedule.features[i].properties.cost;
@@ -66,18 +66,18 @@ angular.module('windopsApp')
           data: data.schedule,
           onEachFeature: function (feature, layer) {
             var txt = '';
-            if (feature.properties.activity === 'Crossing'){
-              txt = 'Activity: Crossing '+feature.properties.crossing+
+            if (feature.properties.activity === 'crossing'){
+              txt = 'Activity: Crossing '+feature.properties.detail+
               '<br>Cost: $'+feature.properties.cost;
             } else {
-              txt = 'Activity:'+feature.properties.activity+
+              txt = 'Activity: '+feature.properties.activity+
               '<br>Cost: $'+feature.properties.cost;
             }
             layer.bindPopup(txt);
           },
           style: function (feature) {return {};},
           pointToLayer: function(feature, latlng) {
-            if (feature.properties.activity === 'Crossing'){
+            if (feature.properties.activity === 'crossing'){
               return new L.marker(latlng, {icon: L.icon(crossingIcon)})
               
             } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
