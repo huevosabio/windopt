@@ -282,7 +282,7 @@ class CraneProject:
         #TODO: improve
         i_coords = []
         for feature in self.features:
-            if feature.interpretation is not 'crossing': continue
+            if feature.interpretation != 'crossing': continue
             if feature.cost == 0.0: continue
             featureGJSON = feature.get_projected_gjson(self.crs)['features']
             for element in featureGJSON:
