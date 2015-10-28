@@ -1,3 +1,0 @@
-[submodule "app/windscripts"]
-	path = app/windscripts
-	url = https://github.com/huevosabio/windscripts.git
