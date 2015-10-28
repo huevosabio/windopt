@@ -1,9 +1,0 @@
-#Files
-*.pyc
-*.shp
-*.dbf
-*.csv
-*.proj
-config.json
-#Directories
-tmp/*
