@@ -1,0 +1,77 @@
+<div class="row">
+    <div class="col-lg-6" ng-controller="ExpectedWindDaysCtrl">
+        <div class="widget"><form name="estimateform" novalidate ng-submit="estimateform.$valid && estimate()">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i> Wind Day Options
+                <button type="submit" class="btn btn-default pull-right">Estimate Wind Days</button>
+                <div style="clear: both;"></div> 
+            </div>
+            <div class="widget-body medium no-padding">
+                
+                    <div class="form-group col-sm-5">
+                        Height [meters]:<input step="1.0" min="1.0" class="form-control" type="number" ng-model="conditions.height" name="height" placeholder="Height of interest"/>
+                    </div>
+                    <div class="form-group col-sm-5">
+                        Max Wind Speed [m/s]:<input step="0.1" min="1.0"  class="form-control" type="number" ng-model="conditions.maxws" name="maxws" placeholder="Maximum wind speed in m/s"/>
+                    </div>
+                    <div class="form-group col-sm-5">
+                        Max hours past limit:<input step="1" min="1" max="23"  class="form-control" type="number" ng-model="conditions.maxhours" name="maxhours" placeholder="Maximum number of hours past limit"/>
+                    </div>
+                    <div class="form-group col-sm-5">
+                        Shift Start Hour[0-23]:<input step="1" min="1" max="23" class="form-control" type="number" ng-model="conditions.starthr" name="starthr" placeholder="Shift start hour"/>
+                    </div>
+                    <div class="form-group col-sm-5">
+                      Shift Length [full hours]:<input  step="1" min="1" max="23" class="form-control" type="number" ng-model="conditions.daylength" name="daylength" placeholder="Shift length in horus"/>
+                    </div>
+                    <div class="form-group col-sm-5">
+                      Confidence [0.0-0.99]:<input step="0.01" min="0.0" max="0.99" class="form-control" type="number" ng-model="conditions.certainty" name="certainty" placeholder="Confidence of the estimate"/>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-5">
+                            <div class="checkbox">
+                                <label><input type="checkbox" ng-model="conditions.consecutive" name="consecutive"/>Consecutive</label>
+                            </div>
+                        </div>
+                    </div> <br>
+                
+            </div>
+        </form></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i> Yearly Wind Speed
+                <button ng-click="newWindFile()" type="submit" class="btn btn-default pull-right">Upload New File</button>
+                <div style="clear: both;"></div> 
+            </div>
+            <div class="widget-body medium no-padding">
+                <div ng-if="!yearlyLoaded"><loading></loading></div>
+               <div class="heatmap" items="seasonality" ng-if="yearlyLoaded" style="height: 100%; width: 100%; margin: 0 auto"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row" >
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i> Expected Wind Days by Month
+            </div>
+            <div class="widget-body medium no-padding">
+                <div ng-if="!expectedLoaded"><loading></loading></div>
+                <div ng-if="expectedLoaded" class="line" items="expected" style="height: 100%; width: 100%; margin: 0 auto"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i> Probability of Wind Day by Month and Starting Hour
+            </div>
+            <div class="widget-body medium no-padding">
+               <div ng-if="!risksLoaded"><loading></loading></div>
+               <div ng-if="risksLoaded" class="risks" items="risks" style="height: 100%; width: 100%; margin: 0 auto"></div>
+            </div>
+        </div>
+    </div>
+</div>

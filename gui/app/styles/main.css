@@ -1,0 +1,11 @@
+@import url('dashboard/dashboard.css');
+@import url('themes/blue.css');
+
+.plot{
+    width:100%;
+}
+
+.angular-leaflet-map {
+    height: 100%;
+    width: 100%;
+}

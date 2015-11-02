@@ -1,0 +1,38 @@
+<div class="row">
+    <div class="col-lg-6">
+        <div class="widget"><form id="layerForm" novalidate ng-submit="tsp()">
+            <div class="widget-title">
+                <i class="fa fa-image"></i> Layer Information<button type="submit" id="tspopt" class="btn btn-default pull-right">Create Sequence</button>
+            </div>
+            <div class="widget-body no-padding">
+                <div class="form-group">
+                    <div ng-if="!layersLoaded"><loading></loading></div>
+                    <div class="table-responsive" ng-if="layersLoaded">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Layer Name</th>
+                                    <th>Interpretation</th>
+                                    <th>Associated Cost [USD]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="formbody">
+                                <tr ng-repeat="(layer,model) in layerdict">
+                                    <td>
+                                        {{layer}}
+                                    </td>
+                                    <td>
+                                        <select class="selectpicker" ng-model="model.interpretation" name = "{{layer}}.interpretation" form="daform"><option value="crossing">Crossing</option><option value="turbines">Turbines</option><option value="boundary">Boundary</option></select>
+                                    </td>
+                                    <td>
+                                        <input class="form-control"  min="0.0" step="0.1" type="number"ng-model="model.cost" name="{{layer}}.cost" placeholder="Associated Cost in USD"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form></div>
+    </div>
+</div>
