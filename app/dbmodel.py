@@ -6,11 +6,16 @@ from flask.ext.httpauth import HTTPBasicAuth
 from flask import Flask, abort, request, jsonify, g, url_for
 from app import app
 import cPickle
+import os
 
 with open('/var/www/windDayApp/config.json') as f:
     dbdata = json.loads(f.read())
 
-conn = connect('', host='mongodb://'+dbdata['DB_USER']+':'+dbdata['DB_PWD']+'@ds049180.mongolab.com:49180/windops')
+
+if os.getenv('ENV_NAME', None) == 'local':
+    conn = connect('windopt', host = 'localhost', port = 27017)
+else:
+    conn = connect('', host='mongodb://'+dbdata['DB_USER']+':'+dbdata['DB_PWD']+'@ds049180.mongolab.com:49180/windops')
 auth = HTTPBasicAuth()
 
 app.config['SECRET_KEY'] = 'die luft der freiheit weht'
