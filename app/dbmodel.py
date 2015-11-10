@@ -6,21 +6,21 @@ from flask.ext.httpauth import HTTPBasicAuth
 from flask import Flask, abort, request, jsonify, g, url_for
 from app import app
 import cPickle
-import os
+from config import DB_URI, DB_USER, DB_PWD, ENV_NAME
 
-with open('/var/www/windDayApp/config.json') as f:
-    dbdata = json.loads(f.read())
-
-
-if os.getenv('ENV_NAME', None) == 'local':
-    conn = connect('windopt', host = 'localhost', port = 27017)
+if ENV_NAME == 'local':
+    # If local, assume that there is a local mongo instance
+    conn = connect('windops', host = 'localhost', port = 27017)
 else:
-    conn = connect('', host='mongodb://'+dbdata['DB_USER']+':'+dbdata['DB_PWD']+'@ds049180.mongolab.com:49180/windops')
+    # Otherwise, use env variables to connect
+    conn = connect('windops', host='mongodb://'+ DB_USER + ':' + DB_PWD + '@' + DB_URI)
+
+
 auth = HTTPBasicAuth()
 
 app.config['SECRET_KEY'] = 'die luft der freiheit weht'
 class User(Document):
-    email = StringField(unique=True)
+    username = StringField(unique=True)
     password = StringField()
     
     def hash_password(self, password):
@@ -31,7 +31,7 @@ class User(Document):
     
     def generate_auth_token(self, expiration = 600):
         s = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
-        return s.dumps({ 'email': self.email })
+        return s.dumps({ 'username': self.username })
 
     @staticmethod
     def verify_auth_token(token):
@@ -42,8 +42,12 @@ class User(Document):
             return None # valid token, but expired
         except BadSignature:
             return None # invalid token
-        user = User.objects(email=data['email'])[0]
+        user = User.objects(username=data['username'])[0]
         return user
+
+class Role(Document):
+    name = StringField(unique = True)
+    description = StringField()
 
 
 @auth.verify_password
@@ -53,13 +57,23 @@ def verify_password(username_or_token, password):
     if not user:
         # try to authenticate with username/password
         try:
-            user = User.objects(email=username_or_token)[0]
+            user = User.objects(username=username_or_token)[0]
             if not user.verify_password(password): return False
         except (User.DoesNotExist, IndexError):
             return False
     g.user = user
     return True
 
+# Create admin account
+@app.before_first_request
+def create_admin():
+    try:
+        User.objects.get(username = 'admin')
+    except User.DoesNotExist:
+        admin = User(username = 'admin')
+        admin.hash_password('admin')
+        admin.save()
+    return
 
 class Project(Document):
     name = StringField(unique=True)

@@ -44,7 +44,10 @@ def upload_file():
             print "File is allowed"
             #filename = secure_filename(file.filename)
             s = StringIO(fileobj.read())
-            project, created = Project.objects.get_or_create(name='default')
+            try:
+                project = Project.objects.get(name='default')
+            except Project.DoesNotExist:
+                project = Project(name = 'default')
             #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
             #else: project.windRaw.replace(file, content_type='text/csv')
             project.windHeight = int(request.values['height'])
