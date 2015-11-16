@@ -36,7 +36,7 @@ angular
     }
 
     $routeProvider
-      .when('/', {
+      .when('/main', {
         templateUrl: 'views/main.html',
         controller: 'MainCtrl',
         resolve: {
@@ -84,23 +84,23 @@ angular
         controllerAs: 'login'
       })
       .otherwise({
-        redirectTo: '/'
+        redirectTo: '/main'
       });
 
 
     $authProvider.httpInterceptor = true; // Add Authorization header to HTTP request
     $authProvider.loginOnSignup = true;
     $authProvider.baseUrl = '/'; // API Base URL for the paths below.
-    $authProvider.loginRedirect = '/';
-    $authProvider.logoutRedirect = '/';
-    $authProvider.signupRedirect = '/login';
+    $authProvider.loginRedirect = '/main';
+    $authProvider.logoutRedirect = '/login';
+    $authProvider.signupRedirect = '/main';
     $authProvider.loginUrl = '/api/auth/login';
     $authProvider.signupUrl = '/api/users';
     $authProvider.loginRoute = '/login';
     $authProvider.signupRoute = '/create';
     $authProvider.tokenRoot = false; // set the token parent element if the token is not the JSON root
     $authProvider.tokenName = 'token';
-    $authProvider.tokenPrefix = 'fineng'; // Local Storage name prefix
+    $authProvider.tokenPrefix = 'windops'; // Local Storage name prefix
     $authProvider.unlinkUrl = '/auth/unlink/';
     $authProvider.unlinkMethod = 'get';
     $authProvider.authHeader = 'Authorization';

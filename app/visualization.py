@@ -6,6 +6,7 @@ import numpy as np
 from app import app
 import scipy.stats as stats
 from app.dbmodel import *
+import auth
 
 def df_to_iplot(df):
     

@@ -1,7 +1,8 @@
 from flask import Flask, abort, request, jsonify, g, url_for
 from app import app
 from errors import BadRequestException, UserException
-from app.dbmodel import User, auth
+from app.auth import User
+import auth
 import cPickle
 
 

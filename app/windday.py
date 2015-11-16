@@ -1,8 +1,9 @@
 from flask import render_template, redirect, jsonify, send_file, request
 from app import app
 from io import BytesIO
-from app.dbmodel import *
+from app.dbmodel import Project
 from windscripts.windday import *
+import auth
 
 @app.route('/')
 @auth.login_required
