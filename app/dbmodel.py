@@ -16,7 +16,7 @@ else:
     conn = connect('windops', host='mongodb://'+ DB_USER + ':' + DB_PWD + '@' + DB_URI)
 
 
-auth = HTTPBasicAuth()
+auth = HTTPBasicAuth(scheme = 'FormBased')
 
 app.config['SECRET_KEY'] = 'die luft der freiheit weht'
 class User(Document):
@@ -63,6 +63,12 @@ def verify_password(username_or_token, password):
             return False
     g.user = user
     return True
+
+@app.route('/api/auth/login', methods=['POST'])
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token()
+    return jsonify({ 'token': token.decode('ascii') })
 
 # Create admin account
 @app.before_first_request
