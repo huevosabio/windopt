@@ -7,6 +7,7 @@ from app import app
 import scipy.stats as stats
 from flask_wtf.csrf import CsrfProtect
 from app.dbmodel import *
+import auth
 
 #csrf = CsrfProtect(app)
 

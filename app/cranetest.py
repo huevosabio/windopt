@@ -2,6 +2,7 @@ from flask import Flask, request, redirect, url_for, jsonify
 import os
 from app import app
 from app.dbmodel import *
+import auth
 
 @app.route('/cranetest')
 @auth.login_required

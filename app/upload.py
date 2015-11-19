@@ -13,7 +13,7 @@ from bson.binary import Binary
 import cPickle
 import time
 import shutil
-
+import auth
 
 ALLOWED_EXTENSIONS = set(['csv'])
 ZIP = set(['zip'])

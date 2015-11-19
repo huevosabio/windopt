@@ -11,6 +11,7 @@ from windscripts.features import *
 import fiona
 import pandas as pd
 from app.dbmodel import *
+import auth
 
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all

@@ -8,12 +8,17 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('DashboardCtrl',  function($scope, $cookieStore) {
+  .controller('DashboardCtrl',  function($scope, $cookieStore, $auth, $alert, $location) {
 
     /**
      * Sidebar Toggle & Cookie Control
      *
      */
+
+     //hides menu items if there's no user authenticated
+     $scope.isAuthenticated = function() {
+        return $auth.isAuthenticated();
+    };
     var mobileView = 992;
 
     $scope.getWidth = function() { return window.innerWidth; };
@@ -53,4 +58,18 @@ angular.module('windopsApp')
     };
 
     window.onresize = function() { $scope.$apply(); };
+
+    $scope.logout = function(){
+        $auth.logout()
+        .then(function() {
+            $location.path('/login');
+            $alert({
+                content: 'You have been logged out',
+                animation: 'fadeZoomFadeDown',
+                type: 'info',
+                duration: 3,
+                placement:'top-right'
+            });
+        });
+    }
 });
