@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LoginCtrl', function($scope, $alert, $auth) {
+  .controller('LoginCtrl', function($scope, $location, $alert, $auth) {
     if ($auth.isAuthenticated()) {
         $auth.logout()
         .then(function() {
@@ -39,10 +39,11 @@ angular.module('windopsApp')
             duration: 3,
             placement:'top-right'
           });
+          $location.path('/');
         })
         .catch(function(response) {
           $alert({
-            content: 'There was an error logging in.',
+            content: 'There was an error logging in',
             animation: 'fadeZoomFadeDown',
             type: 'danger',
             duration: 3,
@@ -60,6 +61,7 @@ angular.module('windopsApp')
             duration: 3,
             placement:'top-right'
           });
+          $location.path('/');
         })
         .catch(function(response) {
           $alert({
