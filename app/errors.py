@@ -37,3 +37,11 @@ class UserException(BaseException):
 @app.errorhandler(UserException)
 def user_exception_handler(error):
 	return handler_function(error)
+
+class ProjectException(BaseException):
+	status_code = 469
+	pass
+
+@app.errorhandler(ProjectException)
+def user_exception_handler(error):
+	return handler_function(error)
