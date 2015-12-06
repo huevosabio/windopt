@@ -8,10 +8,10 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('MainCtrl', function ($scope) {
-    $scope.awesomeThings = [
-      'HTML5 Boilerplate',
-      'AngularJS',
-      'Karma'
-    ];
+  .controller('MainCtrl', function ($scope, project) {
+  	project.listProjects().then( function(data){
+  		$scope.projects = data.projects;
+  	}).then(function(){
+  		console.log($scope.projects);
+  	})
   });

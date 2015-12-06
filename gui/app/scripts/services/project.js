@@ -31,7 +31,7 @@ angular.module('windopsApp')
       return (request.then( handleSuccess, handleError ));
     }
 
-      function handleError( response ){
+    function handleError( response ){
         if (
           ! angular.isObject( response.data ) ||
           ! response.data.message
@@ -54,10 +54,18 @@ angular.module('windopsApp')
             });
           return;
         }
-      }
-
-      function handleSuccess( response ) {
-        return ( response.data );
-      }
     }
+
+    function handleSuccess( response ) {
+      return ( response.data );
+    }
+
+    function listProjects() {
+      var request = $http({
+        method: "get",
+        url: "api/project"
+      });
+      return (request.then (handleSuccess, handleError));
+    }
+    
   });
