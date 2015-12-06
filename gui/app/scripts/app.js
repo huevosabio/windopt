@@ -88,6 +88,11 @@ angular
         controller: 'SignupCtrl',
         controllerAs: 'signup'
       })
+      .when('/projects', {
+        templateUrl: 'views/projects.html',
+        controller: 'ProjectsCtrl',
+        controllerAs: 'projects'
+      })
       .otherwise({
         redirectTo: '/main'
       });
