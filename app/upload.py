@@ -33,9 +33,9 @@ def clear_shpfiles():
             except Exception, e:
                 print e
 
-@app.route('/api/windyday/upload', methods=['POST'])
+@app.route('/api/windyday/<project_name>/upload', methods=['POST'])
 @auth.login_required
-def upload_file():
+def upload_file(project_name):
     print "At upload"
     if request.method == 'POST':
         fileobj = request.files['file']
@@ -45,9 +45,9 @@ def upload_file():
             #filename = secure_filename(file.filename)
             s = StringIO(fileobj.read())
             try:
-                project = Project.objects.get(name='default')
+                project = Project.objects.get(name = project_name)
             except Project.DoesNotExist:
-                project = Project(name = 'default')
+                project = Project(name =  project_name)
             #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
             #else: project.windRaw.replace(file, content_type='text/csv')
             project.windHeight = int(request.values['height'])

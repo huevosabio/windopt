@@ -4,7 +4,8 @@ from io import BytesIO
 from app.dbmodel import Project
 from windscripts.windday import *
 import auth
-    
+from auth import User
+
 @app.route('/api/windday/<project_name>',methods=['POST','GET'])
 @auth.login_required
 def get_project(project_name):
@@ -45,7 +46,7 @@ def get_winddays(project_name):
         
 @app.route('/api/windday/<project_name>/risks',methods=['POST'])
 @auth.login_required
-def get_risks():
+def get_risks(project_name):
     try:
         user = User.objects.get(username = g.username)
         project = Project.objects.get(name = project_name, user = user)

@@ -38,9 +38,12 @@
                 </li>
                 <li class="sidebar-title" ng-if="isAuthenticated()"><span>MENU</span></li>
                 <li class="sidebar-list" ng-if="isAuthenticated()">
-                    <a href="/#/windday">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                    <a href="/#/main">Projects<span class="menu-icon fa fa-tachometer"></span></a>
                 </li>
-                <li class="sidebar-list" ng-if="isAuthenticated()">
+                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
+                    <a href="{{getWindRoute()}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                </li>
+                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
                     <a href="/#/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
                 </li>
             </ul>
@@ -76,8 +79,8 @@
               <div class="page">
                 WindOps
               </div>
-              <div class="breadcrumb-links">
-                Wind Farm Construction Software
+              <div class="breadcrumb-links" ng-if="isOpenProject()">
+                {{getProjectName()}} 
               </div>
             </div>
             <div class="user pull-right" ng-if="isAuthenticated()">

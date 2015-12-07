@@ -8,4 +8,9 @@
  * Value in the windopsApp.
  */
 angular.module('windopsApp')
-  .value('currentProject', null);
+  .value('currentProject', {
+  	project: {
+  		name: null,
+  		hasWindFile: null
+  	}
+  });

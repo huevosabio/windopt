@@ -1,1 +1,20 @@
-<p>Welcome, User!</p>
+<div class="row" >
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i>Project
+            </div>
+            <div class="widget-body medium ">
+                <label for="selectProject">Select Project:</label><br>
+                <select name="selectProject" ng-model="selectedProject" ng-options="project as project.name for project in projects">
+                </select>
+                <button ng-click="openProject(selectedProject)" class="btn btn-success pull-right">Open Project</button>
+                <br>
+                    <p>or create a new project</p>
+                <br>
+                <input  class="form-control pull-left" ng-model="newProjectName" placeholder="Project Name" type="text" />
+                <button ng-click="createProject()" class="btn btn-success pull-right">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>

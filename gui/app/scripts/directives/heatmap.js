@@ -15,8 +15,7 @@ angular.module('windopsApp')
       items: '=items'
     },
     controller: function ($scope, $element, $attrs) {
-      console.log(2);
-      //console.log($scope.items);
+      console.log($scope.items);
     },
     template: '<div id="container" style="margin: 0 auto">not working</div>',
     link: function (scope, element, attrs) {

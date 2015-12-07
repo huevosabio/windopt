@@ -8,8 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', [ '$scope', '$upload','$location',
-  function($scope, $upload, $location) {
+  .controller('UploadCtrl', function($scope, $upload, $location, currentProject) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -17,11 +16,11 @@ angular.module('windopsApp')
     for (var i = 0; i < $files.length; i++) {
       var file = $files[i];
       $scope.upload = $upload.upload({
-        url: 'api/windyday/upload', //upload.php script, node.js route, or servlet url
+        url: 'api/windyday/' + currentProject.project.name +'/upload', //upload.php script, node.js route, or servlet url
         method: 'POST',
         //headers: {'header-key': 'header-value'},
         //withCredentials: true,
-        data: {height: $scope.measuredHeight},
+        data: {height: $scope.measuredHeight, project: currentProject.name},
         file: file // or list of files ($files) for html5 only
         //fileName: 'doc.jpg' or ['1.jpg', '2.jpg', ...] // to modify the name of the file(s)
         // customize file formData name ('Content-Disposition'), server side file variable name. 
@@ -44,4 +43,4 @@ angular.module('windopsApp')
        It could also be used to monitor the progress of a normal http post/put request with large data*/
     // $scope.upload = $upload.http({...})  see 88#issuecomment-31366487 for sample code.
   };
-}]);
+});

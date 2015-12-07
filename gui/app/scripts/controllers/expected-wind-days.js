@@ -8,9 +8,10 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('ExpectedWindDaysCtrl', function ($scope, $location,$http) {
-     $http.post('/api/windday')
+  .controller('ExpectedWindDaysCtrl', function ($scope, $location, $http, currentProject) {
+     $http.post('/api/windday/'  + currentProject.project.name)
     .success(function(data, status, headers, config) {
+      console.log(data)
       if (!data.result.exists){
         $location.path('/upload');
       }

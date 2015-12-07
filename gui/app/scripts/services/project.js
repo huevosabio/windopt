@@ -9,7 +9,7 @@
  * inspired from http://www.bennadel.com/blog/2612-using-the-http-service-in-angularjs-to-make-ajax-requests.htm
  */
 angular.module('windopsApp')
-  .factory('project', function ($http, $alert) {
+  .factory('project', function ($http, $alert, currentProject) {
     // Service logic
     // ...
 
@@ -23,7 +23,7 @@ angular.module('windopsApp')
     function createProject(name) {
       var request = $http({
         method: "post",
-        url: "api/project",
+        url: "api/projects",
         data: {
           name: name
         }
@@ -37,7 +37,7 @@ angular.module('windopsApp')
           ! response.data.message
           ) {
             $alert({
-              content: 'There was an error logging in',
+              content: 'There was an error creating the project.',
               animation: 'fadeZoomFadeDown',
               type: 'danger',
               duration: 3,
@@ -63,9 +63,19 @@ angular.module('windopsApp')
     function listProjects() {
       var request = $http({
         method: "get",
-        url: "api/project"
+        url: "api/projects"
       });
       return (request.then (handleSuccess, handleError));
     }
+
+    function getProjectSummary( name ) {
+      var request = $http({
+        method: "post",
+        url: "api/projects/" + currentProject.project.name,
+      });
+      return (request.then( handleSuccess, handleError))
+    }
+
+    // WindDay Functions
     
   });

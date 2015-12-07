@@ -5,7 +5,7 @@ from app import app, conn, auth
 import cPickle
 from app.auth import User
 
-@app.route('/api/project', methods = ['POST', 'GET'])
+@app.route('/api/projects', methods = ['POST', 'GET'])
 @auth.login_required
 def create_or_list_project():
     '''
@@ -29,27 +29,28 @@ def create_or_list_project():
             user = User.objects.get(username = g.username)
             project = Project(name = project_data['name'], user = user)
             project.save()
-            project_dict = project.to_mongo()
-            print project_dict
-            project_dict.pop('_id')
-            project_dict.pop('user')
-            return jsonify(message = 'Project created successfully.', project = project_dict)
+            return jsonify(
+                message = 'Project created successfully.',
+                project = project.get_summary()
+                )
 
     elif request.method == 'GET':
         user = User.objects.get(username = g.username)
-        projects = [{'name':project.name} for project in Project.objects(user = user).only('name').all()]
+        projects = [project.get_summary() for project in Project.objects(user = user).all()]
         return jsonify(message = 'Queried projects', projects = projects)
 
 
-@app.route('/api/projects/<name>', methods = ['GET', 'PUT', 'DELETE'])
+@app.route('/api/projects/<name>', methods = ['GET'])
 @auth.login_required
-def get_or_update_project(projectname):
+def get_or_update_project(name):
     '''
     GET:
         Returns the project info (name)
     PUT:
+        NOT IMPLEMENTED
         Updates project info (name)
     DELETE:
+        NOT IMPLEMENTED
         Deletes project
     '''
     try:
@@ -58,18 +59,7 @@ def get_or_update_project(projectname):
     except Project.DoesNotExist:
         raise ProjectException('Project does not exist.')
     if request.method == 'GET':
-        return jsonify(projectname = project.projectname, message = 'Project retrieved successfully')
-    elif request.method == 'PUT' and g.project.projectname == projectname:
-        # Method should be used only for changing password
-        try:
-            project.hash_password(request.json['password'])
-            project.save()
-            return jsonify(message = 'Password updated successfully.')
-        except:
-            raise BadRequestException('There was an error in the request.')
-    elif request.method == 'DELETE' and auth.projectname == projectname:
-        project.delete()
-        return jsonify(message = 'Project deleted.')
+        return jsonify(project.get_summary())
     else:
         raise BadRequestException('Your request was not understood by the server.')
 
@@ -107,8 +97,12 @@ class Project(Document):
         if self.windStationary:
             return cPickle.loads(self.windStationary)
         else: return None
-    
-    
+
+    def get_summary(self):
+        return {
+            'name': self.name,
+            'hasWindFile': bool(self.windTMatrix)
+        }
         
         
         

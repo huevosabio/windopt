@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('WinddayCtrl',  function($scope, $location,$http) {
+  .controller('WinddayCtrl',  function($scope, $location,$http, currentProject) {
     $scope.conditions = {}
     $scope.conditions.height = 50;
     $scope.conditions.maxws = 10.0;
@@ -20,23 +20,11 @@ angular.module('windopsApp')
     $scope.expectedLoaded = false;
     $scope.risksLoaded = false;
     $scope.yearlyLoaded = false;
-    $http.get('/api/windday')
-    .success(function(data, status, headers, config) {
-      if (!data.result.exists){
-        $location.path('/upload');
-      }
-      $scope.seasonality = data.result.seasonality;
-      //console.log($scope.seasonality);
-      $scope.yearlyLoaded = true;
-    })
-    .error(function(data, status, headers, config) {
-      //console.log(data);
-    });
     
     $scope.estimate = function(){
       $scope.expectedLoaded = false;
       $scope.risksLoaded = false;
-      $http.post('/api/windday/expected',$scope.conditions)
+      $http.post('/api/windday/' +currentProject.project.name+  '/expected',$scope.conditions)
       .success(function(data,status,headers,config){
         $scope.expected = {byMonth: data.result.byMonth,cumulative:data.result.cumulative};
         $scope.expectedLoaded = true;
@@ -45,7 +33,7 @@ angular.module('windopsApp')
         //console.log(data);
       });
       
-      $http.post('/api/windday/risks',$scope.conditions)
+      $http.post('/api/windday/' +currentProject.project.name+  '/risks',$scope.conditions)
       .success(function(data,status,headers,config){
         $scope.risks = data.result.risks;
         //console.log($scope.risks);
@@ -60,5 +48,17 @@ angular.module('windopsApp')
       $location.path('/upload');
     };
     
-    $scope.estimate();
+    $http.get('/api/windday/' + currentProject.project.name)
+    .success(function(data, status, headers, config) {
+      if (!data.result.exists){
+        $location.path('/upload');
+      }
+      $scope.seasonality = data.result.seasonality;
+      //console.log($scope.seasonality);
+      $scope.yearlyLoaded = true;
+      $scope.estimate();
+    })
+    .error(function(data, status, headers, config) {
+      //console.log(data);
+    });
   });
