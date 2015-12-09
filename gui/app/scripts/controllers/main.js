@@ -17,7 +17,7 @@ angular.module('windopsApp')
   		project.listProjects().then( function(data){
   			$scope.projects = data.projects;
   		}).then(function(){
-  			console.log($scope.projects);
+  			//console.log($scope.projects);
   		});
   	}
 
