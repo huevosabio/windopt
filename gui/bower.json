@@ -29,5 +29,15 @@
   "resolutions": {
     "font-awesome": "~4.3.x",
     "angular": "1.4.7"
+  },
+  "overrides":{
+    "highcharts-release":{
+      "main": [
+        "highcharts.js",
+        "highcharts-more.js",
+        "modules/exporting.js",
+        "modules/heatmap.js"
+      ]
+    }
   }
 }
