@@ -12,7 +12,9 @@ import fiona
 import pandas as pd
 from app.dbmodel import *
 import auth
-
+from upload import allowed_file, ZIP
+import zipfile
+import shutil
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all
 #the nuances of permission management. Thus, in a more refined version, it would
@@ -38,6 +40,43 @@ def clear_uploads(DIR):
             except Exception, e:
                 print e
 
+def clear_shpfiles():
+    shpdir = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
+    if os.path.exists(shpdir):
+        for the_file in os.listdir(shpdir):
+            file_path = os.path.join(shpdir, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception, e:
+                print e
+
+@app.route('/api/cranepath/zipupload',methods=['POST'])
+@auth.login_required
+def upload_ziplfile():
+    clear_shpfiles()
+    print "At upload"
+    if request.method == 'POST':
+        fileobj = request.files['file']
+        print "Got File"
+        if fileobj and allowed_file(fileobj.filename,ZIP):
+            print "File is allowed"
+            #filename = secure_filename(file.filename)
+            fileobj.save(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'))
+            path = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
+            with zipfile.ZipFile(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'), "r") as z:
+                for member in z.namelist():
+                    filename = os.path.basename(member)
+                    if not filename: continue
+                    # copy file (taken from zipfile's extract)
+                    source = z.open(member)
+                    target = file(os.path.join(path, filename), "wb")
+                    with source, target:
+                        shutil.copyfileobj(source, target)
+                    
+            return flask.jsonify(result={"status": 200})
+
+
 @app.route('/api/cranepath/layerlist',methods=['GET'])
 @auth.login_required
 def list_layers():
@@ -48,10 +87,6 @@ def list_layers():
             layers.append(f[:f.index('.')])
     result["layers"] = layers
     return jsonify(result)
-    
-@app.route('/layers',methods=['GET'])
-def send_layer_file():
-    return  app.send_static_file('layerlist.html')
     
 
 @app.route('/api/cranepath/tsp',methods=['POST'])

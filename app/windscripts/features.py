@@ -55,8 +55,16 @@ def customTransform(crs,original,toLatLon=False):
         for element in geometry['coordinates']:
             elements.append(map(trans,element))
         geometry['coordinates'] = elements
+    elif geometry['type'] == 'MultiPolygon':
+        elements = []
+        for element in geometry['coordinates']:
+            subelements = []
+            for subelement in element:
+                subelements.append(map(trans,subelement))
+            elements.append(map(trans, element))
+        geometry['coordinates'] = elements
     else:
-        raise NameError("Geometry type not supported.")
+        raise NameError("Geometry type not supported: " + geometry['type'])
         return
     return geometry
     

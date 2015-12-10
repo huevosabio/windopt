@@ -8,7 +8,7 @@ UPLOAD_FOLDER =  os.getcwd() + '/tmp'
 app = Flask('windopt', static_url_path = '', static_folder = os.getcwd() + '/gui/app')
 app.config.from_object('config')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-#app.config['STATIC'] = '/var/www/windDayApp/app/static'
+app.config['STATIC'] = os.getcwd() + '/app/static'
 #TODO: Remove this from here and place it in an env var.
 app.config['SECRET_KEY'] = 'die luft der freiheit weht'
 
