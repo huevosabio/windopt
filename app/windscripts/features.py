@@ -164,14 +164,17 @@ class GeoFeat(object):
         raster = rasterize(
             feats,
             out_shape=(y_res, x_res),
-            transform=transform,dtype='float32',
+            transform=transform,
+            dtype='float32',
             all_touched=True)
         
         if self.interpretation == 'boundary':
             #1000 is just an arbitrarily large number, could try np.inf
-            raster = np.where(raster==0,1000,self.cost)
+            raster = np.where(raster==0,1000.0,self.cost)
+            print 'at boundary', raster
         elif self.interpretation == 'crossing':
             raster = raster*(self.cost/psize)
+            print 'at all else', raster
         return raster
         
         
@@ -225,7 +228,7 @@ class CraneProject(object):
         originX = self.transform[2]
         originY = self.transform[5]
         coordX = originX+self.psize*xOffset+self.psize/2
-        coordY = originY-self.psize*yOffset+self.psize/2
+        coordY = originY-self.psize*yOffset-self.psize/2
         return coordX, coordY
     
     def shortest_path(self,p1,p2):

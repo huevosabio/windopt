@@ -119,14 +119,15 @@ def tsp_sol_legacy():
         feature.read_shapefile(SHP_DIR+'/'+layer+'.shp')
         feature.cost = float(layerdict[layer]['cost'])
         feature.name = layer
+        feature.interpretation = layerdict[layer]['interpretation']
         try:
             feature.save()
         except:
             print layer + ': not saved'
             continue
-        if layerdict[layer]['interpretation'] == 'turbines':
+        if feature.interpretation == 'turbines':
             crane_project.turbines = feature
-        elif layerdict[layer]['interpretation'] == 'boundary':
+        elif feature.interpretation == 'boundary':
             crane_project.set_boundary(feature)
         else:
             crane_project.features.append(feature)
