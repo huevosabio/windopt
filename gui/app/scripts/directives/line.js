@@ -66,7 +66,6 @@ angular.module('windopsApp')
     });
       scope.$watch("items", function (newValue) {
         chart.series[0].setData(newValue.byMonth, true);
-        chart.series[1].setData(newValue.cumulative,true);
       }, true);
       
     }

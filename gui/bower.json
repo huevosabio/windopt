@@ -17,7 +17,7 @@
     "font-awesome": "~4.2.0",
     "angular-bootstrap": "~0.11.2",
     "highcharts-release": "~4.0.4",
-    "angular-leaflet": "~0.7.10",
+    "angular-leaflet": "~0.10.0",
     "satellizer": "0.12.5",
     "angular-strap": "~2.3.5"
   },
@@ -29,5 +29,15 @@
   "resolutions": {
     "font-awesome": "~4.3.x",
     "angular": "1.4.7"
+  },
+  "overrides":{
+    "highcharts-release":{
+      "main": [
+        "highcharts.js",
+        "highcharts-more.js",
+        "modules/exporting.js",
+        "modules/heatmap.js"
+      ]
+    }
   }
 }

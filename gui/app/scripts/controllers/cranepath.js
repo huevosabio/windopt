@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('CranepathCtrl', function ($scope, $location,$http,leafletData) {
+  .controller('CranepathCtrl', function ($scope, $location,$http,leafletData, currentProject) {
     $scope.mapLoaded = false;
     $scope.bdLoaded = false;
     
@@ -25,10 +25,49 @@ angular.module('windopsApp')
       iconSize:[25, 40],
       iconAnchor:[12, 40]
     };
+
+    var tilesDict = {
+      openstreetmap: {
+        name: "OpenStreetMap",
+        url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        type: 'xyz',
+        options: {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }
+      },
+      opencyclemap: {
+        name: "OpenCycleMap",
+        url: 'http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png',
+        type: 'xyz',
+        options: {
+          attribution: 'All maps &copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, map data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a> (<a href="http://www.openstreetmap.org/copyright">ODbL</a>'
+        }
+      },
+      mapbox_terrain: {
+        name: 'Mapbox Terrain',
+        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
+        type: 'xyz',
+        layerOptions: {
+          apikey: 'pk.eyJ1IjoiaHVldm9zYWJpbyIsImEiOiJmTHplSnY0In0.7eT8FT5PcjhjC6Z5mJaKCA',
+          mapid: 'huevosabio.kgj8hgpp'
+        }
+      }
+    };
+
+    angular.extend($scope, {
+      world: {
+        lat: 0,
+        lng: 0,
+        zoom: 3
+      },
+      layers: {
+        baselayers: tilesDict,
+        overlays:{}
+      }
+    });
     
-    $http.get('/api/cranepath/schedule')
+    $http.get('/api/cranepath/schedule/' + currentProject.project.name)
     .success(function(data, status, headers, config) {
-      //console.log(data);
       $scope.schedule = data.schedule;
       
       $scope.costSeries = [];
@@ -61,30 +100,80 @@ angular.module('windopsApp')
       }
       
       
-      angular.extend($scope, {
+      angular.extend($scope.layers.overlays, {
         geojson: {
+          name: "Schedule",
+          type: "geoJSONShape",
+          visible: true,
           data: data.schedule,
-          onEachFeature: function (feature, layer) {
-            var txt = '';
-            if (feature.properties.activity === 'crossing'){
-              txt = 'Activity: Crossing '+feature.properties.detail+
-              '<br>Cost: $'+feature.properties.cost;
-            } else {
-              txt = 'Activity: '+feature.properties.activity+
-              '<br>Cost: $'+feature.properties.cost;
-            }
-            layer.bindPopup(txt);
-          },
-          style: function (feature) {return {};},
-          pointToLayer: function(feature, latlng) {
-            if (feature.properties.activity === 'crossing'){
-              return new L.marker(latlng, {icon: L.icon(crossingIcon)})
+          layerOptions: {
+            onEachFeature: function (feature, layer) {
+              var txt = '';
+              if (feature.properties.activity === 'crossing'){
+                txt = 'Activity: Crossing '+feature.properties.detail+
+                '<br>Cost: $'+feature.properties.cost;
+              } else {
+                txt = 'Activity: '+feature.properties.activity+
+                '<br>Cost: $'+feature.properties.cost;
+              }
+              layer.bindPopup(txt);
+            },
+            style: function (feature) {return {};},
+            pointToLayer: function(feature, latlng) {
+              if (feature.properties.activity === 'crossing'){
+                return new L.marker(latlng, {icon: L.icon(crossingIcon)})
               
-            } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
-            
-          }
+              } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
+            }
+          },
          }
         });
+      //add Turbines
+      angular.extend($scope.layers.overlays, {
+        turbines:{
+          name: "Turbines",
+          type: "geoJSONShape",
+          visible: false,
+          layerOptions: {
+            pointToLayer: function(feature, latlng) {
+              return new L.marker(latlng, {icon: L.icon(turbineIcon)})
+            },
+          },
+          data: data.turbines
+        }
+      });
+
+      //add Boundary
+      angular.extend($scope.layers.overlays, {
+        boundary:{
+          name: "Boundary",
+          type: "geoJSONShape",
+          visible: true,
+          layerOptions:{
+            style: {
+              color: '#00D',
+              fillColor: 'green',
+              weight: 2.0,
+              opacity: 0.6,
+              fillOpacity: 0.2
+            }
+          },
+          data: data.boundary
+        }
+      });
+
+      //add all features
+      for (var feature in data.features){
+        var name = data.features[feature].name;
+        var layer = {};
+        layer[name] = {
+          name: name,
+          type: "geoJSONShape",
+          visible: false,
+          data: data.features[feature].geojson
+        }
+        angular.extend($scope.layers.overlays, layer);
+      }
      
     })
     .error(function(data, status, headers, config) {
@@ -97,29 +186,6 @@ angular.module('windopsApp')
       $scope.centerMap();
     });
     
-    var tilesDict = {
-      openstreetmap: {
-        url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        options: {
-          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }
-      },
-      opencyclemap: {
-        url: 'http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png',
-        options: {
-          attribution: 'All maps &copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, map data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a> (<a href="http://www.openstreetmap.org/copyright">ODbL</a>'
-        }
-      },
-      mapbox_terrain: {
-        name: 'Mapbox Terrain',
-        url: 'http://api.tiles.mapbox.com/v4/{mapid}/{z}/{x}/{y}.png?access_token={apikey}',
-        type: 'xyz',
-        options: {
-          apikey: 'pk.eyJ1IjoiaHVldm9zYWJpbyIsImEiOiJmTHplSnY0In0.7eT8FT5PcjhjC6Z5mJaKCA',
-          mapid: 'huevosabio.kgj8hgpp'
-        }
-      }
-    };
     
     angular.extend($scope, {
       tiles: tilesDict.mapbox_terrain
@@ -128,14 +194,14 @@ angular.module('windopsApp')
     $scope.centerMap = function() {
       leafletData.getMap().then(function(map) {
         var latlngs = [];
-        for (var i in $scope.geojson.data.features) {
-          if ($scope.geojson.data.features[i].geometry.type === 'Point'){
-            var coord = $scope.geojson.data.features[0].geometry.coordinates;
+        for (var i in $scope.layers.overlays.geojson.data.features) {
+          if ($scope.layers.overlays.geojson.data.features[i].geometry.type === 'Point'){
+            var coord = $scope.layers.overlays.geojson.data.features[0].geometry.coordinates;
             latlngs.push(L.GeoJSON.coordsToLatLng(coord));
           }
-          else if ($scope.geojson.data.features[i].geometry.type === 'LineString'){
-            for (var j in $scope.geojson.data.features[i].geometry.coordinates){
-              var coord = $scope.geojson.data.features[i].geometry.coordinates[j];
+          else if ($scope.layers.overlays.geojson.data.features[i].geometry.type === 'LineString'){
+            for (var j in $scope.layers.overlays.geojson.data.features[i].geometry.coordinates){
+              var coord = $scope.layers.overlays.geojson.data.features[i].geometry.coordinates[j];
               latlngs.push(L.GeoJSON.coordsToLatLng(coord));
             }
           } else {

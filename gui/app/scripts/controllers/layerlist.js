@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LayerlistCtrl',  function($scope, $location,$http) {
+  .controller('LayerlistCtrl',  function($scope, $location,$http, currentProject) {
     $scope.layersLoaded = false;
     $http.get('/api/cranepath/layerlist')
     .success(function(data, status, headers, config) {
@@ -28,7 +28,7 @@ angular.module('windopsApp')
     
     $scope.tsp = function(){
       $scope.layersLoaded = false;
-      $http.post('/api/cranepath/tsp',$scope.layerdict)
+      $http.post('/api/cranepath/tsp',{"layerdict": $scope.layerdict, "project": currentProject.project.name})
       .success(function(data,status,headers,config){
         $location.path('/cranepath');
       })

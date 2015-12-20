@@ -5,7 +5,6 @@ from app import app
 from app.dbmodel import *
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
-import zipfile
 from windscripts.wrangling import *
 from windscripts.windday import *
 from cStringIO import StringIO
@@ -22,20 +21,10 @@ def allowed_file(filename,extensions):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in extensions
 
-def clear_shpfiles():
-    shpdir = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
-    if os.path.exists(shpdir):
-        for the_file in os.listdir(shpdir):
-            file_path = os.path.join(shpdir, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception, e:
-                print e
 
-@app.route('/api/windyday/upload', methods=['POST'])
+@app.route('/api/windyday/<project_name>/upload', methods=['POST'])
 @auth.login_required
-def upload_file():
+def upload_file(project_name):
     print "At upload"
     if request.method == 'POST':
         fileobj = request.files['file']
@@ -45,9 +34,9 @@ def upload_file():
             #filename = secure_filename(file.filename)
             s = StringIO(fileobj.read())
             try:
-                project = Project.objects.get(name='default')
+                project = Project.objects.get(name = project_name)
             except Project.DoesNotExist:
-                project = Project(name = 'default')
+                project = Project(name =  project_name)
             #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
             #else: project.windRaw.replace(file, content_type='text/csv')
             project.windHeight = int(request.values['height'])
@@ -65,29 +54,4 @@ def upload_file():
             print 'seasonality plot = ' + str(t2-t1)
             print 'tmatrix = ' +str(t3-t2)
             print 'save = ' + str(t4-t3)
-            return flask.jsonify(result={"status": 200})
-            
-@app.route('/api/cranepath/zipupload',methods=['POST'])
-@auth.login_required
-def upload_ziplfile():
-    clear_shpfiles()
-    print "At upload"
-    if request.method == 'POST':
-        fileobj = request.files['file']
-        print "Got File"
-        if fileobj and allowed_file(fileobj.filename,ZIP):
-            print "File is allowed"
-            #filename = secure_filename(file.filename)
-            fileobj.save(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'))
-            path = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
-            with zipfile.ZipFile(os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles.zip'), "r") as z:
-                for member in z.namelist():
-                    filename = os.path.basename(member)
-                    if not filename: continue
-                    # copy file (taken from zipfile's extract)
-                    source = z.open(member)
-                    target = file(os.path.join(path, filename), "wb")
-                    with source, target:
-                        shutil.copyfileobj(source, target)
-                    
             return flask.jsonify(result={"status": 200})

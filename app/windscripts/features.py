@@ -55,8 +55,16 @@ def customTransform(crs,original,toLatLon=False):
         for element in geometry['coordinates']:
             elements.append(map(trans,element))
         geometry['coordinates'] = elements
+    elif geometry['type'] == 'MultiPolygon':
+        elements = []
+        for element in geometry['coordinates']:
+            subelements = []
+            for subelement in element:
+                subelements.append(map(trans,subelement))
+            elements.append(map(trans, element))
+        geometry['coordinates'] = elements
     else:
-        raise NameError("Geometry type not supported.")
+        raise NameError("Geometry type not supported: " + geometry['type'])
         return
     return geometry
     
@@ -95,16 +103,20 @@ class GPoint(Point):
             }
         return properties
     
-class GeoFeat:
+class GeoFeat(object):
     '''
     Holds the pertinent information and methods for individual
     features. Stores information in WGS84 LatLon coordinates
     '''
-    def __init__(self,interpretation=None,cost=None,name=None):
-        self.interpretation = interpretation
-        self.cost = cost
-        self.name = name
-        self.geojson = None 
+    #def __init__(self,interpretation=None,cost=None,name=None, **kwargs):
+    #    super(GeoFeat, self).__init__()
+    #    if interpretation:
+    #        self.interpretation = interpretation
+    #    if cost:
+    #        self.cost = cost
+    #    if name:
+    #        self.name = name
+    #    self.geojson = {}
 
     def __str__(self):
         return str(self.geojson)
@@ -152,33 +164,48 @@ class GeoFeat:
         raster = rasterize(
             feats,
             out_shape=(y_res, x_res),
-            transform=transform,dtype='float32',
+            transform=transform,
+            dtype='float32',
             all_touched=True)
         
         if self.interpretation == 'boundary':
             #1000 is just an arbitrarily large number, could try np.inf
-            raster = np.where(raster==0,1000,self.cost)
+            raster = np.where(raster==0,1000.0,self.cost)
+            print 'at boundary', raster
         elif self.interpretation == 'crossing':
             raster = raster*(self.cost/psize)
+            print 'at all else', raster
         return raster
         
         
 
-class CraneProject:
-    def __init__(self,turbines=None,boundary=None,features=[],psize=50.0):
-        self.boundary = boundary
-        if boundary:
-            self.set_boundary(boundary)
-        self.turbines=turbines
-        self.features = features
-        self.psize = psize
+class CraneProject(object):
+    """
+    boundary is a feature
+    turbines is a feature
+    features are a set of features
+    """
+
+    #def __init__(self,turbines=None,boundary=None,features=[],psize=50.0, **kwargs):
+    #    super(CraneProject, self).__init__()
+    #    if boundary:
+    #        self.boundary = boundary
+    #        self.set_boundary(boundary)
+    #    if turbines:
+    #        self.turbines=turbines
+    #    if features:
+    #        self.features = features
+    #    if psize:
+    #        self.psize = psize
     
     def set_boundary(self,boundary):
         self.boundary = boundary
         self.walkCost = boundary.cost
         self.crs = createCustomCRS(boundary.bounds[1],boundary.bounds[0])
-        self.reproject = pointTrans(self.crs)
         self.bounds = list(self.reproject(boundary.bounds[:2])) + list(self.reproject(boundary.bounds[2:]))        
+    
+    def reproject(self, tpl):
+        return pointTrans(self.crs)(tpl)
     
     def createCostRaster(self):
         #t= [psize,rotation,topleft-x-coord,rotation,-psize,topleft-y-coord]
@@ -201,7 +228,7 @@ class CraneProject:
         originX = self.transform[2]
         originY = self.transform[5]
         coordX = originX+self.psize*xOffset+self.psize/2
-        coordY = originY-self.psize*yOffset+self.psize/2
+        coordY = originY-self.psize*yOffset-self.psize/2
         return coordX, coordY
     
     def shortest_path(self,p1,p2):

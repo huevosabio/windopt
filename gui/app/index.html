@@ -2,7 +2,7 @@
 <html lang="en" ng-app="windopsApp">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>WindOps</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
@@ -38,9 +38,12 @@
                 </li>
                 <li class="sidebar-title" ng-if="isAuthenticated()"><span>MENU</span></li>
                 <li class="sidebar-list" ng-if="isAuthenticated()">
-                    <a href="/#/windday">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                    <a href="/#/main">Projects<span class="menu-icon fa fa-tachometer"></span></a>
                 </li>
-                <li class="sidebar-list" ng-if="isAuthenticated()">
+                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
+                    <a href="{{getWindRoute()}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                </li>
+                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
                     <a href="/#/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
                 </li>
             </ul>
@@ -76,8 +79,8 @@
               <div class="page">
                 WindOps
               </div>
-              <div class="breadcrumb-links">
-                Wind Farm Construction Software
+              <div class="breadcrumb-links" ng-if="isOpenProject()">
+                {{getProjectName()}} 
               </div>
             </div>
             <div class="user pull-right" ng-if="isAuthenticated()">
@@ -87,23 +90,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-right">
                   <li class="dropdown-header">
-                    Joe Bloggs
-                  </li>
-                  <li class="divider"></li>
-                  <li class="link">
-                    <a href="#">
-                      Profile
-                    </a>
-                  </li>
-                  <li class="link">
-                    <a href="#">
-                      Menu Item
-                    </a>
-                  </li>
-                  <li class="link">
-                    <a href="#">
-                      Menu Item
-                    </a>
+                    User
                   </li>
                   <li class="divider"></li>
                   <li class="link">
@@ -122,9 +109,6 @@
                     Notifications
                   </li>
                   <li class="divider"></li>
-                  <li>
-                    <a href="#">Server Down!</a>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -181,6 +165,7 @@
     <script src="bower_components/highcharts-release/highcharts.js"></script>
     <script src="bower_components/highcharts-release/highcharts-more.js"></script>
     <script src="bower_components/highcharts-release/modules/exporting.js"></script>
+    <script src="bower_components/highcharts-release/modules/heatmap.js"></script>
     <script src="bower_components/leaflet/dist/leaflet-src.js"></script>
     <script src="bower_components/angular-leaflet/dist/angular-leaflet-directive.js"></script>
     <script src="bower_components/satellizer/satellizer.js"></script>
@@ -211,6 +196,9 @@
         <script src="scripts/controllers/signup.js"></script>
         <script src="scripts/directives/passwordmatch.js"></script>
         <script src="scripts/directives/passwordstrength.js"></script>
+        <script src="scripts/services/project.js"></script>
+        <script src="scripts/controllers/projects.js"></script>
+        <script src="scripts/services/currentproject.js"></script>
         <!-- endbuild -->
 </body>
 </html>
