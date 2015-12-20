@@ -4,6 +4,7 @@ from flask import Flask, abort, request, jsonify, g, url_for
 from app import app, conn, auth
 import cPickle
 from app.auth import User
+import windscripts.features as wind_features
 
 @app.route('/api/projects', methods = ['POST', 'GET'])
 @auth.login_required
@@ -63,6 +64,22 @@ def get_or_update_project(name):
     else:
         raise BadRequestException('Your request was not understood by the server.')
 
+class GeoFeat(wind_features.GeoFeat, Document):
+    interpretation = StringField()
+    cost = FloatField()
+    name = StringField()
+    geojson = DictField()
+
+class CraneProject(wind_features.CraneProject, Document):
+    boundary = ReferenceField(GeoFeat)
+    turbines = ReferenceField(GeoFeat)
+    features = ListField(ReferenceField(GeoFeat))
+    psize = FloatField(default=50.0)
+    walkCost = FloatField()
+    crs = DictField()
+    bounds = ListField(FloatField())
+    geojson = DictField()
+
 
 class Project(Document):
     name = StringField(unique=True)
@@ -70,6 +87,7 @@ class Project(Document):
     windHeight = IntField()
     windTMatrix = BinaryField()
     windSeasonality = BinaryField()
+    crane_project = ReferenceField(CraneProject)
     
     def save_TMatrix(self,tmat):
         #convert transition matrix to binary and assign
@@ -103,9 +121,6 @@ class Project(Document):
             'name': self.name,
             'hasWindFile': bool(self.windTMatrix)
         }
-        
-        
-        
         
         
         

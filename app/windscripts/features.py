@@ -103,16 +103,20 @@ class GPoint(Point):
             }
         return properties
     
-class GeoFeat:
+class GeoFeat(object):
     '''
     Holds the pertinent information and methods for individual
     features. Stores information in WGS84 LatLon coordinates
     '''
-    def __init__(self,interpretation=None,cost=None,name=None):
-        self.interpretation = interpretation
-        self.cost = cost
-        self.name = name
-        self.geojson = None 
+    #def __init__(self,interpretation=None,cost=None,name=None, **kwargs):
+    #    super(GeoFeat, self).__init__()
+    #    if interpretation:
+    #        self.interpretation = interpretation
+    #    if cost:
+    #        self.cost = cost
+    #    if name:
+    #        self.name = name
+    #    self.geojson = {}
 
     def __str__(self):
         return str(self.geojson)
@@ -172,21 +176,33 @@ class GeoFeat:
         
         
 
-class CraneProject:
-    def __init__(self,turbines=None,boundary=None,features=[],psize=50.0):
-        self.boundary = boundary
-        if boundary:
-            self.set_boundary(boundary)
-        self.turbines=turbines
-        self.features = features
-        self.psize = psize
+class CraneProject(object):
+    """
+    boundary is a feature
+    turbines is a feature
+    features are a set of features
+    """
+
+    #def __init__(self,turbines=None,boundary=None,features=[],psize=50.0, **kwargs):
+    #    super(CraneProject, self).__init__()
+    #    if boundary:
+    #        self.boundary = boundary
+    #        self.set_boundary(boundary)
+    #    if turbines:
+    #        self.turbines=turbines
+    #    if features:
+    #        self.features = features
+    #    if psize:
+    #        self.psize = psize
     
     def set_boundary(self,boundary):
         self.boundary = boundary
         self.walkCost = boundary.cost
         self.crs = createCustomCRS(boundary.bounds[1],boundary.bounds[0])
-        self.reproject = pointTrans(self.crs)
         self.bounds = list(self.reproject(boundary.bounds[:2])) + list(self.reproject(boundary.bounds[2:]))        
+    
+    def reproject(self, tpl):
+        return pointTrans(self.crs)(tpl)
     
     def createCostRaster(self):
         #t= [psize,rotation,topleft-x-coord,rotation,-psize,topleft-y-coord]

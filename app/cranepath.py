@@ -1,13 +1,12 @@
 import json
 import os
 import flask
-from flask import Flask, request, redirect, url_for, render_template, jsonify
+from flask import Flask, request, redirect, url_for, render_template, jsonify, g
 from app import app
 from werkzeug.utils import secure_filename
 from windscripts.costing import *
 #from windscripts.geopy import *
 from windscripts.tsp import *
-from windscripts.features import *
 import fiona
 import pandas as pd
 from app.dbmodel import *
@@ -15,6 +14,8 @@ import auth
 from upload import allowed_file, ZIP
 import zipfile
 import shutil
+from mongoengine import *
+from mongoengine.dereference import DeReference
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all
 #the nuances of permission management. Thus, in a more refined version, it would
@@ -96,9 +97,20 @@ def tsp_sol_legacy():
     clear_uploads(PATHS_DIR)
     #Create Layer Dictionary and identify turbines
     print "we are at tsp_sol()"
-    project = CraneProject()
+    
+    #Get the project
+    user = User.objects.get(username = g.username)
+    project = Project.objects.get(name = request.json['project'], user = user)
+
+    crane_project = CraneProject()
+    crane_project.save()
+
+    project.crane_project = crane_project
+
+    project.save()
+
     try:
-        layerdict = request.json
+        layerdict = request.json['layerdict']
     except Exception, e:
         print e
     print "we created the layerdict"
@@ -107,31 +119,41 @@ def tsp_sol_legacy():
         feature.read_shapefile(SHP_DIR+'/'+layer+'.shp')
         feature.cost = float(layerdict[layer]['cost'])
         feature.name = layer
-        print feature
+        try:
+            feature.save()
+        except:
+            print layer + ': not saved'
+            continue
         if layerdict[layer]['interpretation'] == 'turbines':
-            project.turbines = feature
+            crane_project.turbines = feature
         elif layerdict[layer]['interpretation'] == 'boundary':
-            project.set_boundary(feature)
+            crane_project.set_boundary(feature)
         else:
-            project.features.append(feature)
+            crane_project.features.append(feature)
+
+    crane_project.save()
             
     #Create Cost Ratser
     print "cost raster"
-    project.createCostRaster()
+    crane_project.createCostRaster()
     
     #Create Complete NetworkX graph
     print 'graph'
-    project.create_nx_graph()
+    crane_project.create_nx_graph()
     
     #Solve the graph
     print 'tsp'
-    project.solve_tsp()
-    project.expandPaths()
+    crane_project.solve_tsp()
+    crane_project.expandPaths()
     
     #Save to GeoJSON
     print 'GeoJson'
     
-    schedule = project.get_geojson()
+    schedule = crane_project.get_geojson()
+    crane_project.geojson = schedule
+
+    crane_project.save()
+    project.save()
     
     if os.path.exists(os.path.join(app.config['STATIC'], 'schedule.json')):
         os.remove(os.path.join(app.config['STATIC'], 'schedule.json'))
@@ -148,12 +170,16 @@ def tsp_sol_legacy():
     return jsonify({'result':'Success'})
 
 
-@app.route('/api/cranepath/schedule',methods=['GET'])
+@app.route('/api/cranepath/schedule/<project_name>',methods=['GET'])
 @auth.login_required
-def solved():
+def solved(project_name):
+    user = User.objects.get(username = g.username)
+    project = Project.objects.get(name = project_name, user = user).select_related(max_depth=10)
     result = {}
-    with open(os.path.join(app.config['STATIC'], 'schedule.json'),'r') as j:
-        result['schedule'] = json.load(j)
+    result['schedule'] = project.crane_project.geojson
+    result['features'] = [{"name":feature.name, "geojson":feature.geojson} for feature in project.crane_project.features]
+    result['turbines'] = project.crane_project.turbines.geojson
+    result['boundary'] = project.crane_project.boundary.geojson
     return jsonify(result)
     
 @app.route('/api/cranepath/schedule.csv',methods=['GET'])

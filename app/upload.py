@@ -5,7 +5,6 @@ from app import app
 from app.dbmodel import *
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
-import zipfile
 from windscripts.wrangling import *
 from windscripts.windday import *
 from cStringIO import StringIO

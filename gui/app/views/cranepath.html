@@ -7,7 +7,7 @@
             </div>
             <div class="widget-body large no-padding">
                 <div ng-if="!mapLoaded"><loading></loading></div>
-                <leaflet tiles="tiles" ng-if="mapLoaded" geojson="geojson"></leaflet>
+                <leaflet ng-if="mapLoaded" layers="layers"></leaflet>
             </div>
         </div>
     </div>
