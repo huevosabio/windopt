@@ -93,6 +93,11 @@ angular
         controller: 'ProjectsCtrl',
         controllerAs: 'projects'
       })
+      .when('/costs', {
+        templateUrl: 'views/costs.html',
+        controller: 'CostsCtrl',
+        controllerAs: 'costs'
+      })
       .otherwise({
         redirectTo: '/main'
       });
