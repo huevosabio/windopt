@@ -57,7 +57,7 @@ angular.module('windopsApp')
   	$scope.deleteCost = function( data ) {
   		cost.deleteCost(data).then(function(){
   			$scope.listCosts();
-  		});
+  		});	
   	}
 
   });

@@ -84,7 +84,13 @@ class Cost(Document):
     cost= FloatField()
 
     def to_dict(self):
-        return {'name': self.name, 'interpretation': self.interpretation, 'cost': self.cost, 'id': str(self.id)}
+        return {
+        'name': self.name,
+        'interpretation': self.interpretation,
+        'cost': self.cost,
+        'id': str(self.id),
+        'verbose': self.name + ', interpretation: ' + self.interpretation + ',  cost: ' + str(self.cost)
+        }
 
 
 @app.before_first_request

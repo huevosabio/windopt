@@ -8,8 +8,16 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LayerlistCtrl',  function($scope, $location,$http, currentProject) {
+  .controller('LayerlistCtrl',  function($scope, $location,$http, currentProject, cost) {
     $scope.layersLoaded = false;
+
+    //load costs
+    cost.listCosts().then( function(data){
+        $scope.costs = data.costs;
+      }).then(function(){
+        //console.log($scope.costs);
+      });
+
     $http.get('/api/cranepath/layerlist')
     .success(function(data, status, headers, config) {
       console.log(data);
@@ -17,8 +25,6 @@ angular.module('windopsApp')
       $scope.layers = data.layers;
       for (var i = 0; i < data.layers.length; i++){
         $scope.layerdict[data.layers[i]] = {};
-        $scope.layerdict[data.layers[i]].interpretation = 'turbines';
-        $scope.layerdict[data.layers[i]].cost = 0.0;
       }
       $scope.layersLoaded = true;
     })

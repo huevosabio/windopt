@@ -12,8 +12,7 @@
                             <thead>
                                 <tr>
                                     <th>Layer Name</th>
-                                    <th>Interpretation</th>
-                                    <th>Associated Cost [USD]</th>
+                                    <th>Cost</th>
                                 </tr>
                             </thead>
                             <tbody id="formbody">
@@ -22,10 +21,14 @@
                                         {{layer}}
                                     </td>
                                     <td>
-                                        <select class="selectpicker" ng-model="model.interpretation" name = "{{layer}}.interpretation" form="daform"><option value="crossing">Crossing</option><option value="turbines">Turbines</option><option value="boundary">Boundary</option></select>
-                                    </td>
-                                    <td>
-                                        <input class="form-control"  min="0.0" step="0.1" type="number"ng-model="model.cost" name="{{layer}}.cost" placeholder="Associated Cost in USD"/>
+                                        <select 
+                                        class="selectpicker" 
+                                        ng-model="layerdict[layer]" 
+                                        name = "{{layer}}" 
+                                        ng-options= "option.verbose for option in costs"
+                                        ng-required
+                                        form="daform">
+                                        </select>
                                     </td>
                                 </tr>
                             </tbody>
