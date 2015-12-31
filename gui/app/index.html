@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css" />
     <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -39,6 +40,9 @@
                 <li class="sidebar-title" ng-if="isAuthenticated()"><span>MENU</span></li>
                 <li class="sidebar-list" ng-if="isAuthenticated()">
                     <a href="/#/main">Projects<span class="menu-icon fa fa-tachometer"></span></a>
+                </li>
+                <li class="sidebar-list" ng-if="isAuthenticated()">
+                    <a href="/#/costs">Crane Costs<span class="menu-icon fa fa-image"></span></a>
                 </li>
                 <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
                     <a href="{{getWindRoute()}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
@@ -171,6 +175,7 @@
     <script src="bower_components/satellizer/satellizer.js"></script>
     <script src="bower_components/angular-strap/dist/angular-strap.js"></script>
     <script src="bower_components/angular-strap/dist/angular-strap.tpl.js"></script>
+    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -199,6 +204,8 @@
         <script src="scripts/services/project.js"></script>
         <script src="scripts/controllers/projects.js"></script>
         <script src="scripts/services/currentproject.js"></script>
+        <script src="scripts/controllers/costs.js"></script>
+        <script src="scripts/services/cost.js"></script>
         <!-- endbuild -->
 </body>
 </html>

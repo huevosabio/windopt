@@ -20,7 +20,8 @@ angular
     'angularFileUpload',
     'leaflet-directive',
     'satellizer',
-    'mgcrea.ngStrap'
+    'mgcrea.ngStrap',
+    'xeditable'
   ])
   .config(function ($routeProvider, $locationProvider, $authProvider) {
     
@@ -92,6 +93,14 @@ angular
         templateUrl: 'views/projects.html',
         controller: 'ProjectsCtrl',
         controllerAs: 'projects'
+      })
+      .when('/costs', {
+        templateUrl: 'views/costs.html',
+        controller: 'CostsCtrl',
+        controllerAs: 'costs',
+        resolve: {
+          authenticated: authenticated
+        }
       })
       .otherwise({
         redirectTo: '/main'

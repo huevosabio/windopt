@@ -56,11 +56,11 @@ def login_required(f):
 
         try:
             payload = parse_token(request)
-        except DecodeError:
+        except jwt.DecodeError:
             response = jsonify(message='Token is invalid')
             response.status_code = 401
             return response
-        except ExpiredSignature:
+        except jwt.ExpiredSignature:
             response = jsonify(message='Token has expired')
             response.status_code = 401
             return response
