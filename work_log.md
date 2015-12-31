@@ -29,3 +29,10 @@ Good freaking lord, now we have a decent solution!
 ##Creating the Cost DB
 
 I've created the backend part, not a big deal, I intend to have the cost managed using an angular x-editable thing. this way the user can crea/update/delete at will and in a single view. I've decided, for the time being, to use only a single cost page for it, rather than giving the user to create new costs in the layerlist view. 
+
+todo then:
+
+- The user should be able to create, edit and delete costs (cost view)
+-- Create the controller that power the editing of costs - DONE
+-- Create the view that enables the user to create costs - DONE
+- in LayerList, the user should be able to assign layers the corresponding costs

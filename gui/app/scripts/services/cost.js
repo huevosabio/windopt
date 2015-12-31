@@ -8,24 +8,24 @@
  * Factory in the windopsApp.
  */
 angular.module('windopsApp')
-  .factory('costs', function ($http, $alert, currentProject) {
+  .factory('cost', function ($http, $alert, currentProject) {
     // Service logic
     // ...
 
     // Public API here
     return {
       createCost: createCost,
-      listCosts: listCosts
+      listCosts: listCosts,
+      updateCost: updateCost,
+      deleteCost: deleteCost
     };
 
     // Gets creates cost using a cost name
-    function createCost(name) {
+    function createCost( data ) {
       var request = $http({
         method: "post",
         url: "api/costs",
-        data: {
-          name: name
-        }
+        data: data
       });
       return (request.then( handleSuccess, handleError ));
     }
@@ -36,7 +36,7 @@ angular.module('windopsApp')
           ! response.data.message
           ) {
             $alert({
-              content: 'There was an error creating the cost.',
+              content: 'There was an error on the server side.',
               animation: 'fadeZoomFadeDown',
               type: 'danger',
               duration: 3,
@@ -65,6 +65,24 @@ angular.module('windopsApp')
         url: "api/costs"
       });
       return (request.then (handleSuccess, handleError));
+    }
+
+    function deleteCost ( data ) {
+      var request = $http({
+        method: "delete",
+        url: "api/costs/" + data.id,
+        data: data
+      });
+      return (request.then( handleSuccess, handleError ));
+    }
+
+    function updateCost ( data ) {
+      var request = $http({
+        method: "put",
+        url: "api/costs/" + data.id,
+        data: data
+      });
+      return (request.then( handleSuccess, handleError ));
     }
 
     // WindDay Functions

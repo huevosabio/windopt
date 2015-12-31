@@ -36,23 +36,22 @@ def create_or_list_cost():
             cost.save()
             return jsonify(
                 message = 'Cost created successfully.',
-                cost = cost.to_mongo()
+                cost = cost.to_dict()
                 )
 
     elif request.method == 'GET':
         user = User.objects.get(username = g.username)
-        costs = [cost.to_mongo() for cost in Cost.objects(user = user).all()]
+        costs = [cost.to_dict() for cost in Cost.objects(user = user).all()]
         return jsonify(message = 'Queried costs', costs = costs)
 
 
-@app.route('/api/costs/<name>', methods = ['GET'])
+@app.route('/api/costs/<id>', methods = ['GET', 'DELETE', 'PUT'])
 @auth.login_required
-def get_or_update_cost(name):
+def get_or_update_cost(id):
     '''
     GET:
         Returns the cost info (name)
     PUT:
-        NOT IMPLEMENTED
         Updates cost info (name)
     DELETE:
         NOT IMPLEMENTED
@@ -60,16 +59,40 @@ def get_or_update_cost(name):
     '''
     try:
         user = User.objects.get(username = g.username)
-        cost = Cost.objects.get(name = name, user = user)
+        cost = Cost.objects.get(id = id, user = user)
     except Cost.DoesNotExist:
         raise CostException('Cost does not exist.')
     if request.method == 'GET':
-        return jsonify(cost.to_mongo())
+        return jsonify(cost.to_dict()) 
+    if request.method == 'PUT':
+        print request.json
+        cost.name = request.json['name']
+        cost.interpretation = request.json['interpretation']
+        cost.cost = request.json['cost']
+        cost.save()
+        return jsonify(message = 'Cost updated.')
+    if request.method == 'DELETE':
+        cost.delete()
+        return jsonify(message = 'Cost deleted.')
     else:
         raise BadRequestException('Your request was not understood by the server.')
 
-class CraneCost(Document):
+class Cost(Document):
     user = ReferenceField(User)
-    name = StringField()
+    name = StringField(unique = True)
     interpretation = StringField()
     cost= FloatField()
+
+    def to_dict(self):
+        return {'name': self.name, 'interpretation': self.interpretation, 'cost': self.cost, 'id': str(self.id)}
+
+
+@app.before_first_request
+def create_fake_costs():
+    user = User.objects.get(username = 'admin')
+    try:
+        cost = Cost(user = user, name = 'Fake Cost', interpretation = 'turbines', cost = 1000)
+        cost.save()
+    except NotUniqueError:
+        pass
+    return

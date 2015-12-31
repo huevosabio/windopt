@@ -1,1 +1,63 @@
-<p>This is the costs view.</p>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="widget">
+            <div class = "widget-title">
+                <i class="fa fa-dollar"></i>Existing Costs
+            </div>
+            <div class="widget-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th ng-repeat="field in fields">
+                                    {{field}}
+                                </th>
+                                <th>
+                                    Edit
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="cost in costs">
+                                <td ng-repeat="(i,key) in fields">
+                                    <div ng-if="key === 'name'">
+                                        <div editable-text="cost[key]" e-name="key" e-form="rowform" e-required>
+                                            {{cost[key]}}
+                                        </div>
+                                    </div>
+                                    <div ng-if="key === 'cost'">
+                                        <span editable-number="cost[key]" e-name="key" e-form="rowform" e-required>
+                                          {{cost[key]}}
+                                        </span>
+                                    </div>
+                                    <div ng-if="key === 'interpretation'">
+                                        <span editable-select="cost[key]" e-name="key" e-form="rowform" e-ng-options="option for option in interpretations" e-required>
+                                          {{cost[key]}}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                  <!-- form -->
+                                  <form editable-form name="rowform" onaftersave="saveCost(cost)" 
+                                  ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == cost">
+                                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
+                                      save
+                                    </button>
+                                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default">
+                                      cancel
+                                    </button>
+                                  </form>
+                                  <div class="buttons" ng-show="!rowform.$visible">
+                                    <button class="btn btn-primary" ng-click="rowform.$show()">edit</button>
+                                    <button class="btn btn-danger" ng-click="deleteCost(cost)">del</button>
+                                  </div>  
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn btn-default" ng-click="addCost()">Add Cost</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -9,8 +9,8 @@
  */
 angular.module('windopsApp')
   .controller('CostsCtrl', function ($scope, $alert, cost) {
-  	$scope.newCostName = null;
-
+  	$scope.interpretations = ['turbines', 'boundary', 'crossing'];
+  	$scope.fields = ['name', 'interpretation', 'cost'];
   	
   	$scope.listCosts = function () {
   		cost.listCosts().then( function(data){
@@ -22,10 +22,10 @@ angular.module('windopsApp')
 
   	$scope.listCosts();
 
-  	$scope.createCost = function () {
-  		if ($scope.newCostName === null) {
+  	$scope.saveCost = function (data) {
+  		if (data.name === null) {
   			$alert({
-              content: 'Please name the new cost.',
+              content: 'Costs must be uniquely named.',
               animation: 'fadeZoomFadeDown',
               type: 'danger',
               duration: 3,
@@ -33,9 +33,30 @@ angular.module('windopsApp')
             });
             return;
   		}
-  		cost.createCost( $scope.newCostName ).then( function(data) {
+  		if (data.id === null){
+  			cost.createCost(data).then( function() {
+  				$scope.listCosts();
+  			});
+  		} else {
+  			cost.updateCost(data).then( function() {
+  				$scope.listCosts();
+  			})
+  		}
+  	}
+
+  	$scope.addCost = function() {
+  		$scope.inserted = {
+  			name: null,
+  			interpretation: null,
+  			cost: null,
+  			id: null
+  		};
+  		$scope.costs.push($scope.inserted);
+  	}
+
+  	$scope.deleteCost = function( data ) {
+  		cost.deleteCost(data).then(function(){
   			$scope.listCosts();
-  			$scope.newCostName = null;
   		});
   	}
 
