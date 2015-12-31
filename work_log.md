@@ -35,4 +35,28 @@ todo then:
 - The user should be able to create, edit and delete costs (cost view)
 -- Create the controller that power the editing of costs - DONE
 -- Create the view that enables the user to create costs - DONE
-- in LayerList, the user should be able to assign layers the corresponding costs
+- in LayerList, the user should be able to assign layers the corresponding costs - DONE
+
+##Checking that things work as they are supposed to [12/30/2015].
+
+I'm making a very quick overall check to see that things work as required as a user.
+
+###Signup/login
+Works.
+
+###Project Navigation
+- On create/open project it should move the user to the project's page. S.T. it is obvious that you are INSIDE a project and that you can track the status there.
+
+###Wind Day
+- Change icon in side bar
+
+###Cost DB
+- Change icon in side bar.
+
+###Crane Path
+- Layerlist should force at least ONE turbine and ONE boundary.
+- we really need to implement the queue/task system.
+- there's an error in the layerlist crap [TODO]
+
+###Deployment
+- No work done here yet. Should set up with docker compose
