@@ -14,7 +14,7 @@ app.config['SECRET_KEY'] = 'die luft der freiheit weht'
 
 if ENV_NAME == 'local':
     # If local, assume that there is a local mongo instance
-    conn = connect('windops', host = 'localhost', port = 27017)
+    conn = connect('windops', host = DB_URI, port = 27017)
 else:
     # Otherwise, use env variables to connect
     conn = connect('windops', host='mongodb://'+ DB_USER + ':' + DB_PWD + '@' + DB_URI)

@@ -1,5 +1,5 @@
 #Basic Image
-FROM huevosabio/geopy
+FROM huevosabio/geopy:master
 
 #Create the folder where app lives
 #Assumes the entirety of my app is there
@@ -12,7 +12,7 @@ ADD . /var/www/windopt
 #Set nginx and supervisord configs
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 RUN ln -s /var/www/windopt/config/windopt_nginx.conf /etc/nginx/conf.d
-RUN ln -s /var/www/windopt/config/fineng_uwsgi.ini /etc/uwsgi/vassals
+RUN ln -s /var/www/windopt/config/windopt_uwsgi.ini /etc/uwsgi/vassals
 RUN cp /var/www/windopt/config/uwsgi.conf /etc/init
 RUN chown -R www-data:www-data /var/log/uwsgi
 RUN mkdir -p /var/log/supervisord
