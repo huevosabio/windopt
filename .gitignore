@@ -80,5 +80,5 @@ data/
 *.proj
 config.json
 #Directories
-tmp/
-
+tmp/shapefiles/
+*.zip
