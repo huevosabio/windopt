@@ -1,0 +1,31 @@
+## Enable Docker 
+machine:
+  services:
+    - docker
+  node:
+    version: 0.12.0
+
+## Customize checkout
+checkout:
+  post:
+    - cd gui && npm install
+    - cd gui && bower install
+    - cd gui && grunt build --force
+
+dependencies:
+  override:
+    - docker info
+    - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+    - docker build -t huevosabio/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
+
+#test:
+#  override:
+#    - docker run huevosabio/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH nosetests  --with-coverage --cover-package=app
+
+#Push to Docker Hub
+deployment:
+  hub:
+    branch: [master, develop, qa, stage]
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push huevosabio/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH
