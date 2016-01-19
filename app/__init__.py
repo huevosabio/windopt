@@ -35,5 +35,4 @@ from app import lostshifts
 from app import cranetest
 from app import cranepath
 from app import dbmodel
-from app import useradmin
 from app import costs

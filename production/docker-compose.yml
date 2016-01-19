@@ -1,0 +1,9 @@
+windopt:
+  image: huevosabio/windopt:master
+  ports:
+  - "8000:80"
+  environment:
+  - MONGO_URI=ds047095.mongolab.com:47095/windops
+  - ENV_NAME=production.
+  - DB_USER=stanford
+  - DB_PWD=mortenson
