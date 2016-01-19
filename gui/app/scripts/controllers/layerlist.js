@@ -8,13 +8,24 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LayerlistCtrl',  function($scope, $location,$http, currentProject, cost) {
+  .controller('LayerlistCtrl',  function($scope, $location, $alert, $http, currentProject, cost) {
     $scope.layersLoaded = false;
 
     //load costs
     cost.listCosts().then( function(data){
         $scope.costs = data.costs;
       }).then(function(){
+        //if the costs is empty, then redirect.
+        if ($scope.costs.length < 1) {
+          $alert({
+              content: 'You need to create costs first; redirecting.',
+              animation: 'fadeZoomFadeDown',
+              type: 'danger',
+              duration: 3,
+              placement:'top-right'
+            });
+          $location.path('/costs');
+        }
         //console.log($scope.costs);
       });
 

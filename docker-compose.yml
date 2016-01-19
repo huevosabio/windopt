@@ -1,4 +1,14 @@
-postgres:
+mongo:
   image: mongo
   ports:
     - "27017:27017"
+
+windopt:
+  build: .
+  links:
+    - mongo
+  ports:
+  - "80:80"
+  environment:
+  - MONGO_URI=mongo:27017
+  - ENV_NAME=local
