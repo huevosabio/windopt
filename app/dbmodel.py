@@ -66,9 +66,11 @@ def get_or_update_project(name):
 
 class GeoFeat(wind_features.GeoFeat, Document):
     interpretation = StringField()
+    geometry_type = StringField()
     cost = FloatField()
     name = StringField()
     geojson = DictField()
+    bounds = ListField(FloatField())
 
 class CraneProject(wind_features.CraneProject, Document):
     boundary = ReferenceField(GeoFeat)
@@ -79,6 +81,7 @@ class CraneProject(wind_features.CraneProject, Document):
     crs = DictField()
     bounds = ListField(FloatField())
     geojson = DictField()
+    status = StringField()
 
 
 class Project(Document):

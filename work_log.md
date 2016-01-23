@@ -54,9 +54,19 @@ Works.
 - Change icon in side bar.
 
 ###Crane Path
-- Layerlist should force at least ONE turbine and ONE boundary.
+- Layerlist should force at least ONE turbine and ONE boundary.	
 - we really need to implement the queue/task system.
 - there's an error in the layerlist crap [TODO]
 
 ###Deployment
 - No work done here yet. Should set up with docker compose
+
+
+## Deploying the current state of the application.
+
+We need to deploy the current solution, last time I tried to do so I had the issue of the Docker containers failing to be built. Let's tackle that.
+
+- Fixing the docker containers.
+- The Docker containers work, owever the experience is CRAP. It's impossible to tell them to use this.
+
+Urgent next steps:
