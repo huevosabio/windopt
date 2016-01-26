@@ -9,6 +9,7 @@ from windscripts.wrangling import *
 from windscripts.windday import *
 from cStringIO import StringIO
 from bson.binary import Binary
+from errors import ProjectException
 import cPickle
 import time
 import shutil
@@ -37,21 +38,24 @@ def upload_file(project_name):
                 project = Project.objects.get(name = project_name)
             except Project.DoesNotExist:
                 project = Project(name =  project_name)
-            #if not project.windRaw: project.windRaw.put(file,content_type='text/csv')
-            #else: project.windRaw.replace(file, content_type='text/csv')
-            project.windHeight = int(request.values['height'])
-            t0 = time.time()
-            windseries, windcolumn = get_train_set(s)
-            t1 = time.time()
-            project.save_Seasonality(plot_seasonality(windseries))
-            t2 = time.time()
-            project.save_TMatrix(train_mcm_hm(windseries,windcolumn))
-            project.save_Stationary(compute_stationary(project.get_TMatrix()))
-            t3 = time.time()
-            project.save()
-            t4 = time.time()
-            print 'train set = ' + str(t1-t0)
-            print 'seasonality plot = ' + str(t2-t1)
-            print 'tmatrix = ' +str(t3-t2)
-            print 'save = ' + str(t4-t3)
+            try:
+                project.windHeight = int(request.values['height'])
+                t0 = time.time()
+                windseries, windcolumn = get_train_set(s)
+                t1 = time.time()
+                project.save_Seasonality(plot_seasonality(windseries))
+                t2 = time.time()
+                project.save_TMatrix(train_mcm_hm(windseries,windcolumn))
+                project.save_Stationary(compute_stationary(project.get_TMatrix()))
+                t3 = time.time()
+                project.save()
+                t4 = time.time()
+                print 'train set = ' + str(t1-t0)
+                print 'seasonality plot = ' + str(t2-t1)
+                print 'tmatrix = ' +str(t3-t2)
+                print 'save = ' + str(t4-t3)
+            except:
+                raise ProjectException("There was an error processing your wind file.")
             return flask.jsonify(result={"status": 200})
+        else:
+            raise ProjectException("Wrong file type, please use a CSV file")

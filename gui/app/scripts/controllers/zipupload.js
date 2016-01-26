@@ -42,8 +42,19 @@ angular.module('windopsApp')
           });
          }
         $location.path('/layerlist');
-      });
-      //.error(...)
+      })
+      .error(function(data, status, headers, config) {
+        // error uploading
+          $alert({
+                content: "Error uploading: " + data.message,
+                animation: 'fadeZoomFadeDown',
+                type: 'danger',
+                duration: 3,
+                placement:'top-right'
+          });
+        delete $scope.selectedFiles;
+        delete $scope.progress;
+      })
       //.then(success, error, progress); 
       // access or attach event listeners to the underlying XMLHttpRequest.
       //.xhr(function(xhr){xhr.upload.addEventListener(...)})

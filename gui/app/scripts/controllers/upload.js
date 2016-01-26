@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', function($scope, $upload, $location, currentProject) {
+  .controller('UploadCtrl', function($scope, $upload, $location, $alert, currentProject) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -32,8 +32,19 @@ angular.module('windopsApp')
       }).success(function(data, status, headers, config) {
         // file is uploaded successfully
         $location.path('/windday');
+      })
+      .error(function(data, status, headers, config) {
+        // file not successfully
+        $alert({
+            content: 'Error uploading file: ' + data.message,
+            animation: 'fadeZoomFadeDown',
+            type: 'danger',
+            duration: 3,
+            placement:'top-right'
+          });
+        delete $scope.selectedFiles;
+        delete $scope.progress;
       });
-      //.error(...)
       //.then(success, error, progress); 
       // access or attach event listeners to the underlying XMLHttpRequest.
       //.xhr(function(xhr){xhr.upload.addEventListener(...)})

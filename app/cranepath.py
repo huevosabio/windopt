@@ -17,6 +17,7 @@ import shutil
 from mongoengine import *
 from mongoengine.dereference import DeReference
 from cStringIO import StringIO
+from errors import ProjectException
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all
 #the nuances of permission management. Thus, in a more refined version, it would
@@ -104,6 +105,8 @@ def upload_ziplfile():
             project.save()
                     
             return flask.jsonify(result={"status": 200}, messages = messages)
+        else:
+            raise ProjectException("Geographic files should be packed in a ZIP file")
 
 
 @app.route('/api/cranepath/layerlist/<project>',methods=['GET'])
