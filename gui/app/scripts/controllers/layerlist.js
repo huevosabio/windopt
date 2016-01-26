@@ -29,7 +29,7 @@ angular.module('windopsApp')
         //console.log($scope.costs);
       });
 
-    $http.get('/api/cranepath/layerlist')
+    $http.get('/api/cranepath/layerlist/' + currentProject.project.name)
     .success(function(data, status, headers, config) {
       console.log(data);
       $scope.layerdict= {};

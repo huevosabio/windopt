@@ -30,8 +30,6 @@ def send_bower_components(filename):
 from app import auth
 from app import upload
 from app import windday
-from app import visualization
-from app import lostshifts
 from app import cranetest
 from app import cranepath
 from app import dbmodel

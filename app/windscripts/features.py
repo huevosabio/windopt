@@ -121,23 +121,27 @@ class GeoFeat(object):
     def __str__(self):
         return str(self.geojson)
         
-    def read_shapefile(self,filename,properties=None):
+    def read_shapefile(self,layername, zipfile, properties=None):
         features = []
-        with fiona.open(filename) as shp:
-            crs = shp.crs
-            proj = pyproj.Proj(crs)
-            if not proj.is_latlong():
-                trans = pointTrans(crs,inverse=True)
-                x1,y1 = trans(shp.bounds[:2])
-                x2,y2 = trans(shp.bounds[2:])
-                self.bounds = (x1,y1,x2,y2)
-            else:
-                self.bounds = shp.bounds
-            for feat in shp:
-                feature = feat.copy()
+        with fiona.drivers():
+            with fiona.open(
+                '/',
+                vfs = 'zip://' + zipfile,
+                layer = layername) as shp:
+                crs = shp.crs
+                proj = pyproj.Proj(crs)
                 if not proj.is_latlong():
-                    feature['geometry'] = customTransform(shp.crs,feature['geometry'],toLatLon=True)
-                features.append(feature)
+                    trans = pointTrans(crs,inverse=True)
+                    x1,y1 = trans(shp.bounds[:2])
+                    x2,y2 = trans(shp.bounds[2:])
+                    self.bounds = (x1,y1,x2,y2)
+                else:
+                    self.bounds = shp.bounds
+                for feat in shp:
+                    feature = feat.copy()
+                    if not proj.is_latlong():
+                        feature['geometry'] = customTransform(shp.crs,feature['geometry'],toLatLon=True)
+                    features.append(feature)
         self.geojson = {"type": "FeatureCollection","features": features}
         
     def get_projected_gjson(self,crs):
@@ -212,7 +216,8 @@ class CraneProject(object):
         transform = [self.psize,0.0 ,self.bounds[0],0.0,-self.psize,self.bounds[-1]]
         costRaster = self.boundary.get_costRaster(self.bounds,transform,self.psize,self.crs)
         for feature in self.features:
-            costRaster += feature.get_costRaster(self.bounds,transform,self.psize,self.crs)
+            if feature.interpretation == 'crossing':
+                costRaster += feature.get_costRaster(self.bounds,transform,self.psize,self.crs)
         
         self.transform = transform
         self.costRaster = costRaster
