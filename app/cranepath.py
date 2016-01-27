@@ -4,8 +4,6 @@ import flask
 from flask import Flask, request, redirect, url_for, render_template, jsonify, g
 from app import app
 from werkzeug.utils import secure_filename
-from windscripts.costing import *
-#from windscripts.geopy import *
 from windscripts.tsp import *
 import fiona
 import pandas as pd
@@ -18,6 +16,7 @@ from mongoengine import *
 from mongoengine.dereference import DeReference
 from cStringIO import StringIO
 from errors import ProjectException
+import uuid
 #NOTES:
 #This implementation requires heavy use of a file system which in turns has all
 #the nuances of permission management. Thus, in a more refined version, it would
@@ -41,17 +40,6 @@ def clear_uploads(DIR):
             except Exception, e:
                 print e
 
-def clear_shpfiles():
-    shpdir = os.path.join(app.config['UPLOAD_FOLDER'], 'shapefiles')
-    if os.path.exists(shpdir):
-        for the_file in os.listdir(shpdir):
-            file_path = os.path.join(shpdir, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception, e:
-                print e
-
 @app.route('/api/cranepath/zipupload',methods=['POST'])
 @auth.login_required
 def upload_ziplfile():
@@ -66,7 +54,8 @@ def upload_ziplfile():
             #TODO: This still uses the file system
             clear_uploads(SHP_DIR)
             zip_contents = StringIO(fileobj.read())
-            zipfile = SHP_DIR + '/' + str(os.getpid()) +'.zip'
+            unique_name = str(uuid.uuid1())
+            zipfile = SHP_DIR + '/' + unique_name +'.zip'
             with open(zipfile, "wb") as f:
                 f.write(zip_contents.getvalue())
             # create crane project
@@ -82,6 +71,7 @@ def upload_ziplfile():
 
             #TODO: keep track of the data types.
             with fiona.drivers():
+                print " AT FIONA DRIVERS"
                 messages = []
                 crane_project.status = "Reading shapefiles."
                 for i, layername in enumerate(
@@ -91,6 +81,7 @@ def upload_ziplfile():
                     feature = GeoFeat()
                     feature.read_shapefile(layername, zipfile)
                     feature.name = layername
+                    print "this is working"
                     #TODO: This just leaves shitty layers out of the project, you need to report this.
                     try:
                         feature.save()
@@ -218,12 +209,15 @@ def tsp_sol_legacy():
 def solved(project_name):
     user = User.objects.get(username = g.username)
     project = Project.objects.get(name = project_name, user = user).select_related(max_depth=10)
-    result = {}
-    result['schedule'] = project.crane_project.geojson
-    result['features'] = [{"name":feature.name, "geojson":feature.geojson} for feature in project.crane_project.features]
-    result['turbines'] = project.crane_project.turbines.geojson
-    result['boundary'] = project.crane_project.boundary.geojson
-    return jsonify(result)
+    if project.crane_project.status and project.crane_project.status == "Solved.":
+        result = {}
+        result['schedule'] = project.crane_project.geojson
+        result['features'] = [{"name":feature.name, "geojson":feature.geojson} for feature in project.crane_project.features]
+        result['turbines'] = project.crane_project.turbines.geojson
+        result['boundary'] = project.crane_project.boundary.geojson
+        return jsonify(result)
+    else:
+        raise ProjectException("Project is not yet solved.")
     
 @app.route('/api/cranepath/schedule.csv',methods=['GET'])
 @auth.login_required
