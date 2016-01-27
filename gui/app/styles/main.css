@@ -1,4 +1,5 @@
 @import url('dashboard/dashboard.css');
+@import url('dashboard/loading.css');
 @import url('themes/blue.css');
 
 .plot{
