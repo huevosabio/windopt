@@ -13,3 +13,6 @@ ENV_NAME =  os.getenv('ENV_NAME', None)
 CSRF_ENABLED = True
 SECRET_KEY = 'titi'
 
+BROKER_BASE = os.getenv('BROKER_BASE','localhost')
+
+BROKER_URL = 'amqp://guest:guest@'+BROKER_BASE+':5672//'

@@ -87,6 +87,9 @@ class CraneProject(wind_features.CraneProject, Document):
 class Project(Document):
     name = StringField(unique=True)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
+    raw_wind_data = FileField()
+    wind_status = StringField(default = "Empty project.")
+    windday_conditions = DictField()
     windHeight = IntField()
     windTMatrix = BinaryField()
     windSeasonality = BinaryField()

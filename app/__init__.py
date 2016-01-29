@@ -1,16 +1,44 @@
 import os
 from flask import Flask, send_from_directory
-from config import DB_URI, DB_USER, DB_PWD, ENV_NAME
+from config import DB_URI, DB_USER, DB_PWD, ENV_NAME, BROKER_URL
 from mongoengine import connect
+from celery import Celery
+from kombu import Queue
 
 UPLOAD_FOLDER =  os.getcwd() + '/tmp'
 
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
 app = Flask('windopt', static_url_path = '', static_folder = os.getcwd() + '/gui/app')
+CELERY_QUEUES = (
+    Queue('default',routing_key='task.#'),
+    Queue('train_wind_model',routing_key='train_wind_model'),
+)
 app.config.from_object('config')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC'] = os.getcwd() + '/app/static'
 #TODO: Remove this from here and place it in an env var.
 app.config['SECRET_KEY'] = 'die luft der freiheit weht'
+app.config.update(
+    CELERY_DEFAULT_QUEUE = 'default',
+    CELERY_QUEUES=CELERY_QUEUES,
+    CELERY_BROKER_URL=BROKER_URL,
+    CELERY_RESULT_BACKEND=BROKER_URL,
+    CELERY_ROUTES=({'train_wind_model':{'queue':'train_wind_model','routing_key': 'train_wind_model'}},),
+    DB_URI = DB_URI,
+    DB_USER = DB_USER,
+    DB_PWD = DB_PWD,
+    )
 
 if ENV_NAME == 'local':
     # If local, assume that there is a local mongo instance
@@ -18,6 +46,8 @@ if ENV_NAME == 'local':
 else:
     # Otherwise, use env variables to connect
     conn = connect('windops', host='mongodb://'+ DB_USER + ':' + DB_PWD + '@' + DB_URI)
+
+celery = make_celery(app)
 
 #---Static Files--
 @app.route('/')

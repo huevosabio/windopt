@@ -5,6 +5,19 @@ from app.dbmodel import Project
 from windscripts.windday import *
 import auth
 from auth import User
+from errors import ProjectException
+import json
+
+@app.route('/api/windyday/<project_name>/status', methods=['GET'])
+@auth.login_required
+def check_wind_status(project_name):
+    try:
+        user = User.objects.get(username = g.username)
+        project = Project.objects.get(name = project_name, user = user)
+    except:
+        raise ProjectException("Error fetching project status.")
+    return json.dumps({"result": {"status": project.wind_status}})
+
 
 @app.route('/api/windday/<project_name>',methods=['POST','GET'])
 @auth.login_required

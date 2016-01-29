@@ -20,3 +20,4 @@ windopt:
   environment:
     - MONGO_URI=mongo:27017
     - ENV_NAME=local
+    - BROKER_BASE=rabbitmq
