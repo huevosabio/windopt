@@ -15,16 +15,38 @@ angular.module('windopsApp')
     // Public API here
     return {
       checkStatus: checkStatus,
+      getSeasonality: getSeasonality,
+      calculateWindDayRisks: calculateWindDayRisks
     };
 
-    // Gets creates cost using a cost name
+    // Checks status of wind day calculations, and if ready returns risks and winddays
     function checkStatus() {
       var request = $http({
         method: "get",
         url: "api/windyday/" + currentProject.project.name + "/status"
       });
       return (request.then( handleSuccess, handleError ));
+    },
+
+    // gets wind seasonality data
+    function getSeasonality() {
+      var request = $http({
+        method: "get",
+        url: "api/windday/" + currentProject.project.name + "/seasonality"
+      });
+      return (request.then( handleSuccess, handleError ));
+    },
+
+    // Gets creates cost using a cost name
+    function calculateWindDayRisks( data ) {
+      var request = $http({
+        method: "post",
+        url: "/api/windday/" + currentProject.project.name + "/calculate",
+        data: data
+      });
+      return (request.then( handleSuccess, handleError ));
     }
+
 
     function handleError( response ){
         if (

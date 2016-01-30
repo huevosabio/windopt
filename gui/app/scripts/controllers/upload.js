@@ -8,7 +8,15 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', function($scope, $upload, $location, $alert, currentProject, windday) {
+  .controller('UploadCtrl', function(
+    $scope,
+    $upload,
+    $location,
+    $alert,
+    currentProject,
+    windday,
+    polling
+    ) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -35,7 +43,7 @@ angular.module('windopsApp')
         var endEvent = function () {
           $location.path('/windday');
         };
-        loop($scope, windday.checkStatus, $alert, "Wind model trained.", "Wind model training failed.", endEvent);
+        polling.loop($scope, windday.checkStatus, $alert, ["Wind model trained."], ["Wind model training failed."], endEvent);
       })
       .error(function(data, status, headers, config) {
         // file not successfully
@@ -59,33 +67,3 @@ angular.module('windopsApp')
     // $scope.upload = $upload.http({...})  see 88#issuecomment-31366487 for sample code.
   };
 });
-
-
-function isStatusReady($scope, statusCheck,callback){
-    statusCheck()
-      .then(function(data) {
-      console.log(data);
-      $scope.status = data.result.status;
-      callback($scope);
-    })
-};
-
-function loop($scope, statusCheck, $alert, requiredStatus, failureStatus, endEvent){
-  isStatusReady($scope, statusCheck, function($scope){
-    if ($scope.status !== requiredStatus){
-      $alert({
-            content: $scope.status,
-            animation: 'fadeZoomFadeDown',
-            type: 'info',
-            duration: 3,
-            placement:'top-right'
-          });
-      //setTimeout(function(){
-        //loop($scope, statusCheck, $alert, requiredStatus, failureStatus, endEvent);
-      //},4000);
-    } else {
-      endEvent();
-      return;
-    };
-  });
-}

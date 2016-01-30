@@ -5,14 +5,14 @@
                 <i class="fa fa-tasks"></i> Historical Data and Wind DayCriteria
             </div>
             <div class="widget-body small">
-                <div id="fileUpload">
+                <div id="fileUpload" ng-show="selectedFiles == null">
                     <div class="message">
                         Please upload a <b>properly formatted CSV file</b> and 
                         give the <b>height in meters</b> at which the measurement
                         was taken..
                     </div>
                     <br>
-                    <form class="form-inline" ng-show="selectedFiles == null">
+                    <form class="form-inline">
                         <div "form-group">
                             <input class="form-control pull-left" type="number"
                             ng-model="measuredHeight"

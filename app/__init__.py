@@ -23,6 +23,8 @@ app = Flask('windopt', static_url_path = '', static_folder = os.getcwd() + '/gui
 CELERY_QUEUES = (
     Queue('default',routing_key='task.#'),
     Queue('train_wind_model',routing_key='train_wind_model'),
+    Queue('calculate_expected_winddays',routing_key='calculate_expected_winddays'),
+    Queue('calculate_windday_risks', routing_key = 'calculate_windday_risks')
 )
 app.config.from_object('config')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

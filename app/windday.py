@@ -1,5 +1,5 @@
 from flask import render_template, redirect, jsonify, send_file, request, g
-from app import app
+from app import app, celery
 from io import BytesIO
 from app.dbmodel import Project
 from windscripts.windday import *
@@ -11,62 +11,96 @@ import json
 @app.route('/api/windyday/<project_name>/status', methods=['GET'])
 @auth.login_required
 def check_wind_status(project_name):
-    try:
-        user = User.objects.get(username = g.username)
-        project = Project.objects.get(name = project_name, user = user)
-    except:
-        raise ProjectException("Error fetching project status.")
-    return json.dumps({"result": {"status": project.wind_status}})
+    user, project = Project.get_user_and_project(g.username, project_name)
+    expected_winddays_ready = bool(project.expected_winddays)
+    expected_windday_risks_ready = bool(project.expected_winddays)
+    if expected_winddays_ready and expected_windday_risks_ready:
+        project.wind_status = "Wind Day calculations ready."
+        project.save()
+        return jsonify(
+            result = {
+                "status": project.wind_status,
+                "byMonth": project.expected_winddays,
+                "risks": project.risks,
+                "conditions": project.windday_conditions
+            })
+    return jsonify({
+        result = {"status": project.wind_status}
+        })
 
-
-@app.route('/api/windday/<project_name>',methods=['POST','GET'])
+@app.route('/api/windday/<project_name>/seasonality',methods=['POST','GET'])
 @auth.login_required
-def get_project(project_name):
-    try:
-        user = User.objects.get(username = g.username)
-        project = Project.objects.get(name = project_name, user = user)
-        if project.windTMatrix:
-            return jsonify(result={"exists": True,"seasonality":project.get_Seasonality()})
-        else:
-            return jsonify(result={"exists": False})
-    except Project.DoesNotExist:
+def get_project_seasonality(project_name):
+    user, project = Project.get_user_and_project(g.username, project_name)
+    if project.windTMatrix:
+        return jsonify(
+            result={
+            "exists": True,
+            "seasonality":project.get_Seasonality()
+            })
+    else:
         return jsonify(result={"exists": False})
 
+#Compute wind calcs
+@app.route('/api/windday/<project_name>/calculate',methods=['POST'])
+@auth.login_required
+def calulate_wind(project_name):
+    user, project = Project.get_user_and_project(g.username, project_name)
+    if project.windTMatrix:
+        try:
+            conditions = request.json['conditions']
+            project.windday_conditions = conditions
+            project.wind_status = "Calculating Expected Risks of Wind Days"
+            project.save()
+            expected = calculate_expected.delay(*(g.username, project_name))
+            risks = calculate_risks.delay(*(g.username, project_name))
+        except Exception e:
+            project.wind_status = "Error Calculating Wind Days"
+            raise ProjectException("Error Calculating Wind Days: " + str(e))
+        return jsonify(result={"message": project.wind_status})
+    else:
+        raise ProjectException("Please upload wind data.")
 
-@app.route('/api/windday/<project_name>/expected',methods=['POST'])
-@auth.login_required
-def get_winddays(project_name):
+#Compute wind calcs task
+@celery.task(name = 'calculate_expected_winddays')
+def calculate_expected_winddays(username, project_name):
+    user, project = Project.get_user_and_project(username, project_name)
     try:
-        user = User.objects.get(username = g.username)
-        project = Project.objects.get(name = project_name, user = user)
-        if project.windTMatrix:
-            winddays = estimate_winddays(
-                project.windHeight,
-                request.json['height'],
-                request.json['maxws'],
-                request.json['maxhours'],
-                request.json['starthr'],
-                request.json['daylength'],
-                project.get_TMatrix(),
-                request.json['certainty'],
-                consecutive = request.json['consecutive']
-                )
-            return jsonify(result={"exists": True,"byMonth":winddays[0],"cumulative":winddays[1]})
-        else:
-            return jsonify(result={"exists": False})
-    except Project.DoesNotExist:
-        return jsonify(result={"exists": False})
-        
-@app.route('/api/windday/<project_name>/risks',methods=['POST'])
-@auth.login_required
-def get_risks(project_name):
+        winddays = estimate_winddays(
+                       project.windHeight,
+                       project.windday_conditions.height,
+                       project.conditions.maxws,
+                       project.conditions.maxhours,
+                       project.conditions.starthr,
+                       project.conditions.daylength,
+                       project.get_TMatrix(),
+                       project.conditions.certainty,
+                       consecutive = project.conditions.consecutive
+                       )
+        project.expected_winddays = winddays
+        project.save()
+        return winddays
+    except Exception e:
+        project.wind_status = "Error Calculating Wind Days"
+        project.save()
+
+#Compute risks task 
+@celery.task(name = 'calculate_windday_risks')
+def calculate_windday_risks(username, project_name):
+    user, project = Project.get_user_and_project(username, project_name)
     try:
-        user = User.objects.get(username = g.username)
-        project = Project.objects.get(name = project_name, user = user)
-        if project.windTMatrix:
-            risks = risk_by_hour_and_month(project.windHeight,request.json['height'],request.json['maxws'],request.json['maxhours'],request.json['daylength'],project.get_TMatrix(),consecutive=request.json['consecutive'])
-            return jsonify(result={"exists": True,"risks":risks})
-        else:
-            return jsonify(result={"exists": False})
-    except Project.DoesNotExist:
-        return jsonify(result={"exists": False})
+        risks = risk_by_hour_and_month(
+            project.windHeight,
+            project.windday_conditions.height,
+            project.windday_conditions.maxws,
+            project.windday_conditions.maxhours,
+            project.windday_conditions.daylength,
+            project.get_TMatrix(),
+            consecutive=project.windday_conditions.consecutive
+            )
+        project.expected_windday_risks = risks
+        project.save()
+        return risks
+    except Exception e:
+        project.wind_status = "Error Calculating Wind Days"
+        project.save()
