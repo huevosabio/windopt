@@ -8,8 +8,19 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LayerlistCtrl',  function($scope, $location, $alert, $http, currentProject, cost) {
+  .controller('LayerlistCtrl',  
+    function(
+      $scope, 
+      $location, 
+      $alert, 
+      $http, 
+      currentProject, 
+      cost, 
+      craneProject,
+      polling
+      ) {
     $scope.layersLoaded = false;
+    $scope.layerdict= {};
 
     //load costs
     cost.listCosts().then( function(data){
@@ -29,23 +40,34 @@ angular.module('windopsApp')
         //console.log($scope.costs);
       });
 
-    $http.get('/api/cranepath/layerlist/' + currentProject.project.name)
-    .success(function(data, status, headers, config) {
-      console.log(data);
-      $scope.layerdict= {};
-      $scope.layers = data.layers;
-      for (var i = 0; i < data.layers.length; i++){
-        $scope.layerdict[data.layers[i]] = {};
+    //Polling
+    function successEvent($scope, data){
+      $scope.layers = data.result.layers;
+      for (var i = 0; i < data.result.layers.length; i++){
+        $scope.layerdict[data.result.layers[i]] = {};
       }
       $scope.layersLoaded = true;
-    })
-    .error(function(data, status, headers, config) {
-      console.log(data);
-    });
+    }
+
+    function failureEvent($scope, data) {
+      return;
+    }
+
+    polling.loop(
+      $scope,
+      craneProject.checkStatus,
+      $alert,
+      ["Shapefiles stored. User needs to enter Interpretations"],
+      [],
+      successEvent,
+      failureEvent
+      )
     
+
+
     $scope.tsp = function(){
       $scope.layersLoaded = false;
-      $http.post('/api/cranepath/tsp',{"layerdict": $scope.layerdict, "project": currentProject.project.name})
+      craneProject.calculateTSP({"layerdict": $scope.layerdict, "project": currentProject.project.name})
       .success(function(data,status,headers,config){
         $location.path('/cranepath');
       })

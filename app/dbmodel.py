@@ -30,7 +30,11 @@ def create_or_list_project():
         else:
             user = User.objects.get(username = g.username)
             project = Project(name = project_data['name'], user = user)
-            project.save()
+            crane_project = CraneProject()
+            crane_project.status = "Crane Project created."
+            crane_project.save()
+            project.crane_project = crane_project
+            project.save(cascade = True)
             return jsonify(
                 message = 'Project created successfully.',
                 project = project.get_summary()
@@ -81,8 +85,11 @@ class CraneProject(wind_features.CraneProject, Document):
     walkCost = FloatField()
     crs = DictField()
     bounds = ListField(FloatField())
-    geojson = DictField()
+    geojson = DictField(default = {})
     status = StringField()
+    zipfile = FileField()
+    csv_schedule = FileField()
+    messages = StringField(default = "")
 
 
 class Project(Document):

@@ -9,7 +9,7 @@
  */
 angular.module('windopsApp')
   .controller('ZipuploadCtrl',
-  function($scope, $upload, $location, $alert, $http, currentProject) {
+  function($scope, $upload, $location, $alert, $http, currentProject, polling) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -17,7 +17,7 @@ angular.module('windopsApp')
     for (var i = 0; i < $files.length; i++) {
       var file = $files[i];
       $scope.upload = $upload.upload({
-        url: 'api/cranepath/zipupload', //upload.php script, node.js route, or servlet url
+        url: 'api/cranepath/' + currentProject.project.name + '/zipupload', //upload.php script, node.js route, or servlet url
         method: 'POST',
         //headers: {'header-key': 'header-value'},
         //withCredentials: true,
