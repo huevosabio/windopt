@@ -5,6 +5,7 @@ from app import app, conn, auth
 import cPickle
 from app.auth import User
 import windscripts.features as wind_features
+from errors import ProjectException
 
 @app.route('/api/projects', methods = ['POST', 'GET'])
 @auth.login_required
@@ -87,9 +88,14 @@ class CraneProject(wind_features.CraneProject, Document):
 class Project(Document):
     name = StringField(unique=True)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
+    raw_wind_data = FileField()
+    wind_status = StringField(default = "Empty project.")
+    windday_conditions = DictField()
     windHeight = IntField()
     windTMatrix = BinaryField()
     windSeasonality = BinaryField()
+    expected_winddays = ListField(default = [])
+    expected_windday_risks = ListField(default = [])
     crane_project = ReferenceField(CraneProject)
     
     def save_TMatrix(self,tmat):
@@ -124,9 +130,12 @@ class Project(Document):
             'name': self.name,
             'hasWindFile': bool(self.windTMatrix)
         }
-        
-        
-        
-    
-    
-    
+
+    @staticmethod
+    def get_user_and_project(username, project_name):
+        try:
+            user = User.objects.get(username = username)
+            project = Project.objects.get(name = project_name, user = user)
+            return user, project
+        except:
+            raise ProjectException("Error fetching project.")

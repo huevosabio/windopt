@@ -3,12 +3,21 @@ mongo:
   ports:
     - "27017:27017"
 
+
+rabbitmq:
+  image: rabbitmq:3-management
+  ports:
+    - "5672:5672"
+    - "15672:15672"
+
+
 windopt:
   build: .
   links:
     - mongo
   ports:
-  - "80:80"
+    - "80:80"
   environment:
-  - MONGO_URI=mongo:27017
-  - ENV_NAME=local
+    - MONGO_URI=mongo:27017
+    - ENV_NAME=local
+    - BROKER_BASE=rabbitmq

@@ -8,7 +8,15 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('UploadCtrl', function($scope, $upload, $location, $alert, currentProject) {
+  .controller('UploadCtrl', function(
+    $scope,
+    $upload,
+    $location,
+    $alert,
+    currentProject,
+    windday,
+    polling
+    ) {
   $scope.onFileSelect = function($files) {
     //$files: an array of files selected, each file has name, size, and type.
     $scope.selectedFiles = $files;
@@ -31,7 +39,17 @@ angular.module('windopsApp')
         $scope.progress[i-1] = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
       }).success(function(data, status, headers, config) {
         // file is uploaded successfully
-        $location.path('/windday');
+        var status = '';
+        function successEvent($scope, data) {
+          $location.path('/windday');
+        };
+
+        function failureEvent($scope, data){
+          delete $scope.selectedFiles;
+          delete $scope.progress;
+        };
+
+        polling.loop($scope, windday.checkStatus, $alert, ["Wind model trained."], ["Wind model training failed."], successEvent, failureEvent);
       })
       .error(function(data, status, headers, config) {
         // file not successfully

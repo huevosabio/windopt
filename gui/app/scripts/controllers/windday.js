@@ -8,57 +8,75 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('WinddayCtrl',  function($scope, $location,$http, currentProject) {
+  .controller('WinddayCtrl',  function(
+    $scope,
+    $location,
+    $alert,
+    $http,
+    currentProject,
+    windday,
+    polling
+    ){
+
     $scope.conditions = {}
-    $scope.conditions.height = 50;
-    $scope.conditions.maxws = 10.0;
-    $scope.conditions.maxhours = 4;
-    $scope.conditions.starthr = 7;
-    $scope.conditions.consecutive = true;
-    $scope.conditions.daylength = 10;
-    $scope.conditions.certainty = 0.9;
+    $scope.conditionsEnabled = false
     $scope.expectedLoaded = false;
     $scope.risksLoaded = false;
     $scope.yearlyLoaded = false;
-    
+
+    //Polling
+    function successEvent($scope, data){
+      $scope.conditions= data.result.conditions;
+      $scope.conditionsEnabled = true
+      $scope.expected = {byMonth: data.result.byMonth};
+      $scope.expectedLoaded = true;
+      $scope.risks = data.result.risks;
+      $scope.risksLoaded = true;
+    }
+
+    function failureEvent($scope, data) {
+      $scope.conditionsEnabled = true
+      if (["Wind model training failed.", "There was an error storing wind data."].indexOf(data.result.status)){
+        $location.path('/upload')
+      } 
+    }
+    polling.loop(
+      $scope,
+      windday.checkStatus,
+      $alert,
+      ["Wind Day calculations ready."],
+      ["Error Calculating Wind Days", "Empty project.", "Wind model training failed.", "There was an error storing wind data."],
+      successEvent,
+      failureEvent
+      )
+
+    //Seasonality
+    windday.getSeasonality()
+    .then(function(data){
+      $scope.seasonality = data.result.seasonality;
+      $scope.yearlyLoaded = true;
+    })
+
     $scope.estimate = function(){
+      $scope.expected = {};
       $scope.expectedLoaded = false;
+      $scope.risks = [];
       $scope.risksLoaded = false;
-      $http.post('/api/windday/' +currentProject.project.name+  '/expected',$scope.conditions)
-      .success(function(data,status,headers,config){
-        $scope.expected = {byMonth: data.result.byMonth,cumulative:data.result.cumulative};
-        $scope.expectedLoaded = true;
+      windday.calculateWindDayRisks( $scope.conditions ).then(function(){
+        polling.loop(
+          $scope,
+          windday.checkStatus,
+          $alert,
+          ["Wind Day calculations ready.", "Wind model trained."],
+          ["Error Calculating Wind Days", "Empty project.", "Wind model training failed.", "There was an error storing wind data."],
+          successEvent,
+          failureEvent
+        );
       })
-      .error(function(data,status,headers,config){
-        //console.log(data);
-      });
-      
-      $http.post('/api/windday/' +currentProject.project.name+  '/risks',$scope.conditions)
-      .success(function(data,status,headers,config){
-        $scope.risks = data.result.risks;
-        //console.log($scope.risks);
-        $scope.risksLoaded = true;
-      })
-      .error(function(data,status,headers,config){
-        //console.log(data);
-      });
     };
     
     $scope.newWindFile = function(){
       $location.path('/upload');
     };
     
-    $http.get('/api/windday/' + currentProject.project.name)
-    .success(function(data, status, headers, config) {
-      if (!data.result.exists){
-        $location.path('/upload');
-      }
-      $scope.seasonality = data.result.seasonality;
-      //console.log($scope.seasonality);
-      $scope.yearlyLoaded = true;
-      $scope.estimate();
-    })
-    .error(function(data, status, headers, config) {
-      //console.log(data);
-    });
   });
