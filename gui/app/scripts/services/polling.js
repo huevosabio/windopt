@@ -30,17 +30,10 @@ angular.module('windopsApp')
 
   function loop($scope, statusCheck, $alert, requiredStatus, failureStatus, successEvent, failureEvent){
     isStatusReady($scope, statusCheck, function($scope, data){
-      if (requiredStatus.indexOf($scope.status) < 0){
-        $alert({
-              content: $scope.status,
-              animation: 'fadeZoomFadeDown',
-              type: 'info',
-              duration: 3,
-              placement:'top-right'
-            });
-        setTimeout(function(){
-          loop($scope, statusCheck, $alert, requiredStatus, failureStatus, endEvent);
-        },4000);
+      if (requiredStatus.indexOf($scope.status) >= 0){
+        successEvent($scope, data);
+        return;
+
       } else if (failureStatus.indexOf($scope.status) >= 0){
         $alert({
               content: $scope.status,
@@ -51,9 +44,18 @@ angular.module('windopsApp')
             });
         failureEvent($scope, data);
         return;
+
       } else {
-          endEvent($scope, data);
-        return;
+        $alert({
+              content: $scope.status,
+              animation: 'fadeZoomFadeDown',
+              type: 'info',
+              duration: 3,
+              placement:'top-right'
+            });
+        setTimeout(function(){
+          loop($scope, statusCheck, $alert, requiredStatus, failureStatus, successEvent, failureEvent);
+        },4000);
       };
     });
   }

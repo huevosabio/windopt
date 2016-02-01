@@ -26,7 +26,7 @@ angular.module('windopsApp')
         url: "api/windyday/" + currentProject.project.name + "/status"
       });
       return (request.then( handleSuccess, handleError ));
-    },
+    }
 
     // gets wind seasonality data
     function getSeasonality() {
@@ -35,7 +35,7 @@ angular.module('windopsApp')
         url: "api/windday/" + currentProject.project.name + "/seasonality"
       });
       return (request.then( handleSuccess, handleError ));
-    },
+    }
 
     // Gets creates cost using a cost name
     function calculateWindDayRisks( data ) {

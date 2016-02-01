@@ -60,8 +60,8 @@ def send_bower_components(filename):
 	return send_from_directory(os.getcwd()+'/gui/bower_components/',filename)
 
 from app import auth
-from app import upload
 from app import windday
+from app import upload
 from app import cranetest
 from app import cranepath
 from app import dbmodel

@@ -1,20 +1,13 @@
-import os
 import flask
-from flask import Flask, request, redirect, url_for, render_template, g
+from flask import request, g, jsonify
 from app import app, celery
 from app.dbmodel import *
-from werkzeug.utils import secure_filename
-from werkzeug.datastructures import FileStorage
 from windscripts.wrangling import *
 from windscripts.windday import *
 from cStringIO import StringIO
-from bson.binary import Binary
 from errors import ProjectException
-import cPickle
-import time
-import shutil
+from windday import calculate_expected_winddays, calculate_windday_risks
 import auth
-import json
 
 ALLOWED_EXTENSIONS = set(['csv'])
 ZIP = set(['zip'])
@@ -60,17 +53,18 @@ def upload_file(project_name):
             "certainty": 0.9,
             }
             project.windday_conditions = windday_conditions
-            training = train_wind_model.delay(project.name)
+            training = train_wind_model.delay(g.username, project.name)
             project.wind_status = "Data stored, placed in queue for model training."
-            return flask.jsonify(result={"status": 200, "message": "Wind data stored successfully."})
+            project.save()
+            return jsonify(result={"status": 200, "message": "Wind data stored successfully."})
         else:
             raise ProjectException("Wrong file type, please use a CSV file")
 
 
 
 @celery.task(name = 'train_wind_model')
-def train_wind_model(project_name):
-    project = Project.objects.get(name = project_name)
+def train_wind_model(username, project_name):
+    user, project = Project.get_user_and_project(username, project_name)
     try:
         windseries, windcolumn = get_train_set(StringIO(project.raw_wind_data.read()))
         project.save_Seasonality(plot_seasonality(windseries))
@@ -78,9 +72,12 @@ def train_wind_model(project_name):
         project.save_Stationary(compute_stationary(project.get_TMatrix()))
         project.wind_status = "Wind model trained."
         project.save()
-    except:
+        expected = calculate_expected_winddays.delay(*(username, project_name))
+        risks = calculate_windday_risks.delay(*(username, project_name))
+    except Exception as e:
         project.wind_status = "Wind model training failed."
         project.save()
-        raise ProjectException("There was an error processing your wind file.")
-    return json.dumps({"result":{"status": 200}})
+        print str(e)
+        return ("There was an error processing your wind file." + str(e))
+    return project.windTMatrix
     

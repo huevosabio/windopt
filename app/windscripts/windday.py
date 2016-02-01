@@ -148,12 +148,10 @@ def estimate_winddays(measureHeight,height,maxws,maxhours,starthour,daylength,tm
     #TODO: Improve this with actual workdays per month
     maxws = transform_height(measureHeight,height,maxws)
     monthlyLoss = []
-    cumulative = []
     for month in range(12):
         p = estimate_windday(starthour,daylength,month,tmatrix,maxhours,maxws,consecutive=consecutive)
         monthlyLoss.append(float(stats.binom.ppf([certainty],25,p)))
-        cumulative.append(float(np.array(monthlyLoss).sum()))
-    return monthlyLoss,cumulative
+    return monthlyLoss
 
 def risk_by_hour_and_month(measureHeight,height,maxws,maxhours,daylength,tmatrix,consecutive=True):
     maxws = transform_height(measureHeight,height,maxws)

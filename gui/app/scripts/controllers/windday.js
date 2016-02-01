@@ -11,6 +11,7 @@ angular.module('windopsApp')
   .controller('WinddayCtrl',  function(
     $scope,
     $location,
+    $alert,
     $http,
     currentProject,
     windday,
@@ -22,19 +23,10 @@ angular.module('windopsApp')
     $scope.expectedLoaded = false;
     $scope.risksLoaded = false;
     $scope.yearlyLoaded = false;
-    
-
-    //Status
-    windday.getSeasonality()
-    .then(function(data){
-      $scope.seasonality = result.seasonality;
-      $scope.yearlyLoaded = true;
-    })
-
 
     //Polling
     function successEvent($scope, data){
-      $scope.conditions: data.result.conditions;
+      $scope.conditions= data.result.conditions;
       $scope.conditionsEnabled = true
       $scope.expected = {byMonth: data.result.byMonth};
       $scope.expectedLoaded = true;
@@ -42,7 +34,7 @@ angular.module('windopsApp')
       $scope.risksLoaded = true;
     }
 
-    function failureEvent($scope, $location) {
+    function failureEvent($scope, data) {
       $scope.conditionsEnabled = true
       if (["Wind model training failed.", "There was an error storing wind data."].indexOf(data.result.status)){
         $location.path('/upload')
@@ -52,16 +44,25 @@ angular.module('windopsApp')
       $scope,
       windday.checkStatus,
       $alert,
-      ["Wind Day calculations ready.", "Wind model trained."],
+      ["Wind Day calculations ready."],
       ["Error Calculating Wind Days", "Empty project.", "Wind model training failed.", "There was an error storing wind data."],
       successEvent,
       failureEvent
       )
 
+    //Seasonality
+    windday.getSeasonality()
+    .then(function(data){
+      $scope.seasonality = data.result.seasonality;
+      $scope.yearlyLoaded = true;
+    })
+
     $scope.estimate = function(){
+      $scope.expected = {};
       $scope.expectedLoaded = false;
+      $scope.risks = [];
       $scope.risksLoaded = false;
-      windday.calculateWindDayRisks( data ).then(function(){
+      windday.calculateWindDayRisks( $scope.conditions ).then(function(){
         polling.loop(
           $scope,
           windday.checkStatus,

@@ -94,8 +94,8 @@ class Project(Document):
     windHeight = IntField()
     windTMatrix = BinaryField()
     windSeasonality = BinaryField()
-    expected_winddays = DictField(default = {}})
-    expected_windday_risks = DictField(default = {}})
+    expected_winddays = ListField(default = [])
+    expected_windday_risks = ListField(default = [])
     crane_project = ReferenceField(CraneProject)
     
     def save_TMatrix(self,tmat):

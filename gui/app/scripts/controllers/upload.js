@@ -40,10 +40,16 @@ angular.module('windopsApp')
       }).success(function(data, status, headers, config) {
         // file is uploaded successfully
         var status = '';
-        var endEvent = function () {
+        function successEvent($scope, data) {
           $location.path('/windday');
         };
-        polling.loop($scope, windday.checkStatus, $alert, ["Wind model trained."], ["Wind model training failed."], endEvent);
+
+        function failureEvent($scope, data){
+          delete $scope.selectedFiles;
+          delete $scope.progress;
+        };
+
+        polling.loop($scope, windday.checkStatus, $alert, ["Wind model trained."], ["Wind model training failed."], successEvent, failureEvent);
       })
       .error(function(data, status, headers, config) {
         // file not successfully
