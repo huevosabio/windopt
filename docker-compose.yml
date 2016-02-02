@@ -15,6 +15,7 @@ windopt:
   build: .
   links:
     - mongo
+    - rabbitmq
   ports:
     - "80:80"
   environment:
