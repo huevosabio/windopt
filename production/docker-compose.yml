@@ -6,6 +6,8 @@ rabbitmq:
 
 windopt:
   image: huevosabio/windopt:master
+  links:
+    - rabbitmq
   ports:
   - "8000:80"
   environment:
