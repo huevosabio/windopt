@@ -86,7 +86,7 @@ class CraneProject(wind_features.CraneProject, Document):
     crs = DictField()
     bounds = ListField(FloatField())
     geojson = DictField(default = {})
-    status = StringField()
+    status = StringField(default = "Empty Crane Project")
     zipfile = FileField()
     csv_schedule = FileField()
     messages = StringField(default = "")
@@ -104,11 +104,11 @@ class Project(Document):
     expected_winddays = ListField(default = [])
     expected_windday_risks = ListField(default = [])
     crane_project = ReferenceField(CraneProject)
-    
+
     def save_TMatrix(self,tmat):
         #convert transition matrix to binary and assign
         self.windTMatrix = cPickle.dumps(tmat, protocol=2)
-    
+
     def get_TMatrix(self):
         if self.windTMatrix:
             return cPickle.loads(self.windTMatrix)
@@ -117,16 +117,16 @@ class Project(Document):
     def save_Seasonality(self,matrix):
         #convert transition matrix to binary and assign
         self.windSeasonality = cPickle.dumps(matrix, protocol=2)
-    
+
     def get_Seasonality(self):
         if self.windSeasonality:
             return cPickle.loads(self.windSeasonality)
         else: return None
-        
+
     def save_Stationary(self,matrix):
         #convert transition matrix to binary and assign
         self.windStationary = cPickle.dumps(matrix, protocol=2)
-    
+
     def get_Stationary(self):
         if self.windStationary:
             return cPickle.loads(self.windStationary)

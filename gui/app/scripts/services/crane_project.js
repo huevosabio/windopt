@@ -8,7 +8,7 @@
  * Factory in the windopsApp.
  */
 angular.module('windopsApp')
-  .factory('craneProject', function ($http, $alert, currentProject) {
+  .factory('craneProject', function ($http, $alert, $location, currentProject) {
     // Service logic
     // ...
 
@@ -34,7 +34,7 @@ angular.module('windopsApp')
         url: "/api/cranepath/" + currentProject.project.name + "/tsp",
         data: data
       });
-      return (request.then( handleSuccess, handleError ));
+      return (request.then( craneSuccess, handleError ));
     }
 
 
@@ -63,8 +63,13 @@ angular.module('windopsApp')
         }
     }
 
+    function craneSuccess( response ) {
+      $location.path('/cranepath');
+      return ( response.data );
+    }
+
     function handleSuccess( response ) {
       return ( response.data );
     }
-    
+
   });

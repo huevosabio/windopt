@@ -1,0 +1,308 @@
+ * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+ * Restarting with stat
+127.0.0.1 - - [05/Feb/2016 17:56:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/bootstrap/dist/css/bootstrap.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/font-awesome/css/font-awesome.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/leaflet/dist/leaflet.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/angular-xeditable/dist/css/xeditable.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /styles/main.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /images/avatar.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/jquery/dist/jquery.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/ng-file-upload-shim/angular-file-upload-shim.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:16] "GET /bower_components/angular/angular.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/ng-file-upload/angular-file-upload.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/bootstrap/dist/js/bootstrap.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-animate/angular-animate.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /styles/dashboard/dashboard.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /styles/dashboard/loading.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /styles/themes/blue.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-cookies/angular-cookies.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-resource/angular-resource.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-route/angular-route.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-sanitize/angular-sanitize.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-touch/angular-touch.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/angular-bootstrap/ui-bootstrap-tpls.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/highcharts-release/highcharts.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:17] "GET /bower_components/highcharts-release/highcharts-more.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/highcharts-release/modules/exporting.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/highcharts-release/modules/heatmap.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/leaflet/dist/leaflet-src.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/angular-leaflet/dist/angular-leaflet-directive.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/satellizer/satellizer.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/angular-strap/dist/angular-strap.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/angular-strap/dist/angular-strap.tpl.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /bower_components/angular-xeditable/dist/js/xeditable.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/about.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/directives/loading.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/windday.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/dashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/alerts.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/upload.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/directives/heatmap.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/averagewinds.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:18] "GET /scripts/controllers/expected-wind-days.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/directives/line.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/directives/risks.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/cranepath.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/zipupload.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/layerlist.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/directives/piechart.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/login.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/signup.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/directives/passwordmatch.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/directives/passwordstrength.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/project.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/projects.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/currentproject.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/controllers/costs.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/cost.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/windday.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/polling.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:19] "GET /scripts/services/crane_project.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:20] "GET /views/main.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:20] "GET /bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:20] "GET /bower_components/font-awesome/fonts/fontawesome-webfont.woff?v=4.2.0 HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:20] "GET /fonts/montserrat-regular-webfont.woff HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:20] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:33] "POST /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:33] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:34] "GET /views/cranepath.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:34] "GET /api/cranepath/wind_test2/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:34] "GET /views/zipupload.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:34] "GET /images/zippicfix.png HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:40] "POST /api/cranepath/wind_test2/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:40] "GET /views/layerlist.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:40] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:40] "GET /api/cranepath/wind_test2/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 17:56:44] "GET /api/cranepath/wind_test2/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:50:01] "POST /api/cranepath/wind_test2/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:50:01] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:50:01] "GET /api/cranepath/wind_test2/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 47, in get_crane_status
+    if project.crane_project.status and project.crane_project.status == "Solved.":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+ * Detected change in '/home/ramon/development/windopt/app/dbmodel.py', reloading
+ImmutableMultiDict([('project', u'wind_test2')])
+At upload
+Got File
+File is allowed
+[u'boundary']
+ImmutableMultiDict([('project', u'wind_test2')])
+At upload
+Got File
+File is allowed
+ * Restarting with stat
+127.0.0.1 - - [05/Feb/2016 18:54:15] "POST /api/cranepath/wind_test2/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:54:15] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:54:15] "GET /api/cranepath/wind_test2/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 47, in get_crane_status
+    if project.crane_project.status and project.crane_project.status == "Solved.":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+ * Detected change in '/home/ramon/development/windopt/app/cranepath.py', reloading
+ImmutableMultiDict([('project', u'wind_test2')])
+At upload
+Got File
+File is allowed
+ * Restarting with stat
+127.0.0.1 - - [05/Feb/2016 18:57:34] "POST /api/cranepath/wind_test2/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:57:34] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:57:34] "GET /api/cranepath/wind_test2/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 55, in get_crane_status
+    elif project.crane_project.status == "Shapefiles stored. User needs to enter Interpretations":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+ * Detected change in '/home/ramon/development/windopt/app/cranepath.py', reloading
+ImmutableMultiDict([('project', u'wind_test2')])
+At upload
+Got File
+File is allowed
+ * Restarting with stat
+ * Detected change in '/home/ramon/development/windopt/app/cranepath.py', reloading
+ * Restarting with stat
+ * Detected change in '/home/ramon/development/windopt/app/cranepath.py', reloading
+ * Restarting with stat
+127.0.0.1 - - [05/Feb/2016 18:59:52] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 18:59:56] "GET /api/cranepath/FIXTHIS/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 55, in get_crane_status
+    elif project.crane_project.status == "Shapefiles stored. User needs to enter Interpretations":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+127.0.0.1 - - [05/Feb/2016 19:00:04] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:00:08] "GET /api/cranepath/FIXTHIS/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 55, in get_crane_status
+    elif project.crane_project.status == "Shapefiles stored. User needs to enter Interpretations":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+127.0.0.1 - - [05/Feb/2016 19:00:23] "POST /api/cranepath/FIXTHIS/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:00:23] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:00:23] "GET /api/cranepath/FIXTHIS/status HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/ramon/development/windopt/app/auth.py", line 70, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/ramon/development/windopt/app/cranepath.py", line 55, in get_crane_status
+    elif project.crane_project.status == "Shapefiles stored. User needs to enter Interpretations":
+  File "/home/ramon/development/windopt/venv/lib/python2.7/site-packages/bson/dbref.py", line 85, in __getattr__
+    raise AttributeError(key)
+AttributeError: status
+127.0.0.1 - - [05/Feb/2016 19:02:02] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:08] "POST /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:08] "GET /api/projects HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:09] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:14] "POST /api/cranepath/WHY/zipupload HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:15] "GET /api/costs HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:15] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:19] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:23] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:27] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:31] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:35] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [05/Feb/2016 19:02:39] "GET /api/cranepath/WHY/status HTTP/1.1" 200 -
+127.0.0.1 - - [07/Feb/2016 11:51:02] "GET / HTTP/1.1" 304 -
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/SocketServer.py", line 295, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python2.7/SocketServer.py", line 321, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python2.7/SocketServer.py", line 334, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python2.7/SocketServer.py", line 651, in __init__
+    self.finish()
+  File "/usr/lib/python2.7/SocketServer.py", line 710, in finish
+    self.wfile.close()
+  File "/usr/lib/python2.7/socket.py", line 279, in close
+    self.flush()
+  File "/usr/lib/python2.7/socket.py", line 303, in flush
+    self._sock.sendall(view[write_offset:write_offset+buffer_size])
+error: [Errno 32] Broken pipe
+ImmutableMultiDict([('project', u'FIXTHIS')])
+At upload
+Got File
+File is allowed
+ImmutableMultiDict([('project', u'WHY')])
+At upload
+Got File
+File is allowed
+[u'Boundary2']
+----------------------------------------
+Exception happened during processing of request from ('127.0.0.1', 33656)
+----------------------------------------

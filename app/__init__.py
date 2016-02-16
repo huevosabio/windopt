@@ -24,7 +24,9 @@ CELERY_QUEUES = (
     Queue('default',routing_key='task.#'),
     Queue('train_wind_model',routing_key='train_wind_model'),
     Queue('calculate_expected_winddays',routing_key='calculate_expected_winddays'),
-    Queue('calculate_windday_risks', routing_key = 'calculate_windday_risks')
+    Queue('calculate_windday_risks', routing_key = 'calculate_windday_risks'),
+    Queue('unpack_layers', routing_key = 'unpack_layers'),
+    Queue('calculate_tsp', routing_key='calculate_tsp')
 )
 app.config.from_object('config')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
