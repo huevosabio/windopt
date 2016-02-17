@@ -24,12 +24,22 @@ angular
     'xeditable'
   ])
   .config(function ($routeProvider, $locationProvider, $authProvider) {
-    
+
 
     function authenticated($q, $location, $auth) {
       var deferred = $q.defer();
       if (!$auth.isAuthenticated()) {
         $location.path('/login');
+      } else {
+        deferred.resolve();
+      }
+      return deferred.promise;
+    }
+
+    function openProject($q, $location, currentProject){
+      var deferred = $q.defer();
+      if (currentProject.project.name === null) {
+        $location.path('/main');
       } else {
         deferred.resolve();
       }
@@ -48,35 +58,40 @@ angular
         templateUrl: 'views/upload.html',
         controller: 'UploadCtrl',
         resolve: {
-          authenticated: authenticated
+          authenticated: authenticated,
+          openProject: openProject
         }
       })
       .when('/windday', {
         templateUrl: 'views/windday.html',
         controller: 'WinddayCtrl',
         resolve: {
-          authenticated: authenticated
+          authenticated: authenticated,
+          openProject: openProject
         }
       })
       .when('/cranepath', {
         templateUrl: 'views/cranepath.html',
         controller: 'CranepathCtrl',
         resolve: {
-          authenticated: authenticated
+          authenticated: authenticated,
+          openProject: openProject
         }
       })
       .when('/zipupload', {
         templateUrl: 'views/zipupload.html',
         controller: 'ZipuploadCtrl',
         resolve: {
-          authenticated: authenticated
+          authenticated: authenticated,
+          openProject: openProject
         }
       })
       .when('/layerlist', {
         templateUrl: 'views/layerlist.html',
         controller: 'LayerlistCtrl',
         resolve: {
-          authenticated: authenticated
+          authenticated: authenticated,
+          openProject: openProject
         }
       })
       .when('/login', {
@@ -92,6 +107,10 @@ angular
       .when('/projects', {
         templateUrl: 'views/projects.html',
         controller: 'ProjectsCtrl',
+        resolve: {
+          authenticated: authenticated,
+          openProject: openProject
+        },
         controllerAs: 'projects'
       })
       .when('/costs', {
@@ -126,5 +145,5 @@ angular
     $authProvider.authToken = 'Bearer';
     $authProvider.withCredentials = true;
     $authProvider.platform = 'browser'; // or 'mobile'
-    $authProvider.storage = 'localStorage'; // or 'sessionStorage' 
+    $authProvider.storage = 'localStorage'; // or 'sessionStorage'
   });

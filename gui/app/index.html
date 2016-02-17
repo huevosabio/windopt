@@ -37,33 +37,24 @@
                     <span class="menu-icon glyphicon glyphicon-transfer"></span>
                     </a>
                 </li>
-                <li class="sidebar-title" ng-if="isAuthenticated()"><span>MENU</span></li>
+                <li class="sidebar-title" ng-if="isAuthenticated()"><span>GLOBAL MENU</span></li>
                 <li class="sidebar-list" ng-if="isAuthenticated()">
-                    <a href="/#/main">Projects<span class="menu-icon fa fa-tachometer"></span></a>
+                    <a href="/#/main">Projects<span class="menu-icon fa fa-list"></span></a>
                 </li>
                 <li class="sidebar-list" ng-if="isAuthenticated()">
-                    <a href="/#/costs">Crane Costs<span class="menu-icon fa fa-image"></span></a>
+                    <a href="/#/costs">Crane Costs<span class="menu-icon fa fa-usd"></span></a>
+                </li>
+                <li class="sidebar-title" ng-if="isAuthenticated() && isOpenProject()"><span>PROJECT MENU  </span></li>
+                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
+                    <a href="{{windRoute}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
                 </li>
                 <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
-                    <a href="{{getWindRoute()}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
-                </li>
-                <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
-                    <a href="/#/cranepath">CranePath <span class="menu-icon fa fa-image"></span></a>
+                    <a href="{{craneRoute}}">CranePath <span class="menu-icon fa fa-location-arrow "></span></a>
                 </li>
             </ul>
         <div class="sidebar-footer">
-            <div class="col-xs-4">
-              <a href="https://github.com/huevosabio/windopt" target="_blank">
-                Github
-              </a>
-            </div>
-            <div class="col-xs-4">
-                <a href="#" target="_blank">
-                    About
-                </a>
-            </div>
-            <div class="col-xs-4">
-              <a href="#">
+            <div class="col-xs-12">
+              <a href="mailto:ramon.d.iglesias@gmail.com">
                 Support
               </a>
             </div>
@@ -84,7 +75,7 @@
                 WindOps
               </div>
               <div class="breadcrumb-links" ng-if="isOpenProject()">
-                {{getProjectName()}} 
+                {{getProjectName()}}
               </div>
             </div>
             <div class="user pull-right" ng-if="isAuthenticated()">
@@ -102,17 +93,6 @@
                       Logout
                     </a>
                   </li>
-                </ul>               
-              </div>
-              <div class="item dropdown">
-               <a href="#" class="dropdown-toggle">
-                  <i class="fa fa-bell-o"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-right">
-                  <li class="dropdown-header">
-                    Notifications
-                  </li>
-                  <li class="divider"></li>
                 </ul>
               </div>
             </div>
@@ -129,7 +109,7 @@
         <!-- End Main Content -->
 
         </div><!-- End Content Wrapper -->
-        
+
     </div><!-- End Page Wrapper -->
 
 
@@ -208,6 +188,7 @@
         <script src="scripts/services/cost.js"></script>
         <script src="scripts/services/windday.js"></script>
         <script src="scripts/services/polling.js"></script>
+        <script src="scripts/services/crane_project.js"></script>
         <!-- endbuild -->
 </body>
 </html>

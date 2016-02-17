@@ -2,7 +2,9 @@
     <div class="col-lg-6">
         <div class="widget"><form id="layerForm" novalidate ng-submit="tsp()">
             <div class="widget-title">
-                <i class="fa fa-image"></i> Layer Information<button type="submit" id="tspopt" class="btn btn-default pull-right">Create Sequence</button>
+                <i class="fa fa-image"></i> Layer Information
+                <a href="/#/zipupload" class="btn btn-default pull-right">New Upload</a>
+                <button type="submit" id="tspopt" class="btn btn-default pull-right">Create Sequence</button>
             </div>
             <div class="widget-body no-padding">
                 <div class="form-group">
@@ -21,10 +23,10 @@
                                         {{layer}}
                                     </td>
                                     <td>
-                                        <select 
-                                        class="selectpicker" 
-                                        ng-model="layerdict[layer]" 
-                                        name = "{{layer}}" 
+                                        <select
+                                        class="selectpicker"
+                                        ng-model="layerdict[layer]"
+                                        name = "{{layer}}"
                                         ng-options= "option.verbose for option in costs"
                                         ng-required
                                         form="daform">

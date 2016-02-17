@@ -13,7 +13,7 @@
                                     {{field}}
                                 </th>
                                 <th>
-                                    Edit
+                                    actions
                                 </th>
                             </tr>
                         </thead>
@@ -38,7 +38,7 @@
                                 </td>
                                 <td>
                                   <!-- form -->
-                                  <form editable-form name="rowform" onaftersave="saveCost(cost)" 
+                                  <form editable-form name="rowform" onaftersave="saveCost(cost)"
                                   ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == cost">
                                     <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
                                       save
@@ -50,7 +50,7 @@
                                   <div class="buttons" ng-show="!rowform.$visible">
                                     <button class="btn btn-primary" ng-click="rowform.$show()">edit</button>
                                     <button class="btn btn-danger" ng-click="deleteCost(cost)">del</button>
-                                  </div>  
+                                  </div>
                                 </td>
                             </tr>
                         </tbody>

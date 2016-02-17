@@ -14,6 +14,45 @@ angular.module('windopsApp')
      * Sidebar Toggle & Cookie Control
      *
      */
+     $scope.currentProject = currentProject;
+
+     function getWindRoute(){
+       return currentProject.project.hasWindFile ? "/#/windday" : "/#/upload"
+     }
+
+     function getCraneRoute (){
+       var cranepathStatuses = [
+         "Optimization problem queued",
+         "Setting layer interpretations.",
+         "Layer Interpretations set",
+         "Creating the cost raster.",
+         "Building the complete graph.",
+         "Solving the Traveling Salesman Problem",
+         "Getting detailed path costs.",
+         "Solved."
+       ];
+       var layerlistStatuses = [
+         "Shapefiles stored. User needs to enter Interpretations",
+         "Reading shapefiles.",
+         "Project zip file stored, queueing for unpacking layers",
+         "Error computing TSP"
+       ];
+       var zipuploadStatuses = [
+         "Error storing zip file."
+       ]
+       var route =
+       cranepathStatuses.indexOf(currentProject.project['crane status']) > -1 ? '/#/cranepath' :
+       layerlistStatuses.indexOf(currentProject.project['crane status']) > -1 ? '/#/layerlist' :
+       '/#/zipupload';
+       return route;
+     }
+     $scope.windRoute = getWindRoute();
+     $scope.craneRoute = getCraneRoute();
+
+     $scope.$watch('currentProject.project',  function(){
+       $scope.windRoute = getWindRoute();
+       $scope.craneRoute = getCraneRoute();
+     }, true);
 
      //hides menu items if there's no user authenticated
      $scope.isAuthenticated = function() {
@@ -32,10 +71,6 @@ angular.module('windopsApp')
         return currentProject.project['name'];
     }
 
-    $scope.getWindRoute = function(){
-        return currentProject.project.hasWindFile ? "/#/windday" : "/#/upload"
-    }
-
     var mobileView = 992;
 
     $scope.getWidth = function() { return window.innerWidth; };
@@ -49,13 +84,13 @@ angular.module('windopsApp')
                 if($cookieStore.get('toggle') === false)
                 {
                     $scope.toggle = false;
-                }            
+                }
                 else
                 {
                     $scope.toggle = true;
                 }
             }
-            else 
+            else
             {
                 $scope.toggle = true;
             }
@@ -67,7 +102,7 @@ angular.module('windopsApp')
 
     });
 
-    $scope.toggleSidebar = function() 
+    $scope.toggleSidebar = function()
     {
         $scope.toggle = ! $scope.toggle;
 

@@ -8,18 +8,19 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('CranepathCtrl', function ($scope, $location,$http,leafletData, currentProject) {
+  .controller('CranepathCtrl', function ($scope, $location,$http, $alert, leafletData, currentProject, craneProject, polling) {
     $scope.mapLoaded = false;
     $scope.bdLoaded = false;
-    
+    $scope.projectName = currentProject.project.name;
+
     L.Icon.Default.imagePath = 'images';
-    
+
     var turbineIcon = {
       iconUrl:'/images/turbine.png',
       iconSize:[20, 40],
       iconAnchor:[7, 40]
     };
-      
+
     var crossingIcon = {
       iconUrl:'/images/marker-icon.png',
       iconSize:[25, 40],
@@ -65,47 +66,46 @@ angular.module('windopsApp')
         overlays:{}
       }
     });
-    
-    $http.get('/api/cranepath/schedule/' + currentProject.project.name)
-    .success(function(data, status, headers, config) {
-      $scope.schedule = data.schedule;
-      
+
+    function successEvent($scope, data){
+      $scope.schedule = data.result.schedule;
+
       $scope.costSeries = [];
       $scope.costs = {};
-      
-      for (var i in data.schedule.features){
-        var activity = data.schedule.features[i].properties.activity;
+
+      for (var i in data.result.schedule.features){
+        var activity = data.result.schedule.features[i].properties.activity;
         if (activity === 'Turbine Erection' || activity === 'boundary'){
           continue;
         } else {
-          var name = data.schedule.features[i].properties.activity;
-          
+          var name = data.result.schedule.features[i].properties.activity;
+
           if (name === 'crossing'){
-            name = name +'-'+data.schedule.features[i].properties.detail;
+            name = name +'-'+data.result.schedule.features[i].properties.detail;
           }
           if ($scope.costs[name] === undefined){
-            $scope.costs[name] = data.schedule.features[i].properties.cost;
+            $scope.costs[name] = data.result.schedule.features[i].properties.cost;
           } else{
-            $scope.costs[name]+= data.schedule.features[i].properties.cost;
+            $scope.costs[name]+= data.result.schedule.features[i].properties.cost;
           }
         }
-        
+
       }
-      
+
       for (var i in $scope.costs){
         $scope.costSeries.push({
             name:i,
             y:$scope.costs[i]
         });
       }
-      
-      
+
+
       angular.extend($scope.layers.overlays, {
         geojson: {
           name: "Schedule",
           type: "geoJSONShape",
           visible: true,
-          data: data.schedule,
+          data: data.result.schedule,
           layerOptions: {
             onEachFeature: function (feature, layer) {
               var txt = '';
@@ -122,7 +122,7 @@ angular.module('windopsApp')
             pointToLayer: function(feature, latlng) {
               if (feature.properties.activity === 'crossing'){
                 return new L.marker(latlng, {icon: L.icon(crossingIcon)})
-              
+
               } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
             }
           },
@@ -139,7 +139,7 @@ angular.module('windopsApp')
               return new L.marker(latlng, {icon: L.icon(turbineIcon)})
             },
           },
-          data: data.turbines
+          data: data.result.turbines
         }
       });
 
@@ -158,39 +158,51 @@ angular.module('windopsApp')
               fillOpacity: 0.2
             }
           },
-          data: data.boundary
+          data: data.result.boundary
         }
       });
 
       //add all features
-      for (var feature in data.features){
-        var name = data.features[feature].name;
+      for (var feature in data.result.features){
+        var name = data.result.features[feature].name;
         var layer = {};
         layer[name] = {
           name: name,
           type: "geoJSONShape",
           visible: false,
-          data: data.features[feature].geojson
+          data: data.result.features[feature].geojson
         }
         angular.extend($scope.layers.overlays, layer);
       }
-     
-    })
-    .error(function(data, status, headers, config) {
-      console.log(data);
-      $location.path('/zipupload');
-    })
-    .then(function(){
+
       $scope.mapLoaded = true;
       $scope.bdLoaded = true;
       $scope.centerMap();
-    });
-    
-    
+
+    }
+
+    function failureEvent($scope, data){
+      if ($scope.status === "Shapefiles stored. User needs to enter Interpretations"){
+        $location.path('/layerlist');
+      } else {
+        $location.path('/zipupload');
+      }
+      return;
+    }
+    polling.loop(
+      $scope,
+      craneProject.checkStatus,
+      $alert,
+      ["Solved."],
+      ["Error computing TSP", "Crane Project created.", "Shapefiles stored. User needs to enter Interpretations"],
+      successEvent,
+      failureEvent
+      )
+
     angular.extend($scope, {
       tiles: tilesDict.mapbox_terrain
     });
-    
+
     $scope.centerMap = function() {
       leafletData.getMap().then(function(map) {
         var latlngs = [];
@@ -217,12 +229,12 @@ angular.module('windopsApp')
   });
 
 Number.prototype.formatMoney = function(c, d, t){
-  var n = this, 
-      c = isNaN(c = Math.abs(c)) ? 2 : c, 
-      d = d == undefined ? "." : d, 
-      t = t == undefined ? "," : t, 
-      s = n < 0 ? "-" : "", 
-      i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+  var n = this,
+      c = isNaN(c = Math.abs(c)) ? 2 : c,
+      d = d == undefined ? "." : d,
+      t = t == undefined ? "," : t,
+      s = n < 0 ? "-" : "",
+      i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "",
       j = (j = i.length) > 3 ? j % 3 : 0;
   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
  };
