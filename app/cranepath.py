@@ -226,8 +226,10 @@ def calculate_tsp(username, project_name, layerdict):
         print 'csv'
         activities = []
         for part in schedule['features']: activities.append(part['properties'])
+        print activities[:5]
         strio = StringIO()
-        pd.DataFrame(activities).to_csv(os.path.join(strio, 'schedule.csv'))
+        pd.DataFrame(activities).to_csv(strio)
+        strio.seek(0)
         project.crane_project.csv_schedule.put(strio, content_type='text/csv')
         project.crane_project.status = "Solved."
         project.save(cascade = True)
@@ -241,9 +243,10 @@ def calculate_tsp(username, project_name, layerdict):
 
 
 @app.route('/api/cranepath/<project_name>/schedule.csv',methods=['GET'])
-@auth.login_required
+#TODO: @auth.login_required
 def csv(project_name):
-    user, project = Project.get_user_and_project(g.username, project_name)
+    #TODO: user, project = Project.get_user_and_project(g.username, project_name)
+    project = Project.objects.get(name = project_name)
     return send_file(project.crane_project.csv_schedule,
-        attachment_filename="schedule.csv",
+        attachment_filename= project_name + ".csv",
         as_attachment=True)

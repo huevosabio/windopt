@@ -8,18 +8,19 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('CranepathCtrl', function ($scope, $location,$http,$alert, leafletData, currentProject, craneProject, polling) {
+  .controller('CranepathCtrl', function ($scope, $location,$http, $alert, leafletData, currentProject, craneProject, polling) {
     $scope.mapLoaded = false;
     $scope.bdLoaded = false;
-    
+    $scope.projectName = currentProject.project.name;
+
     L.Icon.Default.imagePath = 'images';
-    
+
     var turbineIcon = {
       iconUrl:'/images/turbine.png',
       iconSize:[20, 40],
       iconAnchor:[7, 40]
     };
-      
+
     var crossingIcon = {
       iconUrl:'/images/marker-icon.png',
       iconSize:[25, 40],
@@ -68,17 +69,17 @@ angular.module('windopsApp')
 
     function successEvent($scope, data){
       $scope.schedule = data.result.schedule;
-      
+
       $scope.costSeries = [];
       $scope.costs = {};
-      
+
       for (var i in data.result.schedule.features){
         var activity = data.result.schedule.features[i].properties.activity;
         if (activity === 'Turbine Erection' || activity === 'boundary'){
           continue;
         } else {
           var name = data.result.schedule.features[i].properties.activity;
-          
+
           if (name === 'crossing'){
             name = name +'-'+data.result.schedule.features[i].properties.detail;
           }
@@ -88,17 +89,17 @@ angular.module('windopsApp')
             $scope.costs[name]+= data.result.schedule.features[i].properties.cost;
           }
         }
-        
+
       }
-      
+
       for (var i in $scope.costs){
         $scope.costSeries.push({
             name:i,
             y:$scope.costs[i]
         });
       }
-      
-      
+
+
       angular.extend($scope.layers.overlays, {
         geojson: {
           name: "Schedule",
@@ -121,7 +122,7 @@ angular.module('windopsApp')
             pointToLayer: function(feature, latlng) {
               if (feature.properties.activity === 'crossing'){
                 return new L.marker(latlng, {icon: L.icon(crossingIcon)})
-              
+
               } else {return new L.marker(latlng, {icon: L.icon(turbineIcon)})}
             }
           },
@@ -177,7 +178,7 @@ angular.module('windopsApp')
       $scope.mapLoaded = true;
       $scope.bdLoaded = true;
       $scope.centerMap();
-     
+
     }
 
     function failureEvent($scope, data){
@@ -197,11 +198,11 @@ angular.module('windopsApp')
       successEvent,
       failureEvent
       )
-    
+
     angular.extend($scope, {
       tiles: tilesDict.mapbox_terrain
     });
-    
+
     $scope.centerMap = function() {
       leafletData.getMap().then(function(map) {
         var latlngs = [];
@@ -228,12 +229,12 @@ angular.module('windopsApp')
   });
 
 Number.prototype.formatMoney = function(c, d, t){
-  var n = this, 
-      c = isNaN(c = Math.abs(c)) ? 2 : c, 
-      d = d == undefined ? "." : d, 
-      t = t == undefined ? "," : t, 
-      s = n < 0 ? "-" : "", 
-      i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+  var n = this,
+      c = isNaN(c = Math.abs(c)) ? 2 : c,
+      d = d == undefined ? "." : d,
+      t = t == undefined ? "," : t,
+      s = n < 0 ? "-" : "",
+      i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "",
       j = (j = i.length) > 3 ? j % 3 : 0;
   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
  };
