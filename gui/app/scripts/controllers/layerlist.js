@@ -8,14 +8,14 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('LayerlistCtrl',  
+  .controller('LayerlistCtrl',
     function(
-      $scope, 
-      $location, 
-      $alert, 
-      $http, 
-      currentProject, 
-      cost, 
+      $scope,
+      $location,
+      $alert,
+      $http,
+      currentProject,
+      cost,
       craneProject,
       polling
       ) {
@@ -62,17 +62,11 @@ angular.module('windopsApp')
       successEvent,
       failureEvent
       )
-    
+
 
 
     $scope.tsp = function(){
       $scope.layersLoaded = false;
-      craneProject.calculateTSP({"layerdict": $scope.layerdict, "project": currentProject.project.name})
-      .success(function(data,status,headers,config){
-        $location.path('/cranepath');
-      })
-      .error(function(data,status,headers,config){
-        console.log(data);
-      });
+      craneProject.calculateTSP({"layerdict": $scope.layerdict, "project": currentProject.project.name});
     };
   });

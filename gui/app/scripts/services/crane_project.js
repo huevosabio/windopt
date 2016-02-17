@@ -24,7 +24,7 @@ angular.module('windopsApp')
         method: "get",
         url: "/api/cranepath/" + currentProject.project.name + "/status"
       });
-      return (request.then( handleSuccess, handleError ));
+      return (request.then( statusSuccess, handleError ));
     }
 
     // Gets creates cost using a cost name
@@ -65,6 +65,11 @@ angular.module('windopsApp')
 
     function craneSuccess( response ) {
       $location.path('/cranepath');
+      return ( response.data );
+    }
+
+    function statusSuccess( response ) {
+      currentProject.project['crane status'] = response.data.result.status;
       return ( response.data );
     }
 

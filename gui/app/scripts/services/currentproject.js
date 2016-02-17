@@ -11,6 +11,8 @@ angular.module('windopsApp')
   .value('currentProject', {
   	project: {
   		name: null,
-  		hasWindFile: null
+  		hasWindFile: null,
+      'wind status': null,
+      'crane status': null
   	}
   });

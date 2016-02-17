@@ -46,10 +46,10 @@
                 </li>
                 <li class="sidebar-title" ng-if="isAuthenticated() && isOpenProject()"><span>PROJECT MENU  </span></li>
                 <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
-                    <a href="{{getWindRoute()}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
+                    <a href="{{windRoute}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
                 </li>
                 <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
-                    <a href="/#/cranepath">CranePath <span class="menu-icon fa fa-location-arrow "></span></a>
+                    <a href="{{craneRoute}}">CranePath <span class="menu-icon fa fa-location-arrow "></span></a>
                 </li>
             </ul>
         <div class="sidebar-footer">

@@ -98,9 +98,9 @@ def upload_ziplfile(project_name):
                 project.crane_project.save()
                 unpack_layers.delay(g.username, project_name)
             except Exception as e:
-                project.crane_project.status = "Error storing zip file: " + str(e)
+                project.crane_project.status = "Error storing zip file."
                 project.save(cascade = True)
-                raise ProjectException("Error storing zip file: " + str(e))
+                raise ProjectException("Error storing zip file")
             return flask.jsonify(result={"message": "Project zip file stored, queued for unpacking layers"})
         else:
             raise ProjectException("Geographic files should be packed in a ZIP file")
@@ -190,7 +190,8 @@ def calculate_tsp(username, project_name, layerdict):
             else:
                 project.crane_project.features.append(feature)
 
-        project.crane_project.status = "Layer Interpretations set; " + ";".join(messages)
+        project.crane_project.messages = ";".join(messages)
+        project.crane_project.status = "Layer Interpretations set"
         project.crane_project.save()
 
         #Create Cost Ratser
