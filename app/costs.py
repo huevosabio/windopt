@@ -63,7 +63,7 @@ def get_or_update_cost(id):
     except Cost.DoesNotExist:
         raise CostException('Cost does not exist.')
     if request.method == 'GET':
-        return jsonify(cost.to_dict()) 
+        return jsonify(cost.to_dict())
     if request.method == 'PUT':
         print request.json
         cost.name = request.json['name']
@@ -97,8 +97,12 @@ class Cost(Document):
 def create_fake_costs():
     user = User.objects.get(username = 'admin')
     try:
-        cost = Cost(user = user, name = 'Fake Cost', interpretation = 'turbines', cost = 1000)
-        cost.save()
+        cost_t = Cost(user = user, name = 'Fake Turbine Cost', interpretation = 'turbines', cost = 1000)
+        cost_t.save()
+        cost_b = Cost(user = user, name = 'Fake Boundary Cost', interpretation = 'boundary', cost = 1.5)
+        cost_b.save()
+        cost_c = Cost(user = user, name = 'Fake Crossing Cost', interpretation = 'crossing', cost = 5000)
+        cost_c.save()
     except NotUniqueError:
         pass
     return

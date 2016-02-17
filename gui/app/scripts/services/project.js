@@ -16,7 +16,8 @@ angular.module('windopsApp')
     // Public API here
     return {
       createProject: createProject,
-      listProjects: listProjects
+      listProjects: listProjects,
+      deleteProject: deleteProject
     };
 
     // Gets creates project using a project name
@@ -29,6 +30,14 @@ angular.module('windopsApp')
         }
       });
       return (request.then( handleSuccess, handleError ));
+    }
+
+    function deleteProject(name) {
+      var request = $http({
+        method: "delete",
+        url: "api/projects/" + name,
+      });
+      return (request.then( handleSuccess, handleError))
     }
 
     function handleError( response ){
@@ -77,5 +86,5 @@ angular.module('windopsApp')
     }
 
     // WindDay Functions
-    
+
   });

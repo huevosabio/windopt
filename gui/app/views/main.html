@@ -2,18 +2,54 @@
     <div class="col-lg-6">
         <div class="widget">
             <div class="widget-title">
-                <i class="fa fa-tasks"></i>Project
+                <i class="fa fa-tasks"></i>Projects
             </div>
-            <div class="widget-body medium ">
-                <label for="selectProject">Select Project:</label><br>
-                <select name="selectProject" ng-model="selectedProject" ng-options="project as project.name for project in projects">
-                </select>
-                <button ng-click="openProject(selectedProject)" class="btn btn-success pull-right">Open Project</button>
-                <br>
-                    <p>or create a new project</p>
-                <br>
-                <input  class="form-control pull-left" ng-model="newProjectName" placeholder="Project Name" type="text" />
-                <button ng-click="createProject()" class="btn btn-success pull-right">Create Project</button>
+            <div class="widget-body large ">
+                <div class="table-responsive">
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th ng-repeat="field in fields">
+                                    {{field}}
+                                </th>
+                                <th>
+                                    actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="project in projects">
+                                <td ng-repeat="(i,key) in fields">
+                                    <div ng-if="key === 'name'">
+                                        <div editable-text="project[key]" e-name="key" e-form="rowform" e-required>
+                                            {{project[key]}}
+                                        </div>
+                                    </div>
+                                    <div ng-if="key !== 'name'">
+                                          {{project[key]}}
+                                    </div>
+                                </td>
+                                <td>
+                                  <!-- form -->
+                                  <form editable-form name="rowform" onaftersave="saveProject(project)"
+                                  ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
+                                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
+                                      save
+                                    </button>
+                                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default">
+                                      cancel
+                                    </button>
+                                  </form>
+                                  <div class="buttons" ng-show="!rowform.$visible">
+                                    <button class="btn btn-primary" ng-click="openProject(project)">open</button>
+                                    <button class="btn btn-danger" ng-click="deleteProject(project)">delete</button>
+                                  </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn btn-default" ng-click="addProject()">Create Project</button>
+                </div>
             </div>
         </div>
     </div>

@@ -31,7 +31,6 @@ def create_or_list_project():
             user = User.objects.get(username = g.username)
             project = Project(name = project_data['name'], user = user)
             crane_project = CraneProject()
-            crane_project.status = "Crane Project created."
             crane_project.save()
             project.crane_project = crane_project
             project.save(cascade = True)
@@ -46,7 +45,7 @@ def create_or_list_project():
         return jsonify(message = 'Queried projects', projects = projects)
 
 
-@app.route('/api/projects/<name>', methods = ['GET'])
+@app.route('/api/projects/<name>', methods = ['GET', 'DELETE'])
 @auth.login_required
 def get_or_update_project(name):
     '''
@@ -56,7 +55,6 @@ def get_or_update_project(name):
         NOT IMPLEMENTED
         Updates project info (name)
     DELETE:
-        NOT IMPLEMENTED
         Deletes project
     '''
     try:
@@ -66,6 +64,13 @@ def get_or_update_project(name):
         raise ProjectException('Project does not exist.')
     if request.method == 'GET':
         return jsonify(project.get_summary())
+    if request.method == 'DELETE':
+        for feat in project.crane_project.features:
+            feat.delete()
+        project.crane_project.zipfile.delete()
+        project.crane_project.delete()
+        project.delete()
+        return jsonify(message = "Project deleted.")
     else:
         raise BadRequestException('Your request was not understood by the server.')
 
@@ -86,7 +91,7 @@ class CraneProject(wind_features.CraneProject, Document):
     crs = DictField()
     bounds = ListField(FloatField())
     geojson = DictField(default = {})
-    status = StringField(default = "Empty Crane Project")
+    status = StringField(default = "New project")
     zipfile = FileField()
     csv_schedule = FileField()
     messages = StringField(default = "")
@@ -96,7 +101,7 @@ class Project(Document):
     name = StringField(unique=True)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     raw_wind_data = FileField()
-    wind_status = StringField(default = "Empty project.")
+    wind_status = StringField(default = "New project.")
     windday_conditions = DictField()
     windHeight = IntField()
     windTMatrix = BinaryField()
@@ -133,9 +138,12 @@ class Project(Document):
         else: return None
 
     def get_summary(self):
+        print self.name
         return {
             'name': self.name,
-            'hasWindFile': bool(self.windTMatrix)
+            'hasWindFile': bool(self.windTMatrix),
+            'wind status': self.wind_status,
+            'crane status': self.crane_project.status
         }
 
     @staticmethod

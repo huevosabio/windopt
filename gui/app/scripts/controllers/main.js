@@ -9,10 +9,10 @@
  */
 angular.module('windopsApp')
   .controller('MainCtrl', function ($scope, $alert, project, currentProject) {
-  	$scope.newProjectName = null;
   	$scope.selectedProject = null;
+    $scope.fields = ['name', 'wind status', 'crane status']
+    $scope.projects = [];
 
-  	
   	$scope.listProjects = function () {
   		project.listProjects().then( function(data){
   			$scope.projects = data.projects;
@@ -23,8 +23,8 @@ angular.module('windopsApp')
 
   	$scope.listProjects();
 
-  	$scope.createProject = function () {
-  		if ($scope.newProjectName === null) {
+  	$scope.saveProject = function (data) {
+  		if (data.name === null) {
   			$alert({
               content: 'Please name the new project.',
               animation: 'fadeZoomFadeDown',
@@ -34,17 +34,32 @@ angular.module('windopsApp')
             });
             return;
   		}
-  		project.createProject( $scope.newProjectName ).then( function(data) {
+  		project.createProject( data.name ).then( function(data) {
   			$scope.listProjects();
   			currentProject.project = data.project;
-  			$scope.newProjectName = null;
   		});
   	}
 
-  	$scope.openProject = function ( selectedProject) {
-  		if (selectedProject === null ||
-  			selectedProject.name === null ||
-  			selectedProject.name === undefined) {
+    $scope.deleteProject = function(data){
+      project.deleteProject(data.name);
+      $scope.listProjects();
+    };
+
+    $scope.addProject = function() {
+  		$scope.inserted = {
+  			name: null,
+  			interpretation: null,
+  			cost: null,
+  			id: null
+  		};
+  		$scope.projects.push($scope.inserted);
+  	}
+
+
+  	$scope.openProject = function ( data ) {
+  		if (data === null ||
+  			data.name === null ||
+  			data.name === undefined) {
   			$alert({
               content: 'Please select or create a proejct.',
               animation: 'fadeZoomFadeDown',
@@ -54,6 +69,6 @@ angular.module('windopsApp')
             });
             return;
   		}
-  		currentProject.project = selectedProject;
+  		currentProject.project = data;
   	}
   });
