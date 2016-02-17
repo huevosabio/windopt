@@ -118,8 +118,7 @@ angular
         controller: 'CostsCtrl',
         controllerAs: 'costs',
         resolve: {
-          authenticated: authenticated,
-          openProject: openProject
+          authenticated: authenticated
         }
       })
       .otherwise({
