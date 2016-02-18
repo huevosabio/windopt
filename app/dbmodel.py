@@ -154,3 +154,18 @@ class Project(Document):
             return user, project
         except:
             raise ProjectException("Error fetching project.")
+
+
+#Code to clean the DB on the changes of Feb 17 2016
+@app.before_first_request
+def create_crane_projects():
+    try:
+        prjs = Project.objects(crane_project = None)
+        for project in prjs:
+            cp = CraneProject()
+            cp.save()
+            project.crane_project = cp
+            project.save()
+    except Exception, e:
+        print e
+    return
