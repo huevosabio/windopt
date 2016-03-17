@@ -5,6 +5,7 @@ from app import app, conn, auth
 import cPickle
 from app.auth import User
 import windscripts.features as wind_features
+from errors import CostException
 
 @app.route('/api/costs', methods = ['POST', 'GET'])
 @auth.login_required
