@@ -21,7 +21,7 @@ angular.module('windopsApp')
             });
         });
     }
-    
+
     $scope.logMeIn = function() {
       $alert({
         content: 'Checking your credentials, please wait.',
@@ -43,7 +43,7 @@ angular.module('windopsApp')
         })
         .catch(function(response) {
           $alert({
-            content: 'There was an error logging in',
+            content: response.data.message,
             animation: 'fadeZoomFadeDown',
             type: 'danger',
             duration: 3,

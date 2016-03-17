@@ -4,10 +4,12 @@ FROM huevosabio/geopy:master
 #Create the folder where app lives
 #Assumes the entirety of my app is there
 RUN mkdir /var/www/windopt
+RUN mkdir /var/www/windopt/tmp
 WORKDIR /var/www/windopt
 ADD ./requirements.txt /var/www/windopt/requirements.txt
 RUN pip install -r /var/www/windopt/requirements.txt
 ADD . /var/www/windopt
+RUN chown -R www-data:www-data /var/www/windopt
 
 #Set nginx and supervisord configs
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf

@@ -45,3 +45,11 @@ class ProjectException(BaseException):
 @app.errorhandler(ProjectException)
 def user_exception_handler(error):
 	return handler_function(error)
+
+class CostException(BaseException):
+	status_code = 469
+	pass
+
+@app.errorhandler(CostException)
+def cost_exception_handler(error):
+	return handler_function(error)

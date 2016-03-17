@@ -108,40 +108,46 @@ def upload_ziplfile(project_name):
 #--- Unpacking function ---
 @celery.task(name = 'unpack_layers')
 def unpack_layers (username, project_name):
-    #TODO: This still uses the file system
-    user, project = Project.get_user_and_project(username, project_name)
-    clear_uploads(SHP_DIR)
-    zip_contents = StringIO(project.crane_project.zipfile.read())
-    unique_name = str(uuid.uuid1())
-    zipfile = SHP_DIR + '/' + unique_name +'.zip'
-    with open(zipfile, "wb") as f:
-        f.write(zip_contents.getvalue())
-    #TODO: keep track of the data types.
-    print " AT FIONA DRIVERS"
-    messages = []
-    project.crane_project.status = "Reading shapefiles."
-    print globals()
-    with fiona.drivers():
-        for i, layername in enumerate(
-        fiona.listlayers(
-            '/',
-            vfs='zip://'+zipfile)):
-            feature = GeoFeat()
-            feature.read_shapefile(layername, zipfile)
-            feature.name = layername
-            print "this is working"
-            #TODO: This just leaves shitty layers out of the project, you need to report this.
-            try:
-                feature.save()
-                project.crane_project.features.append(feature)
-            except Exception as e:
-                messages.append(layername + ' not saved, reason: '+ str(e))
-                continue
-                #TODO: These two calls might be redundant, check if its so.
-    project.crane_project.status = "Shapefiles stored. User needs to enter Interpretations"
-    print messages
-    project.save(cascade = True)
-    return "Layers stored"
+    try:
+        #TODO: This still uses the file system
+        user, project = Project.get_user_and_project(username, project_name)
+        clear_uploads(SHP_DIR)
+        zip_contents = StringIO(project.crane_project.zipfile.read())
+        unique_name = str(uuid.uuid1())
+        zipfile = SHP_DIR + '/' + unique_name +'.zip'
+        with open(zipfile, "wb") as f:
+            f.write(zip_contents.getvalue())
+        #TODO: keep track of the data types.
+        print " AT FIONA DRIVERS"
+        messages = []
+        project.crane_project.status = "Reading shapefiles."
+        project.save(cascade = True)
+        print globals()
+        with fiona.drivers():
+            for i, layername in enumerate(
+                fiona.listlayers(
+                '/',
+                vfs='zip://'+zipfile)):
+                feature = GeoFeat()
+                feature.read_shapefile(layername, zipfile)
+                feature.name = layername
+                #TODO: This just leaves shitty layers out of the project, you need to report this.
+                try:
+                    feature.save()
+                    project.crane_project.features.append(feature)
+                except Exception as e:
+                    messages.append(layername + ' not saved, reason: '+ str(e))
+                    continue
+                    #TODO: These two calls might be redundant, check if its so.
+        project.crane_project.status = "Shapefiles stored. User needs to enter Interpretations"
+        print messages
+        project.save(cascade = True)
+        return "Layers stored"
+    except Exception as e:
+        project.crane_project.status = "Error unpacking layers"
+        project.crane_project.messages = "Error unpacking layers: " + str(e)
+        project.save(cascade = True)
+        return
 
 @app.route('/api/cranepath/<project_name>/tsp',methods=['POST'])
 @auth.login_required

@@ -11,7 +11,7 @@ from errors import BadRequestException, UserException
 class User(Document):
     username = StringField(unique=True)
     password = StringField()
-    
+
     def hash_password(self, password):
         self.password = pwd_context.encrypt(password)
 
@@ -73,12 +73,12 @@ def login_required(f):
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    user = User.objects(username = request.json['username'])[0]
-    if not user or not user.verify_password(request.json['password']):
+    user = User.objects(username = request.json['username'])
+    if not user or not user[0].verify_password(request.json['password']):
         response = jsonify(message='Wrong Email or Password')
         response.status_code = 401
         return response
-    token = create_token(user)
+    token = create_token(user[0])
     return jsonify(token=token)
 
 @app.route('/api/users', methods = ['POST'])
