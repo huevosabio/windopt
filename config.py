@@ -14,6 +14,7 @@ CSRF_ENABLED = True
 SECRET_KEY = 'titi'
 
 # get rabbitmq base & username/pass from env variables, if not found assume local/guest
+BROKER_BASE = os.getenv('BROKER_BASE','localhost')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'guest')
 
