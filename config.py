@@ -13,6 +13,8 @@ ENV_NAME =  os.getenv('ENV_NAME', None)
 CSRF_ENABLED = True
 SECRET_KEY = 'titi'
 
-BROKER_BASE = os.getenv('BROKER_BASE','localhost')
+# get rabbitmq base & username/pass from env variables, if not found assume local/guest
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'guest')
 
-BROKER_URL = 'amqp://guest:guest@'+BROKER_BASE+':5672//'
+BROKER_URL = 'amqp://'+RABBITMQ_USER+':'+RABBITMQ_PASS+'@'+BROKER_BASE+':5672//'
