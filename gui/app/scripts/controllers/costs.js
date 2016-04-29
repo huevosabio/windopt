@@ -22,6 +22,8 @@ angular.module('windopsApp')
 
   	$scope.listCosts();
 
+
+
   	$scope.saveCost = function (data) {
   		if (data.name === null) {
   			$alert({
