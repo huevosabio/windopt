@@ -85,12 +85,20 @@ class Cost(Document):
     cost= FloatField()
 
     def to_dict(self):
+        if self.interpretation == 'turbines':
+            units = 'USD/EA'
+        elif self.interpretation == 'boundary':
+            units = 'USD/m'
+        elif self.interpretation == 'crossing':
+            units = 'USD/crossing'
         return {
         'name': self.name,
         'interpretation': self.interpretation,
         'cost': self.cost,
         'id': str(self.id),
-        'verbose': self.name + ', interpretation: ' + self.interpretation + ',  cost: ' + str(self.cost)
+        'verbose': self.name + ', interpretation: ' + self.interpretation + \
+         ',  cost: $' + str(self.cost) + ' ' + units,
+         'units': units
         }
 
 

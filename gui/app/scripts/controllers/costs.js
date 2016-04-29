@@ -10,8 +10,8 @@
 angular.module('windopsApp')
   .controller('CostsCtrl', function ($scope, $alert, cost) {
   	$scope.interpretations = ['turbines', 'boundary', 'crossing'];
-  	$scope.fields = ['name', 'interpretation', 'cost'];
-  	
+  	$scope.fields = ['name', 'interpretation', 'cost', 'units'];
+
   	$scope.listCosts = function () {
   		cost.listCosts().then( function(data){
   			$scope.costs = data.costs;
@@ -57,7 +57,7 @@ angular.module('windopsApp')
   	$scope.deleteCost = function( data ) {
   		cost.deleteCost(data).then(function(){
   			$scope.listCosts();
-  		});	
+  		});
   	}
 
   });
