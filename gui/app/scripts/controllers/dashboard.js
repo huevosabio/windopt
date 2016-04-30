@@ -8,7 +8,7 @@
  * Controller of the windopsApp
  */
 angular.module('windopsApp')
-  .controller('DashboardCtrl',  function($scope, $cookieStore, $auth, $alert, $location, currentProject) {
+  .controller('DashboardCtrl',  function($scope, $cookieStore, $auth, $alert, $location, currentProject, support) {
 
     /**
      * Sidebar Toggle & Cookie Control
@@ -19,6 +19,12 @@ angular.module('windopsApp')
      function getWindRoute(){
        return currentProject.project.hasWindFile ? "/#/windday" : "/#/upload"
      }
+
+     $scope.email = '';
+     $scope.link = '';
+
+     $scope.supportLoaded = false;
+     $scope.supportInfo = support.getSupportInfo();
 
      function getCraneRoute (){
        var cranepathStatuses = [

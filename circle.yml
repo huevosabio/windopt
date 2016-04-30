@@ -1,4 +1,4 @@
-## Enable Docker 
+## Enable Docker
 machine:
   services:
     - docker

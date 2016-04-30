@@ -49,17 +49,17 @@
                     <a href="{{windRoute}}">WindyDay <span class="menu-icon fa fa-tachometer"></span></a>
                 </li>
                 <li class="sidebar-list" ng-if="isAuthenticated() && isOpenProject()">
-                    <a href="{{craneRoute}}">CranePath <span class="menu-icon fa fa-location-arrow "></span></a>
+                    <a href="{{craneRoute}}">CranePath <span cflass="menu-icon fa fa-location-arrow "></span></a>
                 </li>
             </ul>
         <div class="sidebar-footer">
             <div class="col-xs-6">
-              <a href="mailto:ramon.d.iglesias@gmail.com">
+              <a href="mailto:{{supportInfo.$$state.value.email}}">
                 Support
               </a>
             </div>
             <div class="col-xs-6">
-              <a href="mailto:ramon.d.iglesias@gmail.com">
+              <a href="{{supportInfo.$$state.value.link}}">
                 Documentation
               </a>
             </div>
@@ -194,6 +194,7 @@
         <script src="scripts/services/windday.js"></script>
         <script src="scripts/services/polling.js"></script>
         <script src="scripts/services/crane_project.js"></script>
+        <script src="scripts/services/support.js"></script>
         <!-- endbuild -->
 </body>
 </html>

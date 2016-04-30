@@ -103,7 +103,6 @@ class Cost(Document):
             units = ''
 
         def xstr(s):
-            print s
             if s is None:
                 return ''
             else:

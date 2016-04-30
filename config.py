@@ -19,3 +19,6 @@ RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'guest')
 
 BROKER_URL = 'amqp://'+RABBITMQ_USER+':'+RABBITMQ_PASS+'@'+BROKER_BASE+':5672//'
+
+DOC_EMAIL = os.getenv('DOC_EMAIL', None)
+DOC_LINK = os.getenv('DOC_LINK', None)
