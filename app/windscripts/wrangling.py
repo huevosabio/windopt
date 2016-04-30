@@ -7,7 +7,7 @@ from scipy.special import psi
 import io
 
 def get_train_set(filename):
-    """Filename or StringIO object is the full path pointing to the properly 
+    """Filename or StringIO object is the full path pointing to the properly
     formatted wind time series
     """
     #Read the wind time series and interpret the columns correctly
@@ -15,7 +15,7 @@ def get_train_set(filename):
     assert len(windseries.columns) > 0
     #windseries = windseries.set_index(windseries.columns[0])
     #windseries.index = pd.to_datetime(windseries.index)
-    
+
     #Prepare data set to be digestable by the training function
     windColumn = windseries.columns[0]
     windseries['hour'] = windseries.index.hour
@@ -26,15 +26,19 @@ def get_train_set(filename):
 def plot_seasonality(windseries):
     pd.set_option('display.mpl_style', 'default')
     plt.rcParams['figure.figsize'] = (16, 10)
-    
+
     windData = windseries.copy()
-    if 'month' not in windData.keys(): windData = windData.index.month
+    if 'month' not in windData.keys(): windData['hour'] = windData.index.month
     if 'hour' not in windData.keys(): windData['hour'] = windData.index.hour
-    
+
     windmap = windData.groupby(['month','hour']).aggregate(np.mean).unstack(level=0)
     windmap = np.round(windmap*10)/10
     z = []
-    for index, x in np.ndenumerate(windmap.as_matrix()):
-        z.append([index[1],index[0],x])
+    winddict = windmap.to_dict()
+    print winddict
+    for series_month, month_dict in winddict.iteritems():
+        for hour, value in month_dict.iteritems():
+            # months are in 1-12 nomenclature, we need to change to
+            # 0-11
+            z.append([series_month[1] - 1,hour,value])
     return z
-    

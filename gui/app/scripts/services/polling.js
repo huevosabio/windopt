@@ -21,7 +21,6 @@ angular.module('windopsApp')
     function isStatusReady($scope, statusCheck,callback){
       statusCheck()
         .then(function(data) {
-        console.log(data);
         $scope.status = data.result.status;
         callback($scope, data);
       });

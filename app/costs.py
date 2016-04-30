@@ -23,6 +23,14 @@ def create_or_list_cost():
         if 'name' not in cost_data:
             raise BadRequestException('Malformed request.')
 
+        if 'cost' not in cost_data or \
+        type(cost_data['cost']) not in [float, int]:
+            raise CostException('Please assign proper cost.')
+
+        if 'interpretation' not in cost_data or \
+        cost_data['interpretation'] not in ['boundary','turbines','crossing']:
+            raise CostException('Invalid interpretation.')
+
         # check that name does not exist
         if Cost.objects(
             name = cost_data['name']).first():
@@ -85,12 +93,30 @@ class Cost(Document):
     cost= FloatField()
 
     def to_dict(self):
+        if self.interpretation == 'turbines':
+            units = 'USD/EA'
+        elif self.interpretation == 'boundary':
+            units = 'USD/m'
+        elif self.interpretation == 'crossing':
+            units = 'USD/crossing'
+        else:
+            units = ''
+
+        def xstr(s):
+            if s is None:
+                return ''
+            else:
+                return str(s)
         return {
         'name': self.name,
         'interpretation': self.interpretation,
         'cost': self.cost,
         'id': str(self.id),
-        'verbose': self.name + ', interpretation: ' + self.interpretation + ',  cost: ' + str(self.cost)
+        'verbose': xstr(self.name) + ', interpretation: ' + xstr(self.interpretation) + \
+         ',  cost: $' + \
+         xstr(self.cost) + ' ' +\
+          units,
+         'units': units
         }
 
 

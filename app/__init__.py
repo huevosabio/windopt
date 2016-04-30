@@ -1,6 +1,6 @@
 import os
-from flask import Flask, send_from_directory
-from config import DB_URI, DB_USER, DB_PWD, ENV_NAME, BROKER_URL
+from flask import Flask, send_from_directory, jsonify
+from config import DB_URI, DB_USER, DB_PWD, ENV_NAME, BROKER_URL, DOC_LINK, DOC_EMAIL
 from mongoengine import connect
 from celery import Celery
 from kombu import Queue
@@ -60,6 +60,13 @@ def send_index():
 @app.route('/bower_components/<path:filename>')
 def send_bower_components(filename):
 	return send_from_directory(os.getcwd()+'/gui/bower_components/',filename)
+
+#---Support ---
+@app.route('/api/info')
+def send_support_info():
+    email = DOC_EMAIL
+    link = DOC_LINK
+    return jsonify(email = email, link = link, message = None)
 
 from app import auth
 from app import windday
