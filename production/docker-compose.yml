@@ -6,6 +6,7 @@ rabbitmq:
 
 windopt:
   image: huevosabio/windopt:master
+  env_file: .env
   links:
     - rabbitmq
   ports:
